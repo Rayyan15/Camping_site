@@ -1,53 +1,30 @@
 <?php
-
 namespace App\Filament\Widgets;
-
 use App\Models\Booking;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
-
 class LatestBookings extends BaseWidget
 {
-    protected static ?int $sort = 3;
-    
-    protected int | string | array $columnSpan = 'full';
-
+    protected static ?int $sort = 5;
+    protected int | string | array $columnSpan = 2;
     public function table(Table $table): Table
     {
         return $table
-            ->query(
-                Booking::query()->latest()->limit(5)
-            )
-            ->heading('Booking Terbaru')
+            ->query(Booking::query()->latest()->limit(5))
+            ->heading('Daftar Tugas')
             ->columns([
                 Tables\Columns\TextColumn::make('customer.name')
-                    ->label('CUSTOMER')
+                    ->label('Tugas / Pelanggan')
+                    ->description(fn (Booking $record): string => 'Jadwal: ' . $record->check_in->format('M d, Y'))
                     ->weight('bold'),
-                Tables\Columns\TextColumn::make('code')
-                    ->label('KODE')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('check_in')
-                    ->label('CHECK-IN')
-                    ->date('d M Y'),
-                Tables\Columns\TextColumn::make('total')
-                    ->label('TOTAL')
-                    ->money('IDR', locale: 'id'),
                 Tables\Columns\TextColumn::make('status')
-                    ->label('STATUS')
+                    ->label('')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'pending' => 'warning',
-                        'confirmed' => 'success',
-                        'cancelled' => 'danger',
-                        'completed' => 'gray',
-                        default => 'gray',
+                        'pending' => 'warning', 'confirmed' => 'success', 'cancelled' => 'danger', default => 'gray',
                     }),
             ])
-            ->emptyStateHeading('Belum ada booking')
-            ->emptyStateDescription('Daftar booking terbaru akan muncul di sini.')
-            ->emptyStateIcon('heroicon-o-bookmark-slash')
-            ->striped()
             ->paginated(false);
     }
 }

@@ -3,254 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Raynad Hospitality Camping</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Raynad Camping - Luxury Lodge & Tent Booking</title>
+    @vite('resources/css/app.css')
+    <!-- Google Fonts: Plus Jakarta Sans for a premium modern look -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #FAFAFA;
+        }
+        .hero-bg {
+            background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1504280114156-f6c70a8d6dc6?q=80&w=2000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 antialiased selection:bg-teal-600 selection:text-white">
+<body class="text-gray-800 antialiased selection:bg-emerald-500 selection:text-white">
 
     <!-- Navbar -->
-    <nav x-data="{ open: false }" class="bg-white/90 backdrop-blur-md shadow-sm fixed w-full z-50 transition-all">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex-shrink-0 flex items-center">
-                    <span class="font-bold text-xl text-teal-800 tracking-tight">Raynad Camping</span>
-                </div>
-                <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-                    <a href="#profil" class="border-transparent text-gray-600 hover:text-teal-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition">Profil</a>
-                    <a href="#tenda" class="border-transparent text-gray-600 hover:text-teal-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition">Tipe Tenda</a>
-                    <a href="#fasilitas" class="border-transparent text-gray-600 hover:text-teal-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition">Fasilitas</a>
-                    <a href="#lokasi" class="border-transparent text-gray-600 hover:text-teal-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition">Lokasi</a>
-                </div>
-                <div class="hidden sm:flex items-center space-x-4">
-                    <a href="/admin/login" class="text-teal-700 hover:text-teal-900 font-medium text-sm transition">Login Staf</a>
-                    <a href="#tenda" class="bg-teal-700 hover:bg-teal-800 text-white px-5 py-2 rounded-md font-medium text-sm transition shadow-sm">Cek Ketersediaan</a>
-                </div>
-                <!-- Mobile menu button -->
-                <div class="-mr-2 flex items-center sm:hidden">
-                    <button @click="open = !open" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-teal-500" aria-controls="mobile-menu" aria-expanded="false">
-                        <span class="sr-only">Buka menu utama</span>
-                        <svg class="h-6 w-6" x-show="!open" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                        <svg class="h-6 w-6" x-show="open" style="display: none;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
+    <nav class="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-6 text-white w-full max-w-7xl mx-auto">
+        <div class="flex items-center gap-2">
+            <svg class="w-8 h-8 text-emerald-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13h-13L12 6.5z"/></svg>
+            <span class="text-2xl font-bold tracking-tight">Raynad</span>
         </div>
-        <!-- Mobile Menu -->
-        <div x-show="open" class="sm:hidden border-b border-gray-200 bg-white" id="mobile-menu" style="display: none;">
-            <div class="pt-2 pb-3 space-y-1">
-                <a href="#profil" class="block pl-3 pr-4 py-2 text-base font-medium text-gray-600 hover:text-teal-800 hover:bg-teal-50">Profil</a>
-                <a href="#tenda" class="block pl-3 pr-4 py-2 text-base font-medium text-gray-600 hover:text-teal-800 hover:bg-teal-50">Tipe Tenda</a>
-                <a href="#fasilitas" class="block pl-3 pr-4 py-2 text-base font-medium text-gray-600 hover:text-teal-800 hover:bg-teal-50">Fasilitas</a>
-            </div>
+        <div class="hidden md:flex items-center gap-8 font-medium text-sm">
+            <a href="#" class="hover:text-emerald-300 transition">Destinations</a>
+            <a href="#" class="hover:text-emerald-300 transition">Experiences</a>
+            <a href="#" class="hover:text-emerald-300 transition">Gallery</a>
+            <a href="#" class="hover:text-emerald-300 transition">Contact</a>
+        </div>
+        <div>
+            <a href="/admin" class="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-5 py-2.5 rounded-full text-sm font-semibold transition border border-white/30">
+                Staff Login
+            </a>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <div class="relative bg-gray-900 overflow-hidden">
-        <div class="absolute inset-0">
-            <img class="w-full h-full object-cover opacity-60" src="https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" alt="Pemandangan camping di alam terbuka">
-            <div class="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/40 to-transparent"></div>
-        </div>
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 lg:py-48 flex flex-col items-center text-center">
-            <span class="text-teal-400 font-semibold tracking-wider uppercase text-sm mb-4">Pengalaman Menginap di Alam Bebas</span>
-            <h1 class="text-4xl tracking-tight font-extrabold text-white sm:text-5xl md:text-6xl lg:text-7xl mb-6">
-                Raynad <span class="text-teal-400">Hospitality</span> Camping
-            </h1>
-            <p class="mt-4 max-w-2xl text-lg text-gray-200 sm:text-xl">
-                Menyediakan 32 unit tenda berbagai tipe untuk kebutuhan liburan Anda, lengkap dengan fasilitas restoran dan layanan pre-order. Nikmati keindahan alam tanpa repot.
-            </p>
-            <div class="mt-10 max-w-sm sm:max-w-none flex justify-center gap-4">
-                <a href="#tenda" class="flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700 md:py-4 md:text-lg md:px-10 transition">
-                    Lihat Tipe Tenda
-                </a>
-            </div>
+    <header class="hero-bg h-[85vh] relative flex flex-col items-center justify-center text-center px-4">
+        <h1 class="text-5xl md:text-7xl font-extrabold text-white leading-tight max-w-4xl tracking-tight mb-6">
+            Find Your Perfect <br><span class="text-emerald-400 font-serif italic font-normal">Wild Retreat</span>
+        </h1>
+        <p class="text-lg md:text-xl text-gray-200 max-w-2xl mb-12 font-light">
+            Escape the ordinary. Experience luxury lodging in the heart of nature, tailored for your ultimate relaxation.
+        </p>
+    </header>
+
+    <!-- Floating Booking Bar -->
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 relative -mt-16 z-20">
+        <div class="glass-panel rounded-3xl shadow-2xl p-4 md:p-8 border border-gray-100">
+            <form action="{{ route('home') }}" method="GET" class="flex flex-col md:flex-row gap-4 items-end">
+                <div class="w-full md:w-1/3">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Check In</label>
+                    <input type="date" name="check_in" value="{{ request('check_in', date('Y-m-d')) }}" class="w-full border-0 bg-gray-50 rounded-xl px-4 py-3.5 text-gray-900 font-medium focus:ring-2 focus:ring-emerald-500 transition">
+                </div>
+                <div class="w-full md:w-1/3">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Check Out</label>
+                    <input type="date" name="check_out" value="{{ request('check_out', date('Y-m-d', strtotime('+1 day'))) }}" class="w-full border-0 bg-gray-50 rounded-xl px-4 py-3.5 text-gray-900 font-medium focus:ring-2 focus:ring-emerald-500 transition">
+                </div>
+                <div class="w-full md:w-1/4">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Guests</label>
+                    <div class="relative">
+                        <input type="number" name="guests" value="{{ request('guests', 2) }}" min="1" class="w-full border-0 bg-gray-50 rounded-xl px-4 py-3.5 text-gray-900 font-medium focus:ring-2 focus:ring-emerald-500 transition">
+                        <div class="absolute right-4 top-3.5 text-gray-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-full md:w-1/4">
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-6 rounded-xl transition shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2">
+                        <span>Check Availability</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!-- Profil Singkat -->
-    <section id="profil" class="py-20 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="lg:grid lg:grid-cols-2 lg:gap-16 items-center">
-                <div>
-                    <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl mb-6">Fasilitas Lengkap untuk Liburan Anda</h2>
-                    <p class="text-lg text-gray-600 mb-6 leading-relaxed">
-                        Raynad Camping berlokasi di dataran tinggi dengan udara sejuk, menawarkan 7 tipe tenda yang bisa disesuaikan dengan kebutuhan mulai dari rombongan kecil hingga grup. 
-                    </p>
-                    <p class="text-lg text-gray-600 leading-relaxed mb-8">
-                        Fasilitas mencakup area parkir luas, restoran / coffeeshop di dalam area, kamar mandi umum bersih dengan air hangat, dan keamanan 24 jam. Anda juga bisa langsung memesan makanan via QR code dari tenda Anda.
-                    </p>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="flex items-center text-gray-700">
-                            <svg class="h-6 w-6 text-teal-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                            Resto & Coffee Shop
+    @if(request()->has('check_in'))
+    <!-- Booking Results Section -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 mt-12 mb-8">
+        <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between">
+            <div>
+                <h3 class="text-emerald-800 font-bold text-lg">Tersedia {{ count($unitTypes) }} Tipe Tenda</h3>
+                <p class="text-emerald-600 text-sm mt-1">Untuk tanggal {{ request('check_in') }} s/d {{ request('check_out') }}, {{ request('guests') }} Tamu</p>
+            </div>
+            <a href="/" class="text-emerald-700 font-medium text-sm hover:underline mt-4 sm:mt-0">Reset Pencarian</a>
+        </div>
+    </section>
+    @endif
+
+    <!-- Discover Section -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 py-24">
+        <div class="flex justify-between items-end mb-12">
+            <div>
+                <h4 class="text-emerald-600 font-bold tracking-widest uppercase text-sm mb-2">Our Accommodations</h4>
+                <h2 class="text-4xl font-extrabold text-gray-900 tracking-tight">Exclusive Lodges</h2>
+            </div>
+            <div class="hidden sm:block">
+                <button class="flex items-center gap-2 text-gray-600 hover:text-emerald-600 font-medium transition">
+                    View all lodges <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            @forelse($unitTypes as $type)
+                <!-- Card -->
+                <div class="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl transition duration-300 ease-in-out transform hover:-translate-y-1">
+                    <div class="relative h-64 overflow-hidden">
+                        @if($type->photos->count() > 0)
+                            <img src="{{ Storage::url($type->photos->first()->photo_path) }}" alt="{{ $type->name }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        @else
+                            <img src="https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?q=80&w=800&auto=format&fit=crop" alt="Lodge" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        @endif
+                        
+                        <div class="absolute top-4 right-4 bg-white/90 backdrop-blur text-gray-900 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path></svg>
+                            Up to {{ $type->capacity }} Guests
                         </div>
-                        <div class="flex items-center text-gray-700">
-                            <svg class="h-6 w-6 text-teal-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                            Kamar Mandi Air Hangat
+                    </div>
+                    
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-2xl font-bold text-gray-900 group-hover:text-emerald-600 transition">{{ $type->name }}</h3>
                         </div>
-                        <div class="flex items-center text-gray-700">
-                            <svg class="h-6 w-6 text-teal-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                            Area Parkir Luas
+                        
+                        <p class="text-gray-500 text-sm mb-6 line-clamp-2">
+                            {{ $type->description ?? 'Nikmati pengalaman menginap tak terlupakan dengan fasilitas lengkap di tengah keindahan alam.' }}
+                        </p>
+                        
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            @if($type->facilities)
+                                @foreach(array_slice($type->facilities, 0, 3) as $facility)
+                                    <span class="text-xs bg-gray-50 text-gray-600 px-2.5 py-1 rounded-md border border-gray-100">{{ $facility }}</span>
+                                @endforeach
+                                @if(count($type->facilities) > 3)
+                                    <span class="text-xs bg-gray-50 text-gray-600 px-2.5 py-1 rounded-md border border-gray-100">+{{ count($type->facilities) - 3 }}</span>
+                                @endif
+                            @endif
                         </div>
-                        <div class="flex items-center text-gray-700">
-                            <svg class="h-6 w-6 text-teal-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                            QR Order Makanan
+                        
+                        <div class="flex items-center justify-between pt-4 border-t border-gray-50">
+                            <div>
+                                <span class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Mulai dari</span>
+                                <div class="text-xl font-extrabold text-emerald-600">
+                                    Rp {{ number_format($type->base_price_weekday, 0, ',', '.') }}<span class="text-sm text-gray-400 font-normal">/mlm</span>
+                                </div>
+                            </div>
+                            
+                            @if(request()->has('check_in'))
+                                <a href="{{ route('tenda.show', ['slug' => $type->slug, 'check_in' => request('check_in'), 'check_out' => request('check_out'), 'guests' => request('guests')]) }}" class="bg-gray-900 hover:bg-emerald-600 text-white w-12 h-12 flex items-center justify-center rounded-full transition shadow-md hover:shadow-emerald-500/30">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                </a>
+                            @else
+                                <a href="{{ route('tenda.show', $type->slug) }}" class="bg-gray-900 hover:bg-emerald-600 text-white w-12 h-12 flex items-center justify-center rounded-full transition shadow-md hover:shadow-emerald-500/30">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                </a>
+                            @endif
                         </div>
                     </div>
                 </div>
-                <div class="mt-12 lg:mt-0">
-                    <img class="rounded-xl shadow-xl object-cover w-full h-[400px]" src="https://images.unsplash.com/photo-1504280067389-9b9bb20ab20e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Fasilitas api unggun dan tenda">
+            @empty
+                <div class="col-span-full py-12 text-center bg-white rounded-3xl border border-gray-100">
+                    <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800">Tidak ada tenda tersedia</h3>
+                    <p class="text-gray-500 mt-2">Maaf, tidak ada tenda yang sesuai dengan kriteria pencarian Anda.</p>
                 </div>
-            </div>
+            @endforelse
         </div>
     </section>
 
-    <!-- Tipe Tenda -->
-    <section id="tenda" class="py-20 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">Pilihan Tipe Tenda</h2>
-                <p class="mt-4 text-xl text-gray-600">Total 32 unit tersedia. Pilih tenda yang sesuai dengan jumlah rombongan Anda.</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                @if(isset($unitTypes) && $unitTypes->count() > 0)
-                    @foreach($unitTypes as $type)
-                    <div class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition border border-gray-100 flex flex-col">
-                        <div class="h-48 bg-gray-200 relative">
-                            <!-- Placeholder image if no photo -->
-                            <img src="https://images.unsplash.com/photo-153756526675b-34abc6599aa2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="{{ $type->name }}" class="w-full h-full object-cover">
-                            <div class="absolute top-4 right-4 bg-white/90 backdrop-blur text-gray-800 text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-                                Kapasitas {{ $type->capacity }} Orang
-                            </div>
-                        </div>
-                        <div class="p-6 flex-1 flex flex-col">
-                            <h3 class="text-xl font-bold text-gray-900 mb-2">{{ $type->name }}</h3>
-                            <p class="text-gray-600 text-sm mb-4 flex-1 line-clamp-3">{{ $type->description ?? 'Tenda nyaman untuk menginap bersama keluarga.' }}</p>
-                            
-                            <div class="flex flex-wrap gap-2 mb-6">
-                                @if(is_array($type->facilities))
-                                    @foreach(array_slice($type->facilities, 0, 3) as $fasilitas)
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
-                                            {{ $fasilitas }}
-                                        </span>
-                                    @endforeach
-                                    @if(count($type->facilities) > 3)
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-500">
-                                            +{{ count($type->facilities) - 3 }} lainnya
-                                        </span>
-                                    @endif
-                                @endif
-                            </div>
-
-                            <div class="flex justify-between items-end mt-auto pt-4 border-t border-gray-100">
-                                <div>
-                                    <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Mulai dari</p>
-                                    <p class="text-xl font-bold text-teal-700">Rp {{ number_format($type->base_price_weekday, 0, ',', '.') }}<span class="text-sm text-gray-500 font-normal">/malam</span></p>
-                                </div>
-                                <a href="/tenda/{{ $type->slug }}" class="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded text-sm font-medium transition">Detail</a>
-                            </div>
-                        </div>
-                    </div>
-                    @endforeach
-                @else
-                    <!-- Tampilan statis jika database kosong -->
-                    <div class="col-span-full text-center py-12 bg-white rounded-xl border border-gray-100">
-                        <p class="text-gray-500">Data tipe tenda belum tersedia di database. Menampilkan contoh format.</p>
-                    </div>
+    <!-- Features Section -->
+    <section class="bg-emerald-900 text-white py-24 relative overflow-hidden">
+        <!-- Pattern background -->
+        <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 32px 32px;"></div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                <div>
+                    <h4 class="text-emerald-400 font-bold tracking-widest uppercase text-sm mb-2">Why Raynad?</h4>
+                    <h2 class="text-4xl font-extrabold mb-6 leading-tight">Elevate your camping experience</h2>
+                    <p class="text-emerald-100/80 mb-8 text-lg font-light leading-relaxed">
+                        We blend the raw beauty of nature with the uncompromising comfort of a luxury resort. Wake up to bird songs, sleep under the stars, but never sacrifice a good night's rest.
+                    </p>
                     
-                    @php
-                    // Hardcode data dari PRD jika DB kosong (Pancar 11, Safari 6, Salak 5, Indian 5, Romance 2, Snail 2, Dome 1)
-                    $dummies = [
-                        ['name' => 'Tenda Pancar', 'cap' => 4, 'price' => 350000, 'img' => 'https://images.unsplash.com/photo-1517824806704-9040b037703b?w=600&q=80'],
-                        ['name' => 'Tenda Safari', 'cap' => 6, 'price' => 500000, 'img' => 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?w=600&q=80'],
-                        ['name' => 'Tenda Indian', 'cap' => 4, 'price' => 400000, 'img' => 'https://images.unsplash.com/photo-1478827536114-da961b7f86d2?w=600&q=80'],
-                    ];
-                    @endphp
-
-                    @foreach($dummies as $dummy)
-                    <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 flex flex-col">
-                        <div class="h-48 relative">
-                            <img src="{{ $dummy['img'] }}" class="w-full h-full object-cover">
-                            <div class="absolute top-4 right-4 bg-white/90 backdrop-blur text-gray-800 text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-                                Kapasitas {{ $dummy['cap'] }} Orang
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-4 text-emerald-400 backdrop-blur-sm">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.14 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg>
                             </div>
+                            <h4 class="font-bold mb-1">High-Speed WiFi</h4>
+                            <p class="text-sm text-emerald-100/60">Stay connected even in the wild.</p>
                         </div>
-                        <div class="p-6 flex-1 flex flex-col">
-                            <h3 class="text-xl font-bold text-gray-900 mb-2">{{ $dummy['name'] }}</h3>
-                            <p class="text-gray-600 text-sm mb-4 flex-1">Tenda eksklusif dengan kasur busa tebal, bantal, selimut, dan colokan listrik. Nyaman untuk keluarga.</p>
-                            
-                            <div class="flex flex-wrap gap-2 mb-6">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700">Matras Busa</span>
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700">Stop Kontak</span>
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700">Lampu</span>
+                        <div>
+                            <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-4 text-emerald-400 backdrop-blur-sm">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path></svg>
                             </div>
-
-                            <div class="flex justify-between items-end mt-auto pt-4 border-t border-gray-100">
-                                <div>
-                                    <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Mulai dari</p>
-                                    <p class="text-xl font-bold text-teal-700">Rp {{ number_format($dummy['price'], 0, ',', '.') }}<span class="text-sm text-gray-500 font-normal">/malam</span></p>
-                                </div>
-                                <button class="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded text-sm font-medium transition">Detail</button>
-                            </div>
+                            <h4 class="font-bold mb-1">Private Bonfire</h4>
+                            <p class="text-sm text-emerald-100/60">Cozy evenings by your own fire.</p>
                         </div>
                     </div>
-                    @endforeach
-                @endif
+                </div>
+                
+                <div class="relative">
+                    <div class="rounded-3xl overflow-hidden shadow-2xl relative z-10">
+                        <img src="https://images.unsplash.com/photo-1533873984035-25970ab07461?q=80&w=1000&auto=format&fit=crop" alt="Experience" class="w-full h-auto">
+                    </div>
+                    <!-- Decorative element -->
+                    <div class="absolute -bottom-8 -left-8 w-64 h-64 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 z-0"></div>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer class="bg-gray-900 pt-16 pb-8 border-t border-gray-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
-                <div>
-                    <span class="font-bold text-2xl text-white tracking-tight">Raynad Camping</span>
-                    <p class="mt-4 text-gray-400 text-sm leading-relaxed">
-                        PT Raynad Cipta Makmur.<br>
-                        Pengalaman hospitality camping terbaik dengan fasilitas lengkap dan kemudahan order terintegrasi.
-                    </p>
-                </div>
-                <div>
-                    <h3 class="text-sm font-semibold text-gray-200 tracking-wider uppercase mb-4">Kontak & Lokasi</h3>
-                    <ul class="space-y-3 text-sm text-gray-400">
-                        <li class="flex items-start">
-                            <svg class="h-5 w-5 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            Jalan Raya Pegunungan No. 88,<br>Kawasan Wisata, Jawa Barat
-                        </li>
-                        <li class="flex items-center">
-                            <svg class="h-5 w-5 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                            0812-3456-7890
-                        </li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="text-sm font-semibold text-gray-200 tracking-wider uppercase mb-4">Menu Bantuan</h3>
-                    <ul class="space-y-3 text-sm text-gray-400">
-                        <li><a href="#" class="hover:text-white transition">Cara Booking</a></li>
-                        <li><a href="#" class="hover:text-white transition">Kebijakan Refund</a></li>
-                        <li><a href="#" class="hover:text-white transition">Syarat & Ketentuan</a></li>
-                    </ul>
-                </div>
+    <footer class="bg-gray-950 text-gray-400 py-12 border-t border-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-2 text-white">
+                <svg class="w-6 h-6 text-emerald-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13h-13L12 6.5z"/></svg>
+                <span class="text-xl font-bold tracking-tight">Raynad</span>
             </div>
-            <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
-                <p class="text-sm text-gray-500">
-                    &copy; 2026 PT Raynad Cipta Makmur. All rights reserved.
-                </p>
+            <p class="text-sm">© {{ date('Y') }} Raynad Camping. All rights reserved.</p>
+            <div class="flex gap-4">
+                <a href="#" class="hover:text-white transition">Privacy</a>
+                <a href="#" class="hover:text-white transition">Terms</a>
+                <a href="/admin" class="hover:text-emerald-400 transition font-medium">Admin Portal</a>
             </div>
         </div>
     </footer>
-
 </body>
 </html>

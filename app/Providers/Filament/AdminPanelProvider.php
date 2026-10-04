@@ -30,12 +30,18 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->brandName('Raynad Camping')
             ->colors([
-                'primary' => Color::Teal,
+                'primary' => Color::Emerald,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
-                Dashboard::class,
+                // Dashboard is auto-discovered
+            ])
+            ->navigationGroups([
+                'Operasional',
+                'Manajemen Tenda',
+                'SDM & Karyawan',
+                'Laporan & Keuangan',
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([

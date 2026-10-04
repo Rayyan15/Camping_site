@@ -8,9 +8,15 @@ use Illuminate\Http\Request;
 
 class LandingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $unitTypes = UnitType::with('photos')->where('capacity', '>', 0)->get();
+        $query = UnitType::with('photos')->where('capacity', '>', 0);
+        
+        if ($request->has('guests') && $request->guests > 0) {
+            $query->where('capacity', '>=', $request->guests);
+        }
+        
+        $unitTypes = $query->get();
         return view('welcome', compact('unitTypes'));
     }
 }
