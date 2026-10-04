@@ -69,6 +69,11 @@ class BookingsTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->emptyStateHeading('Belum ada data')
+            ->emptyStateDescription('Data akan muncul di sini setelah ditambahkan.')
+            ->emptyStateIcon('heroicon-o-inbox')
+            ->striped()
+            ->defaultSort('created_at', 'desc');
     }
 }

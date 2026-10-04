@@ -12,9 +12,9 @@ class AddonForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Section::make('Layanan Tambahan (Addon)')
+                \Filament\Schemas\Components\Section::make('Layanan Tambahan (Addon)')
                     ->schema([
-                        \Filament\Forms\Components\Grid::make(2)->schema([
+                        \Filament\Schemas\Components\Grid::make(2)->schema([
                             TextInput::make('name')
                                 ->label('Nama Layanan')
                                 ->required(),

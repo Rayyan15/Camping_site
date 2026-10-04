@@ -10,10 +10,10 @@ class CleaningLogForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Section::make('Laporan Kebersihan')
+                \Filament\Schemas\Components\Section::make('Laporan Kebersihan')
                     ->description('Catatan merapihkan dan membersihkan tenda oleh OB/Karyawan')
                     ->schema([
-                        \Filament\Forms\Components\Grid::make(2)->schema([
+                        \Filament\Schemas\Components\Grid::make(2)->schema([
                             \Filament\Forms\Components\Select::make('unit_id')
                                 ->label('Tenda')
                                 ->relationship('unit', 'name')

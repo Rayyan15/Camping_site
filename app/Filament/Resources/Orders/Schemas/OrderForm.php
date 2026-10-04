@@ -13,9 +13,9 @@ class OrderForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Section::make('Data Pesanan Makanan/Layanan')
+                \Filament\Schemas\Components\Section::make('Data Pesanan Makanan/Layanan')
                     ->schema([
-                        \Filament\Forms\Components\Grid::make(2)->schema([
+                        \Filament\Schemas\Components\Grid::make(2)->schema([
                             TextInput::make('code')
                                 ->label('Kode Pesanan')
                                 ->disabled()

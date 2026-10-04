@@ -12,10 +12,10 @@ class UnitTypeForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Section::make('Informasi Utama')
+                \Filament\Schemas\Components\Section::make('Informasi Utama')
                     ->description('Kelola detail tipe tenda')
                     ->schema([
-                        \Filament\Forms\Components\Grid::make(2)->schema([
+                        \Filament\Schemas\Components\Grid::make(2)->schema([
                             TextInput::make('name')
                                 ->label('Nama Tenda')
                                 ->required(),
@@ -38,9 +38,9 @@ class UnitTypeForm
                         ]),
                     ]),
 
-                \Filament\Forms\Components\Section::make('Harga')
+                \Filament\Schemas\Components\Section::make('Harga')
                     ->schema([
-                        \Filament\Forms\Components\Grid::make(2)->schema([
+                        \Filament\Schemas\Components\Grid::make(2)->schema([
                             TextInput::make('base_price_weekday')
                                 ->label('Harga Weekday')
                                 ->prefix('Rp')

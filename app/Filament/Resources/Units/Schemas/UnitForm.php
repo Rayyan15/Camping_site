@@ -11,9 +11,9 @@ class UnitForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Section::make('Data Tenda')
+                \Filament\Schemas\Components\Section::make('Data Tenda')
                     ->schema([
-                        \Filament\Forms\Components\Grid::make(2)->schema([
+                        \Filament\Schemas\Components\Grid::make(2)->schema([
                             \Filament\Forms\Components\Select::make('unit_type_id')
                                 ->label('Tipe Tenda')
                                 ->relationship('unitType', 'name')

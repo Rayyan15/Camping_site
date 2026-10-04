@@ -14,9 +14,9 @@ class BookingForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Section::make('Informasi Pelanggan & Kode')
+                \Filament\Schemas\Components\Section::make('Informasi Pelanggan & Kode')
                     ->schema([
-                        \Filament\Forms\Components\Grid::make(2)->schema([
+                        \Filament\Schemas\Components\Grid::make(2)->schema([
                             TextInput::make('code')
                                 ->label('Kode Booking')
                                 ->disabled()
@@ -29,9 +29,9 @@ class BookingForm
                         ])
                     ]),
 
-                \Filament\Forms\Components\Section::make('Detail Menginap')
+                \Filament\Schemas\Components\Section::make('Detail Menginap')
                     ->schema([
-                        \Filament\Forms\Components\Grid::make(3)->schema([
+                        \Filament\Schemas\Components\Grid::make(3)->schema([
                             DatePicker::make('check_in')
                                 ->label('Check In')
                                 ->required(),
@@ -58,9 +58,9 @@ class BookingForm
                         ])
                     ]),
 
-                \Filament\Forms\Components\Section::make('Rincian Biaya')
+                \Filament\Schemas\Components\Section::make('Rincian Biaya')
                     ->schema([
-                        \Filament\Forms\Components\Grid::make(2)->schema([
+                        \Filament\Schemas\Components\Grid::make(2)->schema([
                             TextInput::make('subtotal')
                                 ->prefix('Rp')
                                 ->disabled()

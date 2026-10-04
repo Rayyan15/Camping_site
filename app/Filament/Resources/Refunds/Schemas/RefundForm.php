@@ -11,9 +11,9 @@ class RefundForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Section::make('Data Pengembalian Dana (Refund)')
+                \Filament\Schemas\Components\Section::make('Data Pengembalian Dana (Refund)')
                     ->schema([
-                        \Filament\Forms\Components\Grid::make(2)->schema([
+                        \Filament\Schemas\Components\Grid::make(2)->schema([
                             \Filament\Forms\Components\Select::make('booking_id')
                                 ->label('Terkait Booking')
                                 ->relationship('booking', 'code')

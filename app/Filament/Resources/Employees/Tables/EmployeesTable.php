@@ -1,33 +1,31 @@
 <?php
 
-namespace App\Filament\Resources\Addons\Tables;
+namespace App\Filament\Resources\Employees\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
-class AddonsTable
+class EmployeesTable
 {
     public static function configure(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('name')
-                    ->label('Layanan Tambahan')
-                    ->searchable(),
-                TextColumn::make('price')
-                    ->label('Harga')
-                    ->money('IDR', locale: 'id')
+                TextColumn::make('user_id')
+                    ->numeric()
                     ->sortable(),
-                TextColumn::make('unit')
-                    ->label('Satuan')
+                TextColumn::make('name')
                     ->searchable(),
-                IconColumn::make('is_active')
-                    ->label('Tersedia')
-                    ->boolean(),
+                TextColumn::make('position')
+                    ->searchable(),
+                TextColumn::make('fingerprint_id')
+                    ->searchable(),
+                TextColumn::make('shift_id')
+                    ->numeric()
+                    ->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -47,11 +45,6 @@ class AddonsTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-            ])
-            ->emptyStateHeading('Belum ada data')
-            ->emptyStateDescription('Data akan muncul di sini setelah ditambahkan.')
-            ->emptyStateIcon('heroicon-o-inbox')
-            ->striped()
-            ->defaultSort('created_at', 'desc');
+            ]);
     }
 }

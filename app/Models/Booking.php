@@ -25,4 +25,9 @@ class Booking extends Model
     {
         return $this->belongsTo(Customer::class);
     }
+
+    public function units()
+    {
+        return $this->belongsToMany(Unit::class, 'booking_units');
+    }
 }
