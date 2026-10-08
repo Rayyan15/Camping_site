@@ -2,71 +2,55 @@
 
 namespace App\Filament\Resources\Orders\Schemas;
 
+use App\Models\Order;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
+/**
+ * Orders are created by the QR page, the booking flow, or the walk-in page, which price them from
+ * the menu. Here staff can only correct who and where; money and status move through services.
+ */
 class OrderForm
 {
     public static function configure(Schema $schema): Schema
     {
         return $schema
             ->components([
-                \Filament\Schemas\Components\Section::make('Data Pesanan Makanan/Layanan')
+                Section::make('Pesanan')
                     ->schema([
-                        \Filament\Schemas\Components\Grid::make(2)->schema([
-                            TextInput::make('code')
-                                ->label('Kode Pesanan')
-                                ->disabled()
-                                ->required(),
-                            \Filament\Forms\Components\Select::make('source')
-                                ->label('Sumber Pesanan')
+                        Grid::make(2)->schema([
+                            TextInput::make('code')->label('Kode pesanan')->disabled(),
+                            Select::make('source')
+                                ->label('Sumber')
                                 ->options([
-                                    'pre_order' => 'Pre-Order (Saat Booking)',
-                                    'resto' => 'Restoran',
-                                    'tenda' => 'Layanan Antar ke Tenda'
+                                    Order::SOURCE_PREORDER => 'Pre-order',
+                                    Order::SOURCE_QR => 'QR',
+                                    Order::SOURCE_WALKIN => 'Walk-in',
                                 ])
-                                ->required(),
-                            \Filament\Forms\Components\Select::make('booking_id')
-                                ->label('Terkait Booking')
+                                ->disabled(),
+                            TextInput::make('customer_name')->label('Nama pemesan')->maxLength(80),
+                            TextInput::make('customer_phone')->label('Nomor telepon')->maxLength(32),
+                            Select::make('booking_id')
+                                ->label('Booking terkait')
                                 ->relationship('booking', 'code')
-                                ->searchable()
-                                ->default(null),
-                            \Filament\Forms\Components\Select::make('dining_spot_id')
-                                ->label('Tempat Makan')
+                                ->disabled(),
+                            Select::make('dining_spot_id')
+                                ->label('Meja atau tenda')
                                 ->relationship('diningSpot', 'name')
-                                ->default(null),
-                            DateTimePicker::make('scheduled_at')
-                                ->label('Waktu Diantar/Disajikan'),
-                            \Filament\Forms\Components\Select::make('status')
-                                ->label('Status Pesanan')
-                                ->options([
-                                    'baru' => 'Pesanan Baru',
-                                    'diproses' => 'Sedang Diproses',
-                                    'diantar' => 'Sedang Diantar',
-                                    'selesai' => 'Selesai'
-                                ])
-                                ->required()
-                                ->default('baru'),
-                            TextInput::make('total')
-                                ->label('Total')
-                                ->prefix('Rp')
-                                ->required()
-                                ->numeric(),
-                            \Filament\Forms\Components\Select::make('payment_status')
-                                ->label('Status Pembayaran')
-                                ->options([
-                                    'unpaid' => 'Belum Lunas',
-                                    'paid' => 'Lunas'
-                                ])
-                                ->required()
-                                ->default('unpaid'),
-                            Toggle::make('bill_to_booking')
-                                ->label('Tagihkan ke Billing Tenda')
-                                ->required(),
-                        ])
-                    ])
+                                ->searchable()
+                                ->preload(),
+                            DateTimePicker::make('scheduled_at')->label('Waktu saji')->disabled(),
+                            TextInput::make('total')->label('Total')->prefix('Rp')->numeric()->disabled(),
+                            TextInput::make('status')->label('Status')->disabled(),
+                            TextInput::make('payment_status')->label('Pembayaran')->disabled(),
+                            Toggle::make('bill_to_booking')->label('Ditagihkan ke booking')->disabled(),
+                        ]),
+                    ]),
             ]);
     }
 }

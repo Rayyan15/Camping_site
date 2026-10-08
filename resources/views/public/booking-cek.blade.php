@@ -1,140 +1,184 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <title>Selesaikan Pesanan - {{ $unitType->name }}</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #FAFAFA; }
-        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
-    </style>
-</head>
-<body class="text-gray-800 antialiased selection:bg-emerald-500 selection:text-white">
-    <!-- Navbar Minimalis -->
-    <nav class="bg-gray-950 shadow-sm w-full z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-20 items-center">
-                <a href="/" class="flex items-center text-white hover:text-emerald-400 transition gap-2">
-                    <svg class="h-6 w-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                    <span class="font-semibold text-sm tracking-wider uppercase">Kembali ke Beranda</span>
-                </a>
-                <div class="flex items-center gap-2 text-white">
-                    <svg class="w-8 h-8 text-emerald-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13h-13L12 6.5z"/></svg>
-                    <span class="font-bold text-xl tracking-tight">Raynad</span>
-                </div>
-            </div>
-        </div>
-    </nav>
-    <div class="max-w-4xl mx-auto px-4 py-12">
-        <div class="flex items-center gap-4 mb-8">
-            <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center font-bold text-xl">2</div>
-            <div>
-                <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Lengkapi Detail Pemesanan</h1>
-                <p class="text-gray-500 mt-1 font-medium">Langkah terakhir sebelum liburan impian Anda.</p>
-            </div>
-        </div>
-        
+@extends('layouts.public')
+
+@section('title', 'Lengkapi pemesanan '.$unitType->name.' - '.config('site.name'))
+@section('noindex', '1')
+
+@php
+    $checkInDate = \Carbon\CarbonImmutable::parse($stay['check_in'])->locale('id');
+    $checkOutDate = \Carbon\CarbonImmutable::parse($stay['check_out'])->locale('id');
+    $rupiah = fn (int $amount) => 'Rp '.number_format($amount, 0, ',', '.');
+    $maxUnits = min($availableUnits->count(), config('booking.max_units_per_booking'));
+    $maxAddon = config('booking.max_addon_quantity');
+    $maxFood = config('booking.max_preorder_quantity');
+@endphp
+
+@section('content')
+    <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:py-14">
+        <p class="eyebrow text-ember-dark">Langkah 2 dari 3</p>
+        <h1 class="font-display mt-2 text-3xl font-semibold text-forest-900 sm:text-4xl">Lengkapi pemesanan</h1>
+        <p class="mt-2 max-w-prose text-ink-soft">
+            {{ $unitType->name }}, {{ $checkInDate->translatedFormat('j F') }} sampai {{ $checkOutDate->translatedFormat('j F Y') }}
+            ({{ $nights }} malam). Unit ditahan {{ config('booking.hold_minutes') }} menit setelah Anda melanjutkan ke pembayaran.
+        </p>
+
         @if(session('error'))
-            <div class="bg-red-50 text-red-700 p-4 rounded-xl mb-8 border border-red-200 flex items-center gap-3 font-medium">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                {{ session('error') }}
+            <p class="mt-6 rounded-2xl bg-ember-soft px-5 py-4 font-semibold text-ember-dark" role="alert">{{ session('error') }}</p>
+        @endif
+
+        @if($errors->any())
+            <div class="mt-6 rounded-2xl bg-ember-soft px-5 py-4 text-sm text-ember-dark" role="alert">
+                <p class="font-bold">Mohon periksa kembali:</p>
+                <ul class="mt-1 list-disc space-y-0.5 pl-5">
+                    @foreach($errors->unique() as $message)<li>{{ $message }}</li>@endforeach
+                </ul>
             </div>
         @endif
 
         @if($isAvailable)
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Form -->
-                <div class="md:col-span-2">
-                    <form action="{{ route('booking.store') }}" method="POST" class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
-                        @csrf
-                        <input type="hidden" name="unit_type_id" value="{{ $unitType->id }}">
-                        <input type="hidden" name="check_in" value="{{ $request->check_in }}">
-                        <input type="hidden" name="check_out" value="{{ $request->check_out }}">
-                        <input type="hidden" name="guests" value="{{ $request->guests }}">
-                        
-                        <div class="bg-emerald-50 text-emerald-700 px-5 py-3 rounded-xl mb-8 border border-emerald-100 font-semibold flex items-center gap-3">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            Kabar Baik! Tersedia {{ $availableUnits->count() }} unit untuk tanggal tersebut.
-                        </div>
+            <form action="{{ route('booking.store') }}" method="POST" id="booking-form"
+                  data-nights="{{ $nights }}" data-unit-price="{{ $stayPrice }}" data-tax-rate="{{ $taxRate }}"
+                  class="mt-8 grid gap-8 lg:grid-cols-[1fr_21rem]">
+                @csrf
+                <input type="hidden" name="unit_type_id" value="{{ $unitType->id }}">
+                <input type="hidden" name="check_in" value="{{ $stay['check_in'] }}">
+                <input type="hidden" name="check_out" value="{{ $stay['check_out'] }}">
 
-                        <h3 class="font-extrabold text-lg text-gray-900 mb-5 border-b pb-2">Pilih Unit Spesifik (Opsional)</h3>
-                        <div class="space-y-3 mb-8">
-                            @foreach($availableUnits as $unit)
-                                <label class="flex items-center space-x-4 bg-gray-50 p-4 rounded-xl border border-gray-200 cursor-pointer hover:bg-emerald-50 transition hover:border-emerald-200">
-                                    <input type="checkbox" name="unit_ids[]" value="{{ $unit->id }}" class="h-5 w-5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500" {{ $loop->first ? 'checked' : '' }}>
-                                    <span class="text-base font-bold text-gray-900">{{ $unit->name }}</span>
-                                </label>
-                            @endforeach
-                        </div>
+                <div class="space-y-6">
+                    <section class="rounded-3xl border border-sand bg-[#fffdf8] p-6 sm:p-8" aria-labelledby="sec-unit">
+                        <h2 id="sec-unit" class="font-display text-xl font-semibold text-forest-900">Unit dan tamu</h2>
+                        <p class="mt-1 text-sm text-ink-soft">Tersedia {{ $availableUnits->count() }} unit {{ $unitType->name }}, muat {{ $unitType->capacity }} orang per unit.</p>
 
-                        <h3 class="font-extrabold text-lg text-gray-900 mb-5 border-b pb-2">Informasi Pemesan</h3>
-                        <div class="space-y-5 mb-8">
+                        <div class="mt-5 flex flex-wrap items-end gap-x-10 gap-y-5">
                             <div>
-                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nama Lengkap</label>
-                                <input type="text" name="customer_name" class="w-full border-0 bg-gray-50 rounded-xl px-4 py-3 text-gray-900 font-medium focus:ring-2 focus:ring-emerald-500 transition shadow-sm" required>
+                                <span class="field-label" id="lbl-qty">Jumlah unit</span>
+                                <x-stepper name="quantity" label="unit" :value="old('quantity', 1)" :min="1" :max="$maxUnits" role="units" />
                             </div>
-                            <div class="grid grid-cols-2 gap-5">
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email</label>
-                                    <input type="email" name="customer_email" class="w-full border-0 bg-gray-50 rounded-xl px-4 py-3 text-gray-900 font-medium focus:ring-2 focus:ring-emerald-500 transition shadow-sm" required>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">No. WhatsApp</label>
-                                    <input type="text" name="customer_phone" class="w-full border-0 bg-gray-50 rounded-xl px-4 py-3 text-gray-900 font-medium focus:ring-2 focus:ring-emerald-500 transition shadow-sm" required>
-                                </div>
+                            <div class="w-40">
+                                <label for="guests" class="field-label">Jumlah tamu</label>
+                                <input id="guests" type="number" name="guests" min="1" max="50" value="{{ old('guests', $stay['guests']) }}" required class="field-input">
                             </div>
                         </div>
+                    </section>
 
-                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-xl transition shadow-lg shadow-emerald-500/30 text-lg flex justify-center items-center gap-2">
-                            Konfirmasi & Lanjut Pembayaran
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                        </button>
-                    </form>
+                    <section class="rounded-3xl border border-sand bg-[#fffdf8] p-6 sm:p-8" aria-labelledby="sec-data">
+                        <h2 id="sec-data" class="font-display text-xl font-semibold text-forest-900">Data pemesan</h2>
+                        <div class="mt-5 space-y-4">
+                            <div>
+                                <label for="customer_name" class="field-label">Nama lengkap</label>
+                                <input id="customer_name" type="text" name="customer_name" value="{{ old('customer_name') }}" autocomplete="name" required class="field-input">
+                            </div>
+                            <div class="grid gap-4 sm:grid-cols-2">
+                                <div>
+                                    <label for="customer_phone" class="field-label">Nomor WhatsApp</label>
+                                    <input id="customer_phone" type="tel" name="customer_phone" value="{{ old('customer_phone') }}" autocomplete="tel" inputmode="tel" placeholder="0812 3456 7890" required class="field-input">
+                                </div>
+                                <div>
+                                    <label for="customer_email" class="field-label">Email</label>
+                                    <input id="customer_email" type="email" name="customer_email" value="{{ old('customer_email') }}" autocomplete="email" required class="field-input">
+                                </div>
+                            </div>
+                            <div>
+                                <label for="notes" class="field-label">Catatan (opsional)</label>
+                                <textarea id="notes" name="notes" rows="3" maxlength="500" class="field-input" placeholder="Perkiraan jam tiba, alergi makanan, permintaan khusus">{{ old('notes') }}</textarea>
+                            </div>
+                        </div>
+                    </section>
+
+                    @if($addons->isNotEmpty())
+                        <section class="rounded-3xl border border-sand bg-[#fffdf8] p-6 sm:p-8" aria-labelledby="sec-addon">
+                            <h2 id="sec-addon" class="font-display text-xl font-semibold text-forest-900">Tambahan</h2>
+                            <ul class="mt-4 divide-y divide-sand">
+                                @foreach($addons as $addon)
+                                    <li class="flex flex-wrap items-center justify-between gap-4 py-4 first:pt-0 last:pb-0">
+                                        <div>
+                                            <p class="font-bold text-forest-900" id="addon-{{ $addon->id }}">{{ $addon->name }}</p>
+                                            <p class="text-sm text-ink-soft">
+                                                {{ $rupiah($addon->price) }} {{ $addon->unit }}@if($addon->isPerNight()), dihitung {{ $nights }} malam @endif
+                                            </p>
+                                        </div>
+                                        <x-stepper :name="'addons['.$addon->id.']'" :label="$addon->name" :value="old('addons.'.$addon->id, 0)" :min="0" :max="$maxAddon" :price="$addon->price" :per-night="$addon->isPerNight()" role="addon" />
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </section>
+                    @endif
+
+                    @if($menuCategories->isNotEmpty())
+                        <details class="group rounded-3xl border border-sand bg-[#fffdf8]" id="preorder" @if(old('preorder')) open @endif>
+                            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 rounded-3xl p-6 sm:p-8 [&::-webkit-details-marker]:hidden">
+                                <span>
+                                    <span class="font-display block text-xl font-semibold text-forest-900">Pesan makanan dan minuman dari sekarang</span>
+                                    <span class="mt-1 block text-sm text-ink-soft">Opsional. Pilih menu dan jam penyajian, dapur menyiapkannya saat Anda tiba.</span>
+                                </span>
+                                <svg class="size-5 shrink-0 text-forest-800 transition group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </summary>
+
+                            <div class="space-y-8 border-t border-sand px-6 pb-8 pt-6 sm:px-8">
+                                @foreach($menuCategories as $category)
+                                    <div>
+                                        <h3 class="eyebrow text-sand-dark">{{ $category->name }}</h3>
+                                        <ul class="mt-3 divide-y divide-sand">
+                                            @foreach($category->items as $item)
+                                                @php $chosen = (int) old('preorder.'.$item->id.'.qty', 0); @endphp
+                                                <li class="py-4" data-menu-row>
+                                                    <div class="flex flex-wrap items-center justify-between gap-4">
+                                                        <div class="min-w-0 max-w-md">
+                                                            <p class="font-bold text-forest-900">{{ $item->name }}</p>
+                                                            @if($item->description)<p class="text-sm text-ink-soft">{{ $item->description }}</p>@endif
+                                                            <p class="mt-1 text-sm font-bold text-ember-dark">{{ $rupiah($item->price) }}</p>
+                                                        </div>
+                                                        <x-stepper :name="'preorder['.$item->id.'][qty]'" :label="$item->name" :value="$chosen" :min="0" :max="$maxFood" :price="$item->price" role="food" />
+                                                    </div>
+                                                    <div class="mt-3 grid max-w-md grid-cols-2 gap-3" data-serve @if($chosen < 1) hidden @endif>
+                                                        <div>
+                                                            <label for="sd-{{ $item->id }}" class="field-label">Tanggal saji</label>
+                                                            <select id="sd-{{ $item->id }}" name="preorder[{{ $item->id }}][serve_date]" class="field-input">
+                                                                @foreach($serveDates as $date)
+                                                                    <option value="{{ $date->toDateString() }}" @selected(old('preorder.'.$item->id.'.serve_date', $serveDates->first()->toDateString()) === $date->toDateString())>{{ $date->locale('id')->translatedFormat('D, j M') }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                        <div>
+                                                            <label for="st-{{ $item->id }}" class="field-label">Jam saji</label>
+                                                            <select id="st-{{ $item->id }}" name="preorder[{{ $item->id }}][serve_time]" class="field-input">
+                                                                @foreach($serveTimes as $time)
+                                                                    <option value="{{ $time }}" @selected(old('preorder.'.$item->id.'.serve_time', '12:00') === $time)>{{ $time }} WIB</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </details>
+                    @endif
                 </div>
 
-                <!-- Summary Card -->
-                <div class="md:col-span-1">
-                    <div class="bg-gray-900 text-white rounded-3xl p-6 shadow-2xl sticky top-6">
-                        <h3 class="font-bold text-lg mb-4 border-b border-gray-700 pb-3">Ringkasan Pesanan</h3>
-                        
-                        <div class="mb-4">
-                            <p class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Tipe Tenda</p>
-                            <p class="font-semibold text-lg text-emerald-400">{{ $unitType->name }}</p>
-                        </div>
-                        
-                        <div class="mb-4">
-                            <p class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Jadwal Inap</p>
-                            <p class="font-medium text-sm">{{ \Carbon\Carbon::parse($request->check_in)->format('d M Y') }} - {{ \Carbon\Carbon::parse($request->check_out)->format('d M Y') }}</p>
-                        </div>
-                        
-                        <div class="mb-6">
-                            <p class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Total Tamu</p>
-                            <p class="font-medium text-sm">{{ $request->guests }} Orang</p>
-                        </div>
+                <aside class="h-fit rounded-3xl bg-forest-900 p-6 text-cream lg:sticky lg:top-24" aria-label="Perkiraan biaya">
+                    <h2 class="font-display text-xl font-semibold">Perkiraan biaya</h2>
+                    <p class="mt-1 text-xs text-forest-300">Perkiraan sementara. Total akhir dihitung ulang oleh server saat pesanan dibuat.</p>
 
-                        <div class="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
-                            <p class="text-xs text-gray-300 font-bold uppercase tracking-wider mb-1">Estimasi Total</p>
-                            <p class="text-2xl font-extrabold text-white">Rp {{ number_format($unitType->base_price_weekday, 0, ',', '.') }}<span class="text-sm font-normal text-gray-400">/mlm</span></p>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-4 text-center">Harga akhir beserta pajak akan dikalkulasi di halaman pembayaran.</p>
-                    </div>
-                </div>
-            </div>
+                    <dl class="mt-5 space-y-3 text-sm">
+                        <div class="flex justify-between gap-4"><dt class="text-forest-300" data-est-label="units">Unit</dt><dd class="font-bold" data-est="units">-</dd></div>
+                        <div class="flex justify-between gap-4"><dt class="text-forest-300">Tambahan</dt><dd class="font-bold" data-est="addons">-</dd></div>
+                        <div class="flex justify-between gap-4"><dt class="text-forest-300">Makanan dan minuman</dt><dd class="font-bold" data-est="food">-</dd></div>
+                        <div class="flex justify-between gap-4"><dt class="text-forest-300">Pajak ({{ rtrim(rtrim(number_format($taxRate * 100, 2, ',', ''), '0'), ',') }}%)</dt><dd class="font-bold" data-est="tax">-</dd></div>
+                        <div class="flex justify-between gap-4 border-t border-forest-700 pt-3 text-base"><dt>Estimasi total</dt><dd class="font-bold" data-est="total" aria-live="polite">-</dd></div>
+                    </dl>
+
+                    <button type="submit" class="btn btn-primary mt-6 w-full">Lanjut ke pembayaran</button>
+                </aside>
+            </form>
+
         @else
-            <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-12 text-center max-w-lg mx-auto mt-12">
-                <div class="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <svg class="h-12 w-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                </div>
-                <h3 class="text-2xl font-extrabold text-gray-900 mb-3">Tenda Sudah Penuh</h3>
-                <p class="text-gray-500 mb-8 font-medium">Mohon maaf, tidak ada tenda <b>{{ $unitType->name }}</b> yang tersedia di tanggal yang Anda pilih. Silakan cari tipe tenda lain atau ubah jadwal liburan Anda.</p>
-                <a href="{{ route('home') }}" class="inline-flex items-center gap-2 bg-gray-900 text-white font-bold py-3 px-8 rounded-full hover:bg-emerald-600 transition shadow-lg">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                    Cari Tanggal Lain
-                </a>
+            <div class="mx-auto mt-10 max-w-lg rounded-3xl border border-sand bg-[#fffdf8] p-10 text-center">
+                <h2 class="font-display text-2xl font-semibold text-forest-900">Tenda sudah penuh</h2>
+                <p class="mt-3 text-ink-soft">Tidak ada tenda <strong>{{ $unitType->name }}</strong> yang tersedia di tanggal ini. Coba tipe lain atau ubah tanggal.</p>
+                <a href="{{ route('home') }}#cari" class="btn btn-primary mt-6">Cari tanggal lain</a>
             </div>
         @endif
     </div>
-</body>
-</html>
+@endsection

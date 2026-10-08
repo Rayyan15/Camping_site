@@ -2,7 +2,11 @@
 
 namespace App\Filament\Resources\Refunds\Schemas;
 
-use Filament\Forms\Components\TextInput;
+use App\Enums\BookingStatus;
+use App\Models\Booking;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class RefundForm
@@ -11,33 +15,20 @@ class RefundForm
     {
         return $schema
             ->components([
-                \Filament\Schemas\Components\Section::make('Data Pengembalian Dana (Refund)')
+                Section::make('Pengajuan pengembalian dana')
+                    ->description('Nominal dihitung otomatis dari kebijakan refund dan jumlah yang sudah dibayar.')
                     ->schema([
-                        \Filament\Schemas\Components\Grid::make(2)->schema([
-                            \Filament\Forms\Components\Select::make('booking_id')
-                                ->label('Terkait Booking')
-                                ->relationship('booking', 'code')
-                                ->required(),
-                            TextInput::make('amount')
-                                ->label('Nominal Pengembalian')
-                                ->prefix('Rp')
-                                ->required()
-                                ->numeric(),
-                            \Filament\Forms\Components\Select::make('status')
-                                ->label('Status Refund')
-                                ->options([
-                                    'requested' => 'Diajukan',
-                                    'approved' => 'Disetujui',
-                                    'rejected' => 'Ditolak',
-                                    'processed' => 'Sudah Ditransfer'
-                                ])
-                                ->required()
-                                ->default('requested'),
-                            \Filament\Forms\Components\Textarea::make('reason')
-                                ->label('Alasan Batal / Refund')
-                                ->columnSpanFull(),
-                        ])
-                    ])
+                        Select::make('booking_id')
+                            ->label('Booking lunas')
+                            ->options(fn () => Booking::where('status', BookingStatus::Paid)->orderBy('code')->pluck('code', 'id'))
+                            ->searchable()
+                            ->required(),
+                        Textarea::make('reason')
+                            ->label('Alasan pembatalan')
+                            ->required()
+                            ->minLength(5)
+                            ->maxLength(500),
+                    ]),
             ]);
     }
 }

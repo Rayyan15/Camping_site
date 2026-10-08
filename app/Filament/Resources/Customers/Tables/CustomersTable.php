@@ -17,9 +17,11 @@ class CustomersTable
                 TextColumn::make('name')
                     ->searchable(),
                 TextColumn::make('phone')
+                    ->visible(fn (): bool => (bool) auth()->user()?->can('view_customer_contact'))
                     ->searchable(),
                 TextColumn::make('email')
                     ->label('Email address')
+                    ->visible(fn (): bool => (bool) auth()->user()?->can('view_customer_contact'))
                     ->searchable(),
                 TextColumn::make('user_id')
                     ->numeric()

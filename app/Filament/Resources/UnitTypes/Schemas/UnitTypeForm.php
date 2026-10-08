@@ -2,8 +2,11 @@
 
 namespace App\Filament\Resources\UnitTypes\Schemas;
 
-use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class UnitTypeForm
@@ -12,10 +15,10 @@ class UnitTypeForm
     {
         return $schema
             ->components([
-                \Filament\Schemas\Components\Section::make('Informasi Utama')
+                Section::make('Informasi Utama')
                     ->description('Kelola detail tipe tenda')
                     ->schema([
-                        \Filament\Schemas\Components\Grid::make(2)->schema([
+                        Grid::make(2)->schema([
                             TextInput::make('name')
                                 ->label('Nama Tenda')
                                 ->required(),
@@ -26,7 +29,7 @@ class UnitTypeForm
                                 ->label('Kapasitas (Orang)')
                                 ->required()
                                 ->numeric(),
-                            \Filament\Forms\Components\TagsInput::make('facilities')
+                            TagsInput::make('facilities')
                                 ->label('Fasilitas Utama')
                                 ->placeholder('Ketik fasilitas lalu tekan Enter')
                                 ->separator(',')
@@ -38,9 +41,9 @@ class UnitTypeForm
                         ]),
                     ]),
 
-                \Filament\Schemas\Components\Section::make('Harga')
+                Section::make('Harga')
                     ->schema([
-                        \Filament\Schemas\Components\Grid::make(2)->schema([
+                        Grid::make(2)->schema([
                             TextInput::make('base_price_weekday')
                                 ->label('Harga Weekday')
                                 ->prefix('Rp')
@@ -51,7 +54,7 @@ class UnitTypeForm
                                 ->prefix('Rp')
                                 ->required()
                                 ->numeric(),
-                        ])
+                        ]),
                     ]),
             ]);
     }

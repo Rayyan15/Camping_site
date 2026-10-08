@@ -4,6 +4,8 @@ namespace App\Filament\Resources\Addons\Schemas;
 
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class AddonForm
@@ -12,9 +14,9 @@ class AddonForm
     {
         return $schema
             ->components([
-                \Filament\Schemas\Components\Section::make('Layanan Tambahan (Addon)')
+                Section::make('Layanan Tambahan (Addon)')
                     ->schema([
-                        \Filament\Schemas\Components\Grid::make(2)->schema([
+                        Grid::make(2)->schema([
                             TextInput::make('name')
                                 ->label('Nama Layanan')
                                 ->required(),
@@ -30,8 +32,8 @@ class AddonForm
                                 ->label('Tersedia / Aktif')
                                 ->required()
                                 ->default(true),
-                        ])
-                    ])
+                        ]),
+                    ]),
             ]);
     }
 }

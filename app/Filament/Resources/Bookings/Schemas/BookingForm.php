@@ -4,8 +4,11 @@ namespace App\Filament\Resources\Bookings\Schemas;
 
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class BookingForm
@@ -14,24 +17,24 @@ class BookingForm
     {
         return $schema
             ->components([
-                \Filament\Schemas\Components\Section::make('Informasi Pelanggan & Kode')
+                Section::make('Informasi Pelanggan & Kode')
                     ->schema([
-                        \Filament\Schemas\Components\Grid::make(2)->schema([
+                        Grid::make(2)->schema([
                             TextInput::make('code')
                                 ->label('Kode Booking')
                                 ->disabled()
                                 ->required(),
-                            \Filament\Forms\Components\Select::make('customer_id')
+                            Select::make('customer_id')
                                 ->label('Pelanggan')
                                 ->relationship('customer', 'name')
                                 ->searchable()
                                 ->required(),
-                        ])
+                        ]),
                     ]),
 
-                \Filament\Schemas\Components\Section::make('Detail Menginap')
+                Section::make('Detail Menginap')
                     ->schema([
-                        \Filament\Schemas\Components\Grid::make(3)->schema([
+                        Grid::make(3)->schema([
                             DatePicker::make('check_in')
                                 ->label('Check In')
                                 ->required(),
@@ -42,25 +45,25 @@ class BookingForm
                                 ->label('Jumlah Tamu')
                                 ->required()
                                 ->numeric(),
-                            \Filament\Forms\Components\Select::make('status')
+                            Select::make('status')
                                 ->label('Status Booking')
                                 ->options([
                                     'pending_payment' => 'Menunggu Pembayaran',
                                     'confirmed' => 'Terkonfirmasi (Sudah Bayar)',
                                     'cancelled' => 'Dibatalkan',
-                                    'completed' => 'Selesai / Check Out'
+                                    'completed' => 'Selesai / Check Out',
                                 ])
                                 ->required()
                                 ->default('pending_payment'),
                             DateTimePicker::make('hold_expires_at')
                                 ->label('Batas Waktu Hold')
                                 ->disabled(),
-                        ])
+                        ]),
                     ]),
 
-                \Filament\Schemas\Components\Section::make('Rincian Biaya')
+                Section::make('Rincian Biaya')
                     ->schema([
-                        \Filament\Schemas\Components\Grid::make(2)->schema([
+                        Grid::make(2)->schema([
                             TextInput::make('subtotal')
                                 ->prefix('Rp')
                                 ->disabled()
@@ -86,7 +89,7 @@ class BookingForm
                                 ->label('Catatan Tambahan')
                                 ->default(null)
                                 ->columnSpanFull(),
-                        ])
+                        ]),
                     ]),
             ]);
     }

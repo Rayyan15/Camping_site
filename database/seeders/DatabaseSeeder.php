@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -11,24 +10,25 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed the application's database.
+     * Demo data exists only for local and testing. Every other environment, production above all,
+     * receives the minimal ProductionSeeder and never any demo accounts, tents or menu.
      */
     public function run(): void
     {
-        $this->call(\Database\Seeders\RoleSeeder::class);
+        if (! app()->environment(['local', 'testing'])) {
+            $this->call(ProductionSeeder::class);
 
-        // Kebijakan refund (H+1 minggu / >7 hari = 100%)
-        \App\Models\RefundPolicy::firstOrCreate([
-            'min_days_before' => 7,
-            'percent' => 100
-        ]);
-        \App\Models\RefundPolicy::firstOrCreate([
-            'min_days_before' => 3,
-            'percent' => 50
-        ]);
-        \App\Models\RefundPolicy::firstOrCreate([
-            'min_days_before' => 0,
-            'percent' => 0
+            return;
+        }
+
+        $this->call([
+            RoleSeeder::class,
+            UnitTypeSeeder::class,
+            AddonSeeder::class,
+            MenuSeeder::class,
+            DiningSpotSeeder::class,
+            DemoUserSeeder::class,
+            RefundPolicySeeder::class,
         ]);
     }
 }

@@ -15,10 +15,12 @@ class CustomerForm
                     ->required(),
                 TextInput::make('phone')
                     ->tel()
+                    ->visible(fn (): bool => (bool) auth()->user()?->can('view_customer_contact'))
                     ->required(),
                 TextInput::make('email')
                     ->label('Email address')
                     ->email()
+                    ->visible(fn (): bool => (bool) auth()->user()?->can('view_customer_contact'))
                     ->default(null),
                 TextInput::make('user_id')
                     ->numeric()

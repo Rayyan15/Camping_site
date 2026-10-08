@@ -1,32 +1,49 @@
 <?php
+
 namespace App\Filament\Widgets;
+
+use App\Services\DashboardMetricsService;
 use Filament\Widgets\ChartWidget;
+
 class ProgressChart extends ChartWidget
 {
-    protected ?string $heading = 'Status Tenda';
+    protected ?string $heading = 'Okupansi per Tipe Unit';
+
     protected static ?int $sort = 7;
-    protected int | string | array $columnSpan = 2;
+
+    public static function canView(): bool
+    {
+        return (bool) auth()->user()?->can('view_occupancy_dashboard');
+    }
+
+    protected int|string|array $columnSpan = 2;
+
     protected function getData(): array
     {
+        $series = app(DashboardMetricsService::class)->occupancyByUnitType();
+
         return [
             'datasets' => [
-                [
-                    'data' => [41, 35, 24],
-                    'backgroundColor' => ['#064e3b', '#10b981', '#e5e7eb'],
-                ],
+                ['label' => 'Terisi', 'data' => $series['occupied'], 'backgroundColor' => '#047857'],
+                ['label' => 'Kosong', 'data' => $series['available'], 'backgroundColor' => '#d1d5db'],
             ],
-            'labels' => ['Terisi', 'Dibersihkan', 'Kosong'],
+            'labels' => $series['labels'],
         ];
     }
-    protected function getType(): string { return 'doughnut'; }
-    protected function getOptions(): array {
+
+    protected function getOptions(): array
+    {
         return [
-            'cutout' => '70%',
-            'plugins' => [
-                'legend' => [
-                    'position' => 'bottom',
-                ],
+            'scales' => [
+                'x' => ['stacked' => true],
+                'y' => ['stacked' => true, 'beginAtZero' => true, 'ticks' => ['precision' => 0]],
             ],
+            'plugins' => ['legend' => ['position' => 'bottom']],
         ];
+    }
+
+    protected function getType(): string
+    {
+        return 'bar';
     }
 }

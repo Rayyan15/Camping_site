@@ -2,6 +2,13 @@
 
 namespace App\Filament\Resources\CleaningLogs\Schemas;
 
+use App\Enums\CleaningLogStatus;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class CleaningLogForm
@@ -10,42 +17,41 @@ class CleaningLogForm
     {
         return $schema
             ->components([
-                \Filament\Schemas\Components\Section::make('Laporan Kebersihan')
+                Section::make('Laporan Kebersihan')
                     ->description('Catatan merapihkan dan membersihkan tenda oleh OB/Karyawan')
                     ->schema([
-                        \Filament\Schemas\Components\Grid::make(2)->schema([
-                            \Filament\Forms\Components\Select::make('unit_id')
+                        Grid::make(2)->schema([
+                            Select::make('unit_id')
                                 ->label('Tenda')
-                                ->relationship('unit', 'name')
+                                ->relationship('unit', 'code', fn ($query) => $query->with('unitType'))
+                                ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->code} - {$record->unitType?->name}")
+                                ->searchable()
+                                ->preload()
                                 ->required(),
-                            \Filament\Forms\Components\Select::make('employee_id')
+                            Select::make('employee_id')
                                 ->label('Nama Karyawan/OB')
                                 ->relationship('employee', 'name')
                                 ->required(),
-                            \Filament\Forms\Components\DateTimePicker::make('cleaned_at')
+                            DateTimePicker::make('cleaned_at')
                                 ->label('Waktu Selesai Dibersihkan')
                                 ->default(now())
                                 ->required(),
-                            \Filament\Forms\Components\Select::make('status')
+                            Select::make('status')
                                 ->label('Status Pengecekan')
-                                ->options([
-                                    'pending' => 'Menunggu Pengecekan',
-                                    'approved' => 'Disetujui / Sesuai Standar',
-                                    'rejected' => 'Perlu Dibersihkan Ulang'
-                                ])
-                                ->default('pending')
+                                ->options(CleaningLogStatus::class)
+                                ->default(CleaningLogStatus::Pending)
                                 ->required(),
-                            \Filament\Forms\Components\FileUpload::make('photo_path')
+                            FileUpload::make('photo_path')
                                 ->label('Bukti Foto Tenda Rapih')
                                 ->image()
                                 ->directory('cleaning_logs')
                                 ->required()
                                 ->columnSpanFull(),
-                            \Filament\Forms\Components\Textarea::make('notes')
+                            Textarea::make('notes')
                                 ->label('Catatan Tambahan (Bila ada)')
                                 ->columnSpanFull(),
-                        ])
-                    ])
+                        ]),
+                    ]),
             ]);
     }
 }

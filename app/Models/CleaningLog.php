@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CleaningLogStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -20,6 +21,7 @@ class CleaningLog extends Model
 
     protected $casts = [
         'cleaned_at' => 'datetime',
+        'status' => CleaningLogStatus::class,
     ];
 
     public function unit()

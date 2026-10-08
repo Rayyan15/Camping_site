@@ -2,10 +2,15 @@
 
 namespace App\Filament\Resources\Refunds\Tables;
 
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
+use App\Enums\RefundStatus;
+use App\Exceptions\RefundException;
+use App\Models\Refund;
+use App\Services\RefundService;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class RefundsTable
@@ -24,43 +29,58 @@ class RefundsTable
                     ->sortable(),
                 TextColumn::make('reason')
                     ->label('Alasan')
-                    ->limit(30)
+                    ->limit(40)
                     ->searchable(),
                 TextColumn::make('status')
                     ->label('Status')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'requested' => 'warning',
-                        'approved' => 'info',
-                        'rejected' => 'danger',
-                        'processed' => 'success',
-                        default => 'gray',
-                    })
-                    ->searchable(),
+                    ->badge(),
                 TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->label('Diajukan')
+                    ->dateTime('d M Y H:i')
+                    ->sortable(),
             ])
             ->filters([
-                //
+                SelectFilter::make('status')
+                    ->label('Status')
+                    ->options(RefundStatus::class),
             ])
             ->recordActions([
-                EditAction::make(),
+                self::decision('approve', 'Setujui', 'success', RefundStatus::Requested)
+                    ->requiresConfirmation()
+                    ->modalDescription('Booking akan ditandai dikembalikan dan tenda dilepas.')
+                    ->action(fn (Refund $record) => self::run(fn () => app(RefundService::class)->approve($record, auth()->id()), 'Refund disetujui')),
+                self::decision('reject', 'Tolak', 'danger', RefundStatus::Requested)
+                    ->schema([Textarea::make('note')->label('Alasan penolakan')->required()])
+                    ->action(fn (Refund $record, array $data) => self::run(fn () => app(RefundService::class)->reject($record, auth()->id(), $data['note']), 'Refund ditolak')),
+                self::decision('markPaid', 'Tandai sudah ditransfer', 'info', RefundStatus::Approved)
+                    ->requiresConfirmation()
+                    ->action(fn (Refund $record) => self::run(fn () => app(RefundService::class)->markPaid($record, auth()->id()), 'Refund ditandai sudah ditransfer')),
             ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
-            ])
-            ->emptyStateHeading('Belum ada data')
-            ->emptyStateDescription('Data akan muncul di sini setelah ditambahkan.')
+            ->emptyStateHeading('Belum ada pengajuan refund')
+            ->emptyStateDescription('Pengajuan dari tamu atau operator akan muncul di sini.')
             ->emptyStateIcon('heroicon-o-inbox')
             ->striped()
             ->defaultSort('created_at', 'desc');
+    }
+
+    private static function decision(string $name, string $label, string $color, RefundStatus $visibleFrom): Action
+    {
+        return Action::make($name)
+            ->label($label)
+            ->color($color)
+            ->visible(fn (Refund $record): bool => (bool) auth()->user()?->can('approve_refund') && $record->status === $visibleFrom);
+    }
+
+    private static function run(callable $transition, string $successTitle): void
+    {
+        try {
+            $transition();
+        } catch (RefundException $e) {
+            Notification::make()->title($e->getMessage())->danger()->send();
+
+            return;
+        }
+
+        Notification::make()->title($successTitle)->success()->send();
     }
 }

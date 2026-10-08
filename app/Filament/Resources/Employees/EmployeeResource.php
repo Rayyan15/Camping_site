@@ -13,17 +13,30 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\View\ComponentAttributeBag;
 
 class EmployeeResource extends Resource
 {
     protected static ?string $model = Employee::class;
 
     protected static ?string $modelLabel = 'Karyawan';
-    protected static ?string $pluralModelLabel = 'Data Karyawan';
-    public static function getNavigationGroup(): ?string { return 'SDM & Karyawan'; }
-    public static function getNavigationSort(): ?int { return 1; }
-    public static function getNavigationIcon(): string|\Illuminate\View\ComponentAttributeBag { return 'heroicon-o-user-group'; }
 
+    protected static ?string $pluralModelLabel = 'Data Karyawan';
+
+    public static function getNavigationGroup(): ?string
+    {
+        return 'SDM & Karyawan';
+    }
+
+    public static function getNavigationSort(): ?int
+    {
+        return 1;
+    }
+
+    public static function getNavigationIcon(): string|ComponentAttributeBag
+    {
+        return 'heroicon-o-user-group';
+    }
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 

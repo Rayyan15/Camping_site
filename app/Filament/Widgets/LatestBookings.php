@@ -1,28 +1,53 @@
 <?php
+
 namespace App\Filament\Widgets;
+
 use App\Models\Booking;
-use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
+
 class LatestBookings extends BaseWidget
 {
+    private const STATUS_LABELS = [
+        'pending_payment' => 'Menunggu Bayar',
+        'paid' => 'Lunas',
+        'checked_in' => 'Check-in',
+        'checked_out' => 'Check-out',
+        'expired' => 'Kedaluwarsa',
+        'cancelled' => 'Dibatalkan',
+        'refunded' => 'Dikembalikan',
+    ];
+
     protected static ?int $sort = 5;
-    protected int | string | array $columnSpan = 2;
+
+    public static function canView(): bool
+    {
+        return (bool) auth()->user()?->can('view_occupancy_dashboard');
+    }
+
+    protected int|string|array $columnSpan = 2;
+
     public function table(Table $table): Table
     {
         return $table
-            ->query(Booking::query()->latest()->limit(5))
-            ->heading('Daftar Tugas')
+            ->query(Booking::query()->with('customer')->latest()->limit(5))
+            ->heading('Booking Terbaru')
+            ->emptyStateHeading('Belum ada booking')
             ->columns([
-                Tables\Columns\TextColumn::make('customer.name')
-                    ->label('Tugas / Pelanggan')
-                    ->description(fn (Booking $record): string => 'Jadwal: ' . $record->check_in->format('M d, Y'))
+                TextColumn::make('customer.name')
+                    ->label('Pelanggan')
+                    ->description(fn (Booking $record): string => 'Check-in: '.$record->check_in->translatedFormat('d M Y'))
                     ->weight('bold'),
-                Tables\Columns\TextColumn::make('status')
-                    ->label('')
+                TextColumn::make('status')
+                    ->label('Status')
                     ->badge()
+                    ->formatStateUsing(fn (string $state): string => self::STATUS_LABELS[$state] ?? $state)
                     ->color(fn (string $state): string => match ($state) {
-                        'pending' => 'warning', 'confirmed' => 'success', 'cancelled' => 'danger', default => 'gray',
+                        'pending_payment' => 'warning',
+                        'paid', 'checked_in' => 'success',
+                        'cancelled', 'expired', 'refunded' => 'danger',
+                        default => 'gray',
                     }),
             ])
             ->paginated(false);

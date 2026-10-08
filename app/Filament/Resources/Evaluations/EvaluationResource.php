@@ -13,17 +13,30 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\View\ComponentAttributeBag;
 
 class EvaluationResource extends Resource
 {
     protected static ?string $model = Evaluation::class;
 
     protected static ?string $modelLabel = 'Penilaian Karyawan';
-    protected static ?string $pluralModelLabel = 'Rating & Evaluasi';
-    public static function getNavigationGroup(): ?string { return 'SDM & Karyawan'; }
-    public static function getNavigationSort(): ?int { return 2; }
-    public static function getNavigationIcon(): string|\Illuminate\View\ComponentAttributeBag { return 'heroicon-o-star'; }
 
+    protected static ?string $pluralModelLabel = 'Rating & Evaluasi';
+
+    public static function getNavigationGroup(): ?string
+    {
+        return 'SDM & Karyawan';
+    }
+
+    public static function getNavigationSort(): ?int
+    {
+        return 2;
+    }
+
+    public static function getNavigationIcon(): string|ComponentAttributeBag
+    {
+        return 'heroicon-o-star';
+    }
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 

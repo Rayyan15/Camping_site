@@ -2,93 +2,56 @@
 
 namespace App\Http\Controllers\Public;
 
+use App\Exceptions\MenuItemUnavailableException;
+use App\Exceptions\UnitUnavailableException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Public\CheckAvailabilityRequest;
+use App\Http\Requests\Public\StoreBookingRequest;
 use App\Models\UnitType;
-use App\Models\Customer;
 use App\Services\BookingService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Services\PricingService;
+use Carbon\CarbonImmutable;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 
 class BookingController extends Controller
 {
-    protected $bookingService;
+    public function __construct(
+        private readonly BookingService $bookingService,
+        private readonly PricingService $pricing,
+    ) {}
 
-    public function __construct(BookingService $bookingService)
+    public function checkAvailability(CheckAvailabilityRequest $request): View
     {
-        $this->bookingService = $bookingService;
+        $stay = $request->validated();
+        $unitType = UnitType::findOrFail($stay['unit_type_id']);
+        $availableUnits = $this->bookingService->checkAvailability($unitType->id, $stay['check_in'], $stay['check_out']);
+
+        $checkIn = CarbonImmutable::parse($stay['check_in']);
+        $nights = $this->pricing->nightsBetween($checkIn, $stay['check_out']);
+
+        return view('public.booking-cek', [
+            'unitType' => $unitType,
+            'stay' => $stay,
+            'nights' => $nights,
+            'serveDates' => collect(range(0, $nights - 1))->map(fn (int $offset) => $checkIn->addDays($offset)),
+            'availableUnits' => $availableUnits,
+            'isAvailable' => $availableUnits->isNotEmpty(),
+            'stayPrice' => $this->pricing->stayTotal($unitType, $stay['check_in'], $stay['check_out']),
+            'taxRate' => $this->pricing->taxRate(),
+            'serveTimes' => config('booking.serve_times'),
+            ...$this->bookingService->formOptions(),
+        ]);
     }
 
-    public function checkAvailability(Request $request)
+    public function store(StoreBookingRequest $request): RedirectResponse
     {
-        $request->validate([
-            'unit_type_id' => 'required|exists:unit_types,id',
-            'check_in' => 'required|date|after_or_equal:today',
-            'check_out' => 'required|date|after:check_in',
-            'guests' => 'required|integer|min:1'
-        ]);
-
-        $unitType = UnitType::findOrFail($request->unit_type_id);
-        
-        $availableUnits = $this->bookingService->checkAvailability(
-            $request->unit_type_id, 
-            $request->check_in, 
-            $request->check_out, 
-            $request->guests
-        );
-
-        $isAvailable = $availableUnits->count() > 0;
-
-        return view('public.booking-cek', compact('unitType', 'request', 'availableUnits', 'isAvailable'));
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'unit_type_id' => 'required|exists:unit_types,id',
-            'check_in' => 'required|date',
-            'check_out' => 'required|date',
-            'guests' => 'required|integer',
-            'unit_ids' => 'required|array',
-            'customer_name' => 'required|string|max:255',
-            'customer_email' => 'required|email|max:255',
-            'customer_phone' => 'required|string|max:20',
-        ]);
-
         try {
-            DB::beginTransaction();
-
-            // 1. Cari atau buat customer
-            $customer = Customer::firstOrCreate(
-                ['email' => $request->customer_email],
-                [
-                    'name' => $request->customer_name,
-                    'phone' => $request->customer_phone,
-                ]
-            );
-
-            // 2. Buat Booking menggunakan Service
-            $booking = $this->bookingService->createBooking(
-                $customer->id,
-                $request->check_in,
-                $request->check_out,
-                $request->guests,
-                $request->unit_ids
-            );
-
-            DB::commit();
-
-            // Redirect ke halaman sukses / pembayaran
-            return redirect()->route('booking.success', ['code' => $booking->code]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', $e->getMessage())->withInput();
+            $booking = $this->bookingService->createFromCheckout($request->validated());
+        } catch (UnitUnavailableException|MenuItemUnavailableException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
         }
-    }
 
-    public function success($code)
-    {
-        $booking = \App\Models\Booking::where('code', $code)->firstOrFail();
-        return view('public.booking-success', compact('booking'));
+        return redirect()->route('checkout.show', $booking->code);
     }
 }

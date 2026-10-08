@@ -1,59 +1,88 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Raynad Camping
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistem hospitality untuk PT Raynad Cipta Makmur: booking tenda online, pre-order dan QR order makanan, pembayaran, refund, dan dashboard operasional dalam satu aplikasi.
 
-## About Laravel
+32 unit tenda dari 7 tipe (Pancar, Safari, Salak, Indian, Romance, Snail, Dome).
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Stack
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- PHP 8.2+, Laravel 11
+- Filament v4 (dashboard admin di `/admin`)
+- spatie/laravel-permission (role dan permission)
+- Blade + Tailwind CSS v4 (Vite) untuk halaman publik
+- barryvdh/laravel-dompdf (invoice PDF), simplesoftwareio/simple-qrcode (QR)
+- Payment gateway: Midtrans Snap, dengan gateway palsu untuk pengembangan lokal
+- SQLite untuk pengembangan, MySQL 8 untuk produksi
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Menjalankan secara lokal
 
-## Learning Laravel
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+touch database/database.sqlite          # Windows PowerShell: New-Item database/database.sqlite
+php artisan migrate --seed
+php artisan storage:link
+npm run build                           # atau npm run dev saat mengembangkan UI
+php artisan serve
+php artisan schedule:work               # job pelepas hold booking, jalankan di terminal lain
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+Buka `http://127.0.0.1:8000`. Admin ada di `/admin`. Akun demo hanya dibuat di environment `local` dan `testing` (password dari `DEMO_PASSWORD` di `.env`, atau acak bila kosong).
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Di produksi tidak ada akun bawaan. Buat owner dengan:
 
-## Laravel Sponsors
+```bash
+php artisan app:create-owner email@contoh.com "Nama Owner"
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Detail akses dan keamanan: `docs/internal/05-access-security-ops.md`.
 
-### Premium Partners
+Menjalankan test:
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```bash
+php artisan test
+```
 
-## Contributing
+## Fitur yang sudah ada
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- Landing page, daftar tipe tenda, cek ketersediaan dengan kalender rentang tanggal
+- Booking multi-unit dengan extra bed dan pre-order makanan, harga dihitung di server
+  (weekday, weekend, harga khusus tanggal, addon, pajak)
+- Hold unit 15 menit; booking yang tidak dibayar kedaluwarsa otomatis
+- Checkout, pembayaran lewat Midtrans, webhook terverifikasi dan idempoten
+- Halaman status booking tanpa login (`/booking/{kode}`), pembatalan, refund sesuai kebijakan
+- Invoice PDF dan tombol bagikan ke WhatsApp
+- QR order di tenda dan meja (`/order/{token}`), bisa dibayar ke kasir atau ditagihkan ke booking
+- Antrian dapur, order walk-in, dan pre-order yang tampil otomatis H-1 dan hari H
+- Dashboard admin: booking, unit, pelanggan, order, menu, QR, refund, pembersihan, karyawan, penilaian
+- Tiga role (Owner, Operator FO, Operator Kasir), 2FA untuk owner, log aktivitas, security headers
 
-## Code of Conduct
+Daftar kebutuhan lengkap ada di `docs/internal/prd-sistem-hospitality-camping.md` (folder ini di-gitignore).
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Konfigurasi penting (`.env`)
 
-## Security Vulnerabilities
+| Variabel | Fungsi |
+|---|---|
+| `APP_TIMEZONE`, `APP_LOCALE` | Default `Asia/Jakarta` dan `id` |
+| `PAYMENT_GATEWAY` | `fake` untuk lokal, `midtrans` untuk produksi |
+| `MIDTRANS_SERVER_KEY`, `MIDTRANS_CLIENT_KEY`, `MIDTRANS_IS_PRODUCTION` | Kredensial Midtrans |
+| `SITE_*` | Nama usaha, nomor WhatsApp, alamat, maps, Instagram (dipakai landing dan invoice) |
+| `FILESYSTEM_DISK` | `public` agar foto unggahan bisa diakses |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Di dashboard Midtrans, atur notification URL ke `https://<domain>/webhook/payment`.
 
-## License
+## Struktur kode
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- `app/Services` berisi logika bisnis (BookingService, PricingService, RefundService, InvoiceService, Payment/*). Controller dan kelas Filament hanya menerjemahkan input ke pemanggilan service.
+- `app/Enums` berisi status (BookingStatus, OrderStatus, RefundStatus, PaymentStatus, dan lain-lain).
+- `app/Jobs/ReleaseExpiredHolds` dijadwalkan tiap menit di `routes/console.php`.
+- Aturan kode dan desain ada di `CLAUDE.md`.
+
+## Produksi
+
+- Set `APP_ENV=production`, `APP_DEBUG=false`, database MySQL, `PAYMENT_GATEWAY=midtrans`.
+- Jalankan `php artisan migrate --force`, `php artisan storage:link`, `npm run build`.
+- Cron: `* * * * * php /path/artisan schedule:run`.
+- Backup database harian dan salinan di luar server belum disiapkan.
