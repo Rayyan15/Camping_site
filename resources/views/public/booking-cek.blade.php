@@ -93,7 +93,7 @@
                                         <div>
                                             <p class="font-bold text-forest-900" id="addon-{{ $addon->id }}">{{ $addon->name }}</p>
                                             <p class="text-sm text-ink-soft">
-                                                {{ $rupiah($addon->price) }} {{ $addon->unit }}@if($addon->isPerNight()), dihitung {{ $nights }} malam @endif
+                                                {{ $rupiah($addon->price) }} {{ $addon->unit->value }}@if($addon->isPerNight()), dihitung {{ $nights }} malam @endif
                                             </p>
                                         </div>
                                         <x-stepper :name="'addons['.$addon->id.']'" :label="$addon->name" :value="old('addons.'.$addon->id, 0)" :min="0" :max="$maxAddon" :price="$addon->price" :per-night="$addon->isPerNight()" role="addon" />

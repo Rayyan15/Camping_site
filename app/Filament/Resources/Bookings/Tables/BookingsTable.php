@@ -2,14 +2,35 @@
 
 namespace App\Filament\Resources\Bookings\Tables;
 
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
+use App\Enums\BookingStatus;
+use App\Filament\Resources\Bookings\Actions\BookingActions;
+use App\Models\Booking;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class BookingsTable
 {
+    private const MINUTES_PER_HOUR = 60;
+
+    private const HOURS_PER_DAY = 24;
+
+    private static function reviewAge(Booking $record): ?string
+    {
+        if ($record->status !== BookingStatus::NeedsReview) {
+            return null;
+        }
+
+        $minutes = (int) ($record->review_started_at ?? $record->updated_at)->diffInMinutes(now());
+        $hours = intdiv($minutes, self::MINUTES_PER_HOUR);
+
+        return match (true) {
+            $hours >= self::HOURS_PER_DAY * 2 => 'sudah '.intdiv($hours, self::HOURS_PER_DAY).' hari',
+            $hours >= 1 => "sudah {$hours} jam",
+            default => "sudah {$minutes} menit",
+        };
+    }
+
     public static function configure(Table $table): Table
     {
         return $table
@@ -34,22 +55,23 @@ class BookingsTable
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'confirmed' => 'success',
-                        'pending_payment' => 'warning',
-                        'cancelled' => 'danger',
-                        'completed' => 'info',
-                        default => 'gray',
-                    })
                     ->searchable(),
+                TextColumn::make('review_age')
+                    ->label('Umur review')
+                    ->state(fn (Booking $record): ?string => self::reviewAge($record))
+                    ->placeholder('-'),
                 TextColumn::make('total')
                     ->label('Total Harga')
-                    ->money('IDR', locale: 'id')
+                    ->money('IDR', locale: 'id', decimalPlaces: 0)
                     ->sortable(),
                 TextColumn::make('paid_amount')
                     ->label('Dibayar')
-                    ->money('IDR', locale: 'id')
+                    ->money('IDR', locale: 'id', decimalPlaces: 0)
                     ->sortable(),
+                TextColumn::make('remaining')
+                    ->label('Sisa Tagihan')
+                    ->state(fn (Booking $record): int => BookingActions::remainingBalance($record))
+                    ->money('IDR', locale: 'id', decimalPlaces: 0),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -63,12 +85,11 @@ class BookingsTable
                 //
             ])
             ->recordActions([
+                BookingActions::checkIn(),
+                BookingActions::checkOut(),
+                BookingActions::recordPayment(),
+                BookingActions::resolveReview(),
                 EditAction::make(),
-            ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
             ])
             ->emptyStateHeading('Belum ada data')
             ->emptyStateDescription('Data akan muncul di sini setelah ditambahkan.')

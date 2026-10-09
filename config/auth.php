@@ -114,4 +114,24 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Customer Accounts
+    |--------------------------------------------------------------------------
+    |
+    | Optional accounts for guests who want to see their booking history. The password minimum
+    | follows PRD 7.2. Throttle values are attempts per minute, keyed per IP and email in
+    | AppServiceProvider.
+    |
+    */
+
+    'customer_password_min' => 8,
+
+    'customer_throttle' => [
+        'login_per_minute' => (int) env('THROTTLE_ACCOUNT_LOGIN', 5),
+        'register_per_minute' => (int) env('THROTTLE_ACCOUNT_REGISTER', 5),
+        'reset_per_minute' => (int) env('THROTTLE_ACCOUNT_RESET', 5),
+        'verification_per_minute' => (int) env('THROTTLE_ACCOUNT_VERIFICATION', 3),
+    ],
+
 ];

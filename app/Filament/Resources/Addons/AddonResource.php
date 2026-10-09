@@ -23,7 +23,7 @@ class AddonResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Kelola Tenda';
+        return 'Manajemen Tenda';
     }
 
     public static function getNavigationSort(): ?int

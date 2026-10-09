@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\AddonUnit;
 use App\Enums\BookingStatus;
 use App\Enums\OrderStatus;
 use App\Exceptions\InvalidOrderTransitionException;
@@ -41,7 +42,7 @@ class BookingFlowTest extends TestCase
         Unit::create(['unit_type_id' => $this->unitType->id, 'code' => 'D1', 'status' => Unit::STATUS_ACTIVE]);
         Unit::create(['unit_type_id' => $this->unitType->id, 'code' => 'D2', 'status' => Unit::STATUS_ACTIVE]);
 
-        $this->extraBed = Addon::create(['name' => 'Extra Bed', 'price' => 75000, 'unit' => Addon::UNIT_PER_NIGHT, 'is_active' => true]);
+        $this->extraBed = Addon::create(['name' => 'Extra Bed', 'price' => 75000, 'unit' => AddonUnit::PerNight, 'extra_guests' => 1, 'is_active' => true]);
         $category = MenuCategory::create(['name' => 'Minuman', 'sort_order' => 1]);
         $this->coffee = MenuItem::create(['category_id' => $category->id, 'name' => 'Kopi', 'price' => 12000, 'is_available' => true]);
     }
@@ -84,7 +85,7 @@ class BookingFlowTest extends TestCase
         $response = $this->post(route('booking.store'), $this->fullPayload());
 
         $booking = Booking::firstOrFail();
-        $response->assertRedirect(route('checkout.show', $booking->code));
+        $response->assertRedirect(route('checkout.show', $booking->access_token));
 
         // Unit 2 nights x 100000, extra bed 75000 x 1 x 2 nights, coffee 2 x 12000.
         $this->assertSame(200000 + 150000 + 24000, $booking->subtotal);
@@ -168,7 +169,7 @@ class BookingFlowTest extends TestCase
         $this->post(route('booking.store'), $this->fullPayload());
         $booking = Booking::firstOrFail();
 
-        $this->get(route('checkout.show', $booking->code))
+        $this->get(route('checkout.show', $booking->access_token))
             ->assertOk()
             ->assertSee($booking->code)
             ->assertSee('Extra Bed')
@@ -184,12 +185,12 @@ class BookingFlowTest extends TestCase
 
         $this->travel(16)->minutes();
 
-        $this->get(route('checkout.show', $booking->code))
+        $this->get(route('checkout.show', $booking->access_token))
             ->assertOk()
             ->assertSee('Waktu pembayaran habis')
             ->assertDontSee('Bayar sekarang');
 
-        $this->post(route('checkout.pay', $booking->code))->assertRedirect(route('checkout.show', $booking->code));
+        $this->post(route('checkout.pay', $booking->access_token))->assertRedirect(route('checkout.show', $booking->access_token));
     }
 
     public function test_checkout_unknown_code_is_404_and_paid_booking_redirects(): void
@@ -200,7 +201,7 @@ class BookingFlowTest extends TestCase
         $booking = Booking::firstOrFail();
         $booking->update(['status' => BookingStatus::Paid]);
 
-        $this->get(route('checkout.show', $booking->code))->assertRedirect(route('booking.status', $booking->code));
+        $this->get(route('checkout.show', $booking->access_token))->assertRedirect(route('booking.status', $booking->access_token));
     }
 
     public function test_pay_redirects_to_gateway_url(): void
@@ -213,7 +214,7 @@ class BookingFlowTest extends TestCase
         $this->post(route('booking.store'), $this->payload());
         $booking = Booking::firstOrFail();
 
-        $this->post(route('checkout.pay', $booking->code))->assertRedirect('https://pay.example.test/abc');
+        $this->post(route('checkout.pay', $booking->access_token))->assertRedirect('https://pay.example.test/abc');
     }
 
     public function test_order_status_only_moves_one_step_forward(): void
@@ -226,5 +227,24 @@ class BookingFlowTest extends TestCase
 
         $this->expectException(InvalidOrderTransitionException::class);
         $service->updateStatus($order, OrderStatus::Selesai);
+    }
+
+    public function test_serve_date_in_another_format_is_a_validation_error_not_a_crash(): void
+    {
+        $payload = $this->fullPayload();
+        $payload['preorder'][$this->coffee->id]['serve_date'] = '07/12/2026';
+
+        $this->post(route('booking.store'), $payload)
+            ->assertSessionHasErrors('preorder.0.serve_date');
+
+        $this->assertSame(0, Booking::count());
+    }
+
+    public function test_a_per_night_addon_that_is_not_a_bed_adds_no_capacity(): void
+    {
+        $firewood = Addon::create(['name' => 'Kayu bakar', 'price' => 20000, 'unit' => AddonUnit::PerNight, 'is_active' => true]);
+
+        $this->post(route('booking.store'), $this->payload(['guests' => 10, 'addons' => [$firewood->id => 5]]))
+            ->assertSessionHasErrors('guests');
     }
 }

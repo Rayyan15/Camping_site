@@ -24,11 +24,11 @@ class UnitTypesTable
                     ->sortable(),
                 TextColumn::make('base_price_weekday')
                     ->label('Harga Weekday')
-                    ->money('IDR', locale: 'id')
+                    ->money('IDR', locale: 'id', decimalPlaces: 0)
                     ->sortable(),
                 TextColumn::make('base_price_weekend')
                     ->label('Harga Weekend')
-                    ->money('IDR', locale: 'id')
+                    ->money('IDR', locale: 'id', decimalPlaces: 0)
                     ->sortable(),
             ])
             ->filters([

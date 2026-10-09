@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\AddonUnit;
 use App\Models\Addon;
 use App\Models\Unit;
 use App\Models\UnitType;
@@ -84,15 +85,15 @@ class UnitTypeSeeder extends Seeder
 
         Addon::firstOrCreate(
             ['name' => 'Extra Bed'],
-            ['price' => 75000, 'unit' => 'per malam', 'is_active' => true],
+            ['price' => 75000, 'unit' => AddonUnit::PerNight, 'is_active' => true],
         );
         Addon::firstOrCreate(
             ['name' => 'Paket Kayu Bakar'],
-            ['price' => 50000, 'unit' => 'per item', 'is_active' => true],
+            ['price' => 50000, 'unit' => AddonUnit::PerItem, 'is_active' => true],
         );
         Addon::firstOrCreate(
             ['name' => 'Sewa Matras Tambahan'],
-            ['price' => 25000, 'unit' => 'per item', 'is_active' => true],
+            ['price' => 25000, 'unit' => AddonUnit::PerItem, 'is_active' => true],
         );
     }
 

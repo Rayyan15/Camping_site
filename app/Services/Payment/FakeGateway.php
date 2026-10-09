@@ -4,7 +4,6 @@ namespace App\Services\Payment;
 
 use App\Contracts\PaymentGateway;
 use App\Enums\PaymentStatus;
-use App\Models\Booking;
 use Illuminate\Support\Facades\Route;
 use LogicException;
 
@@ -21,12 +20,12 @@ class FakeGateway implements PaymentGateway
         }
     }
 
-    public function createTransaction(Booking $booking, string $orderId, int $amount): string
+    public function createTransaction(GatewayCharge $charge): string
     {
-        // The dev page only exists on a local machine; elsewhere (tests) fall back to the status page.
+        // The dev page only exists on a local machine; elsewhere (tests) fall back to the finish page.
         return Route::has('dev.pay.show')
-            ? route('dev.pay.show', $orderId)
-            : route('booking.status', $booking->code);
+            ? route('dev.pay.show', $charge->reference)
+            : $charge->finishUrl;
     }
 
     public function isAuthentic(array $payload): bool

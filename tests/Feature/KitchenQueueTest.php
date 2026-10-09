@@ -95,6 +95,20 @@ class KitchenQueueTest extends TestCase
         $this->assertNotContains($unpaidBooking->id, $ids);
     }
 
+    public function test_preorder_of_expired_or_cancelled_booking_is_hidden(): void
+    {
+        $expired = $this->preorder($this->booking(BookingStatus::Expired), now()->setTime(12, 0));
+        $cancelled = $this->preorder($this->booking(BookingStatus::Cancelled), now()->setTime(12, 0));
+        $checkedIn = $this->preorder($this->booking(BookingStatus::CheckedIn), now()->setTime(12, 0));
+
+        $ids = $this->boardIds();
+
+        $this->assertNotContains($expired->id, $ids);
+        $this->assertNotContains($cancelled->id, $ids);
+        $this->assertContains($checkedIn->id, $ids);
+        $this->assertSame(1, app(KitchenQueueService::class)->activeCount());
+    }
+
     public function test_qr_and_walkin_orders_show_for_today(): void
     {
         $service = app(OrderService::class);

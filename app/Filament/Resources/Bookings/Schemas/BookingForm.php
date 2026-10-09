@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\Bookings\Schemas;
 
+use App\Enums\BookingStatus;
+use App\Models\Booking;
+use App\Services\BookingStatusTransition;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
@@ -23,12 +26,12 @@ class BookingForm
                             TextInput::make('code')
                                 ->label('Kode Booking')
                                 ->disabled()
-                                ->required(),
+                                ->dehydrated(false),
                             Select::make('customer_id')
                                 ->label('Pelanggan')
                                 ->relationship('customer', 'name')
-                                ->searchable()
-                                ->required(),
+                                ->disabled()
+                                ->dehydrated(false),
                         ]),
                     ]),
 
@@ -37,27 +40,27 @@ class BookingForm
                         Grid::make(3)->schema([
                             DatePicker::make('check_in')
                                 ->label('Check In')
-                                ->required(),
+                                ->disabled()
+                                ->dehydrated(false),
                             DatePicker::make('check_out')
                                 ->label('Check Out')
-                                ->required(),
+                                ->disabled()
+                                ->dehydrated(false),
                             TextInput::make('guests')
                                 ->label('Jumlah Tamu')
-                                ->required()
+                                ->disabled()
+                                ->dehydrated(false)
                                 ->numeric(),
                             Select::make('status')
                                 ->label('Status Booking')
-                                ->options([
-                                    'pending_payment' => 'Menunggu Pembayaran',
-                                    'confirmed' => 'Terkonfirmasi (Sudah Bayar)',
-                                    'cancelled' => 'Dibatalkan',
-                                    'completed' => 'Selesai / Check Out',
-                                ])
-                                ->required()
-                                ->default('pending_payment'),
+                                ->options(fn (?Booking $record): array => $record?->status
+                                    ? app(BookingStatusTransition::class)->optionsFor($record->status)
+                                    : [BookingStatus::PendingPayment->value => BookingStatus::PendingPayment->getLabel()])
+                                ->required(),
                             DateTimePicker::make('hold_expires_at')
                                 ->label('Batas Waktu Hold')
-                                ->disabled(),
+                                ->disabled()
+                                ->dehydrated(false),
                         ]),
                     ]),
 
@@ -67,24 +70,26 @@ class BookingForm
                             TextInput::make('subtotal')
                                 ->prefix('Rp')
                                 ->disabled()
+                                ->dehydrated(false)
                                 ->numeric(),
                             TextInput::make('tax')
                                 ->label('Pajak (Tax)')
                                 ->prefix('Rp')
                                 ->disabled()
-                                ->numeric()
-                                ->default(0),
+                                ->dehydrated(false)
+                                ->numeric(),
                             TextInput::make('total')
                                 ->label('Total Akhir')
                                 ->prefix('Rp')
                                 ->disabled()
+                                ->dehydrated(false)
                                 ->numeric(),
                             TextInput::make('paid_amount')
                                 ->label('Sudah Dibayar')
                                 ->prefix('Rp')
                                 ->disabled()
-                                ->numeric()
-                                ->default(0),
+                                ->dehydrated(false)
+                                ->numeric(),
                             Textarea::make('notes')
                                 ->label('Catatan Tambahan')
                                 ->default(null)

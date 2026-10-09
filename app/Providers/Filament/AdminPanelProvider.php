@@ -30,6 +30,7 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->profile()
+            ->databaseNotifications()
             ->multiFactorAuthentication(
                 [AppAuthentication::make()->recoverable()],
                 isRequired: true,
@@ -46,6 +47,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->navigationGroups([
                 'Operasional',
+                'Menu',
                 'Manajemen Tenda',
                 'SDM & Karyawan',
                 'Laporan & Keuangan',

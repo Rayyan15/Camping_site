@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\BookingStatus;
 use App\Exceptions\LastOwnerException;
+use App\Jobs\ReleaseExpiredHolds;
 use App\Models\ActivityLog;
 use App\Models\Booking;
 use App\Models\Customer;
@@ -116,5 +117,20 @@ class ActivityLogTest extends TestCase
         $this->expectException(LastOwnerException::class);
 
         $service->update($owner, ['is_active' => false], User::ROLE_OWNER);
+    }
+
+    public function test_expired_hold_release_is_logged_as_system_status_change(): void
+    {
+        $booking = $this->makeBooking();
+        $booking->update(['hold_expires_at' => now()->subMinute()]);
+        ActivityLog::query()->delete();
+
+        (new ReleaseExpiredHolds)->handle();
+
+        $log = ActivityLog::where('subject_type', 'booking')->where('action', 'status_changed')->sole();
+        $this->assertSame($booking->id, $log->subject_id);
+        $this->assertNull($log->user_id);
+        $this->assertSame('pending_payment', $log->changes['old']['status']);
+        $this->assertSame('expired', $log->changes['new']['status']);
     }
 }

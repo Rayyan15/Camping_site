@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\BookingStatus;
 use App\Enums\PaymentMethod;
+use App\Enums\QrPaymentChoice;
 use App\Exceptions\OrderBillingException;
 use App\Models\Booking;
 use App\Models\BookingUnit;
@@ -17,6 +18,7 @@ use App\Models\UnitType;
 use App\Models\User;
 use App\Services\DiningSpotService;
 use App\Services\OrderService;
+use App\Services\Payment\PaymentService;
 use Database\Seeders\DiningSpotSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -168,6 +170,39 @@ class QrOrderTest extends TestCase
         $this->assertTrue($order->bill_to_booking);
     }
 
+    public function test_tent_page_never_exposes_booking_code_or_guest_identity(): void
+    {
+        $booking = $this->activeStay();
+
+        $response = $this->get(route('qr.show', $this->tent->qr_token))
+            ->assertOk()
+            ->assertSee('Tagihkan ke booking')
+            ->assertDontSee($booking->code)
+            ->assertDontSee('Budi Santoso')
+            ->assertDontSee('081234567890');
+
+        $this->assertStringNotContainsString('value="Budi Santoso"', $response->getContent());
+    }
+
+    public function test_tracking_a_billed_order_does_not_reveal_the_booking(): void
+    {
+        $booking = $this->activeStay();
+
+        $this->post(route('qr.store', $this->tent->qr_token), $this->payload(['payment_choice' => 'booking']))->assertRedirect();
+        $order = Order::firstOrFail();
+
+        $this->get(route('qr.track', [$this->tent->qr_token, $order->code]))
+            ->assertOk()
+            ->assertSee('Ditagihkan ke booking Anda')
+            ->assertDontSee($booking->code)
+            ->assertDontSee('Budi Santoso');
+
+        $this->getJson(route('qr.track', [$this->tent->qr_token, $order->code]))
+            ->assertOk()
+            ->assertJsonMissingPath('booking_id')
+            ->assertJsonMissingPath('booking_code');
+    }
+
     public function test_cashier_choice_on_a_tent_with_booking_is_not_billed_to_it(): void
     {
         $this->activeStay();
@@ -188,7 +223,7 @@ class QrOrderTest extends TestCase
             [['menu_item_id' => $this->coffee->id, 'qty' => 1]],
             'Sari',
             null,
-            true,
+            QrPaymentChoice::Booking,
         );
     }
 
@@ -261,5 +296,58 @@ class QrOrderTest extends TestCase
         $this->assertSame($count, DiningSpot::count());
         $this->assertSame($token, DiningSpot::where('name', 'Meja 2')->value('qr_token'));
         $this->assertSame(1, DiningSpot::where('unit_id', $this->unit->id)->count());
+    }
+
+    public function test_online_order_stays_out_of_the_kitchen_until_the_gateway_settles_it(): void
+    {
+        $this->post(route('qr.store', $this->table->qr_token), $this->payload(['payment_choice' => 'online']))
+            ->assertRedirect();
+
+        $order = Order::firstOrFail();
+        $this->assertTrue($order->awaitsOnlinePayment());
+        $this->assertFalse(Order::kitchenRelevant()->whereKey($order->id)->exists());
+
+        $payment = $order->payments()->firstOrFail();
+        $this->assertSame($order->total, $payment->amount);
+
+        app(PaymentService::class)->handleNotification([
+            'order_id' => $payment->gateway_ref,
+            'transaction_status' => 'settlement',
+        ]);
+
+        $this->assertTrue($order->fresh()->isPaid());
+        $this->assertTrue(Order::kitchenRelevant()->whereKey($order->id)->exists());
+    }
+
+    public function test_unpaid_online_order_can_reopen_payment_from_the_tracking_page(): void
+    {
+        $this->post(route('qr.store', $this->table->qr_token), $this->payload(['payment_choice' => 'online']));
+        $order = Order::firstOrFail();
+
+        $this->get(route('qr.track', [$this->table->qr_token, $order->code]))
+            ->assertOk()
+            ->assertSee('Buka pembayaran QRIS');
+
+        $this->post(route('qr.pay', [$this->table->qr_token, $order->code]))->assertRedirect();
+        $this->assertSame(1, $order->payments()->count());
+    }
+
+    public function test_turnover_day_bills_the_guest_who_checked_in_not_the_one_leaving(): void
+    {
+        $today = now()->toDateString();
+        $leaving = $this->stay(BookingStatus::CheckedIn, now()->subDays(2)->toDateString(), $today);
+        $arriving = $this->stay(BookingStatus::CheckedIn, $today, now()->addDays(2)->toDateString());
+
+        $this->assertTrue(app(DiningSpotService::class)->activeBooking($this->tent)->is($arriving));
+        $this->assertFalse(app(DiningSpotService::class)->activeBooking($this->tent)->is($leaving));
+    }
+
+    public function test_paid_no_show_never_beats_the_checked_in_guest(): void
+    {
+        $noShow = $this->stay(BookingStatus::Paid, now()->subDay()->toDateString(), now()->addDay()->toDateString());
+        $inTent = $this->stay(BookingStatus::CheckedIn, now()->toDateString(), now()->addDays(2)->toDateString());
+
+        $this->assertTrue(app(DiningSpotService::class)->activeBooking($this->tent)->is($inTent));
+        $this->assertNotNull($noShow);
     }
 }

@@ -9,9 +9,9 @@ use Illuminate\Http\Response;
 
 class InvoiceController extends Controller
 {
-    public function download(string $code, InvoiceService $invoices): Response
+    public function download(string $token, InvoiceService $invoices): Response
     {
-        $booking = Booking::where('code', $code)->firstOrFail();
+        $booking = Booking::byAccessToken($token)->firstOrFail();
 
         if (! $booking->isInvoiceable()) {
             abort(403, 'Invoice tersedia setelah pembayaran booking dikonfirmasi.');

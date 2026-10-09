@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Exceptions\InvalidOrderTransitionException;
 use App\Exceptions\OrderBillingException;
+use App\Filament\Resources\Orders\Tables\OrdersTable;
 use App\Models\Order;
 use App\Services\KitchenQueueService;
 use App\Services\OrderService;
@@ -59,16 +60,25 @@ class KitchenQueue extends Page
         ];
     }
 
-    public function advance(int $orderId): void
+    /**
+     * The card sends the status it moves to, so a repeated click on a stale card is refused
+     * instead of advancing a second step.
+     */
+    public function advance(int $orderId, ?string $to = null): void
     {
         abort_unless(auth()->user()->can('process_orders'), 403);
 
         $order = Order::findOrFail($orderId);
-        $next = $order->statusEnum()->next();
+        $target = $to === null ? $order->statusEnum()->next() : OrderStatus::tryFrom($to);
+
+        if ($target === null) {
+            Notification::make()->title('Status pesanan tidak valid')->danger()->send();
+
+            return;
+        }
 
         try {
-            abort_if($next === null, 422);
-            app(OrderService::class)->updateStatus($order, $next);
+            app(OrderService::class)->updateStatus($order, $target);
         } catch (InvalidOrderTransitionException $e) {
             Notification::make()->title($e->getMessage())->danger()->send();
         }
@@ -76,12 +86,20 @@ class KitchenQueue extends Page
 
     public function markPaid(int $orderId, string $method): void
     {
-        abort_unless(auth()->user()->can('process_orders'), 403);
+        abort_unless(auth()->user()->can('record_order_payment'), 403);
+
+        $paymentMethod = PaymentMethod::tryFrom($method);
+
+        if (! in_array($paymentMethod, OrdersTable::cashierMethods(), true)) {
+            Notification::make()->title('Metode pembayaran tidak valid')->danger()->send();
+
+            return;
+        }
 
         try {
             app(OrderService::class)->markPaidAtCashier(
                 Order::findOrFail($orderId),
-                PaymentMethod::from($method),
+                $paymentMethod,
                 auth()->id(),
             );
 

@@ -23,6 +23,8 @@ class UnitNightLedger
     public function claim(Collection $lines): void
     {
         foreach ($lines as $line) {
+            // Re-claiming the same line replaces its rows, so a retry never collides with itself.
+            BookingUnitNight::where('booking_unit_id', $line->id)->delete();
             $this->purgeStale($line);
 
             try {

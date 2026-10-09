@@ -19,7 +19,7 @@ class DashboardStats extends BaseWidget
 
     protected function getColumns(): int
     {
-        return 3;
+        return auth()->user()?->can('view_financials') ? 4 : 3;
     }
 
     protected function getStats(): array
@@ -39,6 +39,9 @@ class DashboardStats extends BaseWidget
             Stat::make('Pesanan F&B Aktif', $metrics->activeFoodOrderCount())
                 ->description('Belum berstatus selesai')
                 ->descriptionIcon('heroicon-m-fire'),
+            Stat::make('Pre-order Menunggu Pembayaran', $metrics->preorderAwaitingPaymentCount())
+                ->description('Belum masuk antrean dapur')
+                ->descriptionIcon('heroicon-m-clock'),
         ];
 
         return auth()->user()?->can('view_financials')

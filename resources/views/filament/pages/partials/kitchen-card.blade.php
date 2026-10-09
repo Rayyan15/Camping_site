@@ -7,7 +7,7 @@
     $isLate = $status === OrderStatus::Baru && $waiting >= $lateAfterMinutes;
     $place = $order->diningSpot?->name ?? ($order->booking ? 'Booking '.$order->booking->code : 'Di kasir');
     $next = $status->next();
-    $canSettle = $showActions && $canProcess && ! $order->isPaid() && ! $order->bill_to_booking;
+    $canSettle = $showActions && auth()->user()->can('record_order_payment') && ! $order->isPaid() && ! $order->bill_to_booking;
 @endphp
 
 <article class="kq-card" data-late="{{ $isLate ? 'true' : 'false' }}" wire:key="order-{{ $order->id }}">
@@ -45,7 +45,7 @@
     @if($showActions && $canProcess)
         <div class="kq-actions">
             @if($next)
-                <x-filament::button size="sm" wire:click="advance({{ $order->id }})" wire:loading.attr="disabled">
+                <x-filament::button size="sm" wire:click="advance({{ $order->id }}, '{{ $next->value }}')" wire:loading.attr="disabled">
                     Tandai {{ strtolower($next->label()) }}
                 </x-filament::button>
             @endif

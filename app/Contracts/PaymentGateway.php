@@ -4,16 +4,16 @@ namespace App\Contracts;
 
 use App\Enums\PaymentStatus;
 use App\Exceptions\PaymentException;
-use App\Models\Booking;
+use App\Services\Payment\GatewayCharge;
 
 interface PaymentGateway
 {
     /**
-     * Creates a hosted payment page for the given order id and returns the URL the customer is sent to.
+     * Creates a hosted payment page for the charge and returns the URL the customer is sent to.
      *
      * @throws PaymentException when the gateway cannot create the transaction
      */
-    public function createTransaction(Booking $booking, string $orderId, int $amount): string;
+    public function createTransaction(GatewayCharge $charge): string;
 
     /**
      * Whether an incoming notification really comes from the gateway.

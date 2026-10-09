@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentDirection;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
+use App\Enums\QrPaymentChoice;
 use App\Exceptions\InvalidOrderTransitionException;
 use App\Exceptions\MenuItemUnavailableException;
 use App\Exceptions\OrderBillingException;
@@ -47,7 +48,11 @@ class OrderService
         $lines = $this->pricing->menuLines($items);
         $billToBooking ??= $source === Order::SOURCE_PREORDER || $bookingId !== null;
 
-        return DB::transaction(function () use ($source, $lines, $bookingId, $diningSpotId, $scheduledAt, $customerName, $customerPhone, $billToBooking) {
+        $total = array_sum(array_column($lines, 'subtotal'));
+        // Pre-orders are taxed inside booking.total at checkout; other food billed to a booking keeps its own tax.
+        $tax = $billToBooking && $source !== Order::SOURCE_PREORDER ? $this->pricing->taxFor($total) : null;
+
+        return DB::transaction(function () use ($source, $lines, $bookingId, $diningSpotId, $scheduledAt, $customerName, $customerPhone, $billToBooking, $total, $tax) {
             $order = Order::create([
                 'code' => $this->generateCode(),
                 'source' => $source,
@@ -57,7 +62,8 @@ class OrderService
                 'dining_spot_id' => $diningSpotId,
                 'scheduled_at' => $scheduledAt,
                 'status' => OrderStatus::Baru->value,
-                'total' => array_sum(array_column($lines, 'subtotal')),
+                'total' => $total,
+                'tax' => $tax,
                 'payment_status' => Order::PAYMENT_UNPAID,
                 'bill_to_booking' => $billToBooking,
             ]);
@@ -87,24 +93,31 @@ class OrderService
         array $items,
         string $customerName,
         ?string $customerPhone,
-        bool $billToBooking,
+        QrPaymentChoice $choice,
     ): Order {
+        $billToBooking = $choice === QrPaymentChoice::Booking;
         $booking = $this->diningSpots->activeBooking($spot);
 
         if ($billToBooking && $booking === null) {
             throw OrderBillingException::noActiveBooking();
         }
 
-        return $this->createOrder(
-            Order::SOURCE_QR,
-            $items,
-            $billToBooking ? $booking->id : null,
-            $spot->id,
-            null,
-            $customerName,
-            $customerPhone,
-            $billToBooking,
-        );
+        return DB::transaction(function () use ($spot, $items, $customerName, $customerPhone, $billToBooking, $booking, $choice) {
+            $order = $this->createOrder(
+                Order::SOURCE_QR,
+                $items,
+                $billToBooking ? $booking->id : null,
+                $spot->id,
+                null,
+                $customerName,
+                $customerPhone,
+                $billToBooking,
+            );
+
+            $order->update(['payment_choice' => $choice]);
+
+            return $order;
+        });
     }
 
     /**
@@ -142,21 +155,26 @@ class OrderService
     }
 
     /**
-     * Moves an order exactly one step forward in the kitchen queue.
+     * Moves an order exactly one step forward in the kitchen queue. The row is locked and the status
+     * re-read, so simultaneous clicks cannot skip a step.
      *
      * @throws InvalidOrderTransitionException
      */
     public function updateStatus(Order $order, OrderStatus $newStatus): Order
     {
-        $current = OrderStatus::from($order->status);
+        return DB::transaction(function () use ($order, $newStatus) {
+            $locked = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
+            $current = OrderStatus::from($locked->status);
 
-        if (! $current->canMoveTo($newStatus)) {
-            throw InvalidOrderTransitionException::between($current, $newStatus);
-        }
+            if (! $current->canMoveTo($newStatus)) {
+                throw InvalidOrderTransitionException::between($current, $newStatus);
+            }
 
-        $order->update(['status' => $newStatus->value]);
+            $locked->update(['status' => $newStatus->value]);
+            $order->refresh();
 
-        return $order;
+            return $order;
+        });
     }
 
     /**

@@ -86,3 +86,11 @@ Di dashboard Midtrans, atur notification URL ke `https://<domain>/webhook/paymen
 - Jalankan `php artisan migrate --force`, `php artisan storage:link`, `npm run build`.
 - Cron: `* * * * * php /path/artisan schedule:run`.
 - Backup database harian dan salinan di luar server belum disiapkan.
+
+## Deploy
+
+Runbook lengkap (prasyarat, urutan rilis, migrasi yang mengubah data, rencana mundur) ada di `deploy/DEPLOY.md`. Untuk menjalankan urutan rilis secara terpandu:
+
+```
+bash deploy/deploy.sh
+```

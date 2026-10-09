@@ -48,7 +48,7 @@ class FakePaymentTest extends TestCase
         $this->get($intent->redirectUrl)->assertOk()->assertSee('Simulasi pembayaran (hanya lokal)');
 
         $this->post(route('dev.pay', $intent->reference), ['outcome' => 'paid'])
-            ->assertRedirect(route('booking.status', 'FAKE01'));
+            ->assertRedirect(route('booking.status', $booking->access_token));
 
         $this->assertSame(BookingStatus::Paid, $booking->fresh()->status);
         $this->assertSame(PaymentStatus::Paid, Payment::sole()->status);

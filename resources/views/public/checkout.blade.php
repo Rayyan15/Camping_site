@@ -9,13 +9,14 @@
     $checkIn = $booking->check_in->locale('id');
     $checkOut = $booking->check_out->locale('id');
     $remaining = $holdActive ? max(0, (int) now()->diffInSeconds($booking->hold_expires_at, false)) : 0;
+    $downPaid = $booking->paid_amount > 0;
 @endphp
 
 @section('content')
     <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:py-14">
         <p class="eyebrow text-ember-dark">Langkah 3 dari 3</p>
         <h1 class="font-display mt-2 text-3xl font-semibold text-forest-900 sm:text-4xl">Pembayaran</h1>
-        <p class="mt-2 text-ink-soft">Kode booking <strong class="font-mono tracking-wider text-forest-900">{{ $booking->code }}</strong>. Simpan kode ini untuk melihat status pesanan.</p>
+        <p class="mt-2 text-ink-soft">Kode booking <strong class="font-mono tracking-wider text-forest-900">{{ $booking->code }}</strong>. Alamat halaman ini juga berlaku sebagai tautan status pesanan, jadi simpan atau bagikan hanya kepada orang yang Anda percaya.</p>
 
         @if(session('error'))
             <p class="mt-6 rounded-2xl bg-ember-soft px-5 py-4 font-semibold text-ember-dark" role="alert">{{ session('error') }}</p>
@@ -83,16 +84,38 @@
                 </section>
 
                 <aside class="h-fit rounded-3xl bg-forest-900 p-6 text-cream lg:sticky lg:top-24" aria-label="Pembayaran">
-                    <p class="text-sm text-forest-300">Selesaikan pembayaran dalam</p>
-                    <p id="countdown" class="font-display mt-1 text-5xl font-semibold tabular-nums" data-remaining="{{ $remaining }}" role="timer">--:--</p>
-                    <p class="mt-2 text-sm text-forest-300">Setelah waktu habis, tenda dilepas otomatis.</p>
+                    @if($downPaid)
+                        <p class="text-sm text-forest-300">DP diterima</p>
+                        <p class="text-2xl font-bold">{{ $rupiah($booking->paid_amount) }}</p>
+                        <p class="mt-2 text-sm text-forest-300">Tenda Anda dipegang sampai {{ $booking->hold_expires_at->locale('id')->translatedFormat('j F Y, H:i') }} WIB. Lunasi sisanya sebelum itu, atau saat check-in.</p>
 
-                    <p class="mt-6 text-sm text-forest-300">Total bayar</p>
-                    <p class="text-2xl font-bold">{{ $rupiah($booking->total) }}</p>
+                        <p class="mt-6 text-sm text-forest-300">Sisa tagihan</p>
+                        <p class="text-2xl font-bold">{{ $rupiah($outstanding) }}</p>
+                    @else
+                        <p class="text-sm text-forest-300">Selesaikan pembayaran dalam</p>
+                        <p id="countdown" class="font-display mt-1 text-5xl font-semibold tabular-nums" data-remaining="{{ $remaining }}" role="timer">--:--</p>
+                        <p class="mt-2 text-sm text-forest-300">Setelah waktu habis, tenda dilepas otomatis.</p>
 
-                    <form action="{{ route('checkout.pay', $booking->code) }}" method="POST" class="mt-6">
+                        <p class="mt-6 text-sm text-forest-300">Total bayar</p>
+                        <p class="text-2xl font-bold">{{ $rupiah($outstanding) }}</p>
+                    @endif
+
+                    <form action="{{ route('checkout.pay', $booking->access_token) }}" method="POST" class="mt-6">
                         @csrf
-                        <button type="submit" class="btn btn-primary w-full">Bayar sekarang</button>
+                        @if($downPayment !== null)
+                            <fieldset class="mb-5 grid gap-2">
+                                <legend class="mb-2 text-sm text-forest-300">Cara bayar</legend>
+                                <label class="flex min-h-14 cursor-pointer items-center gap-3 rounded-xl border-[1.5px] border-forest-700 px-4 py-3 has-[:checked]:border-cream has-[:checked]:bg-forest-800">
+                                    <input type="radio" name="plan" value="full" checked class="size-5 accent-ember">
+                                    <span><span class="block font-semibold">Bayar penuh</span><span class="block text-sm text-forest-300">{{ $rupiah($outstanding) }}</span></span>
+                                </label>
+                                <label class="flex min-h-14 cursor-pointer items-center gap-3 rounded-xl border-[1.5px] border-forest-700 px-4 py-3 has-[:checked]:border-cream has-[:checked]:bg-forest-800">
+                                    <input type="radio" name="plan" value="down_payment" class="size-5 accent-ember">
+                                    <span><span class="block font-semibold">Bayar DP dulu</span><span class="block text-sm text-forest-300">{{ $rupiah($downPayment) }} sekarang, sisa {{ $rupiah($outstanding - $downPayment) }} paling lambat saat check-in</span></span>
+                                </label>
+                            </fieldset>
+                        @endif
+                        <button type="submit" class="btn btn-primary w-full">{{ $downPaid ? 'Lunasi sekarang' : 'Bayar sekarang' }}</button>
                     </form>
                 </aside>
             </div>

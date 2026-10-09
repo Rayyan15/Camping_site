@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Addons\Tables;
 
+use App\Enums\AddonUnit;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -20,10 +21,11 @@ class AddonsTable
                     ->searchable(),
                 TextColumn::make('price')
                     ->label('Harga')
-                    ->money('IDR', locale: 'id')
+                    ->money('IDR', locale: 'id', decimalPlaces: 0)
                     ->sortable(),
                 TextColumn::make('unit')
                     ->label('Satuan')
+                    ->formatStateUsing(fn (AddonUnit $state) => $state->label())
                     ->searchable(),
                 IconColumn::make('is_active')
                     ->label('Tersedia')

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\CleaningLogs\Schemas;
 
-use App\Enums\CleaningLogStatus;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -35,11 +34,6 @@ class CleaningLogForm
                             DateTimePicker::make('cleaned_at')
                                 ->label('Waktu Selesai Dibersihkan')
                                 ->default(now())
-                                ->required(),
-                            Select::make('status')
-                                ->label('Status Pengecekan')
-                                ->options(CleaningLogStatus::class)
-                                ->default(CleaningLogStatus::Pending)
                                 ->required(),
                             FileUpload::make('photo_path')
                                 ->label('Bukti Foto Tenda Rapih')

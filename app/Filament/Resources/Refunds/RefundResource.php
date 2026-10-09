@@ -27,7 +27,7 @@ class RefundResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Keuangan';
+        return 'Laporan & Keuangan';
     }
 
     public static function getNavigationSort(): ?int

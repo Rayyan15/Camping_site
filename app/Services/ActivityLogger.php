@@ -24,7 +24,7 @@ class ActivityLogger
     /** Attributes whose value is never stored. */
     private const HIDDEN_ATTRIBUTES = [
         'password', 'remember_token', 'app_authentication_secret', 'app_authentication_recovery_codes',
-        'raw_payload', 'proof_path',
+        'raw_payload', 'proof_path', 'access_token',
     ];
 
     /** Contact attributes that are stored partially masked. */

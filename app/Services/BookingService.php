@@ -21,6 +21,7 @@ class BookingService
         private readonly PricingService $pricing,
         private readonly OrderService $orders,
         private readonly BookingCodeGenerator $codes,
+        private readonly UnitNightLedger $ledger,
     ) {}
 
     /**
@@ -66,28 +67,97 @@ class BookingService
      */
     public function createFromCheckout(array $data): Booking
     {
+        $attempts = (int) config('booking.db_transaction_attempts');
+
+        // Under MySQL REPEATABLE READ the free-unit query reads the snapshot taken before a concurrent
+        // checkout committed, so the loser can pick the unit the winner just took and fail on the ledger.
+        // A fresh transaction sees the committed rows and picks the next free unit; when none is left,
+        // pickFreeUnitIds throws again and the guest gets the honest "sold out" answer.
+        for ($attempt = 1; ; $attempt++) {
+            try {
+                return $this->createFromCheckoutOnce($data);
+            } catch (UnitUnavailableException $e) {
+                if ($attempt >= $attempts) {
+                    throw $e;
+                }
+            }
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     *
+     * @throws UnitUnavailableException
+     * @throws MenuItemUnavailableException
+     */
+    private function createFromCheckoutOnce(array $data): Booking
+    {
+        // One transaction so the units picked here stay locked until the booking and ledger rows exist.
+        return DB::transaction(function () use ($data) {
+            $customer = $this->resolveCustomer($data['customer_name'], $data['customer_email'], $data['customer_phone']);
+
+            $unitIds = $this->pickFreeUnitIds(
+                $data['unit_type_id'],
+                $this->dateString($data['check_in']),
+                $this->dateString($data['check_out']),
+                $data['quantity'],
+            );
+
+            return $this->createBooking(
+                $customer->id,
+                $data['check_in'],
+                $data['check_out'],
+                $data['guests'],
+                $unitIds,
+                $data['addons'] ?? [],
+                $data['notes'] ?? null,
+                $data['preorder'] ?? [],
+            );
+        }, (int) config('booking.db_transaction_attempts'));
+    }
+
+    /**
+     * Email alone is not an identity: a different phone means a different person, so that guest gets
+     * their own record instead of inheriting (or overwriting) someone else's booking history.
+     */
+    private function resolveCustomer(string $name, string $email, string $phone): Customer
+    {
         $customer = Customer::firstOrCreate(
-            ['email' => $data['customer_email']],
-            ['name' => $data['customer_name'], 'phone' => $data['customer_phone']],
+            ['email' => $email, 'phone' => $phone],
+            ['name' => $name],
         );
 
-        $units = $this->checkAvailability($data['unit_type_id'], $data['check_in'], $data['check_out'])
-            ->take($data['quantity']);
+        if ($customer->name !== $name) {
+            $customer->update(['name' => $name]);
+        }
 
-        if ($units->count() < $data['quantity']) {
+        return $customer;
+    }
+
+    /**
+     * Locks the lowest free units so a concurrent checkout waits here. On MySQL the waiting checkout may
+     * still see a stale snapshot; createFromCheckout retries in a new transaction for that case.
+     *
+     * @return array<int, int>
+     *
+     * @throws UnitUnavailableException
+     */
+    private function pickFreeUnitIds(int $unitTypeId, string $checkIn, string $checkOut, int $quantity): array
+    {
+        $unitIds = Unit::where('unit_type_id', $unitTypeId)
+            ->where('status', Unit::STATUS_ACTIVE)
+            ->freeBetween($checkIn, $checkOut)
+            ->orderBy('id')
+            ->limit($quantity)
+            ->lockForUpdate()
+            ->pluck('id')
+            ->all();
+
+        if (count($unitIds) < $quantity) {
             throw UnitUnavailableException::alreadyBooked();
         }
 
-        return $this->createBooking(
-            $customer->id,
-            $data['check_in'],
-            $data['check_out'],
-            $data['guests'],
-            $units->pluck('id')->all(),
-            $data['addons'] ?? [],
-            $data['notes'] ?? null,
-            $data['preorder'] ?? [],
-        );
+        return $unitIds;
     }
 
     /**
@@ -141,12 +211,15 @@ class BookingService
                 'notes' => $notes,
             ]);
 
-            $booking->bookingUnits()->createMany($unitLines->all());
+            $lines = $booking->bookingUnits()->createMany($unitLines->all());
             $booking->addons()->createMany($addonLines);
             $this->createPreorders($booking, $preorders);
 
+            // Last step: a conflict rolls back the whole booking, including pre-orders.
+            $this->ledger->claim($lines);
+
             return $booking;
-        });
+        }, (int) config('booking.db_transaction_attempts'));
     }
 
     /**

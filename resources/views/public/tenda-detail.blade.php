@@ -1,100 +1,126 @@
 @extends('layouts.public')
 
+@php
+    $photos = $unitType->photos->sortBy('sort_order')->values();
+    $formatRupiah = fn (int $amount) => 'Rp '.number_format($amount, 0, ',', '.');
+    $breadcrumbData = [
+        '@context' => 'https://schema.org',
+        '@type' => 'BreadcrumbList',
+        'itemListElement' => [
+            ['@type' => 'ListItem', 'position' => 1, 'name' => config('site.name'), 'item' => route('home')],
+            ['@type' => 'ListItem', 'position' => 2, 'name' => 'Tenda', 'item' => route('home').'#tenda'],
+            ['@type' => 'ListItem', 'position' => 3, 'name' => $unitType->name, 'item' => route('tenda.show', ['slug' => $unitType->slug])],
+        ],
+    ];
+@endphp
+
 @section('title', $unitType->name.' - '.config('site.name'))
 @section('description', 'Tenda '.$unitType->name.' untuk hingga '.$unitType->capacity.' orang. Cek ketersediaan dan pesan online.')
 
-@section('og_image', optional($unitType->photos->sortBy('sort_order')->first())->url)
+@section('og_image', $photos->first()?->url ?? '')
+
+@push('head')
+    <script type="application/ld+json">{!! json_encode($breadcrumbData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) !!}</script>
+@endpush
 
 @section('content')
-    <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:py-14">
-        <a href="{{ route('home') }}#tenda" class="inline-flex items-center gap-2 text-sm font-bold text-forest-800 hover:text-ember-dark">
-            <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
-            Semua tipe tenda
-        </a>
+    {{-- Petang: the visitor has picked a tent and is deciding on a night. Same dusk tint and tent-peak edge as the landing. --}}
+    <div class="relative bg-dusk-100 pb-32 pt-8 text-forest-900 sm:pb-40 sm:pt-10">
+        <div class="mx-auto max-w-6xl px-4 sm:px-6">
+            <nav aria-label="Jejak halaman">
+                <ol class="flex flex-wrap items-center gap-x-2 text-sm font-semibold text-ink-soft">
+                    <li><a href="{{ route('home') }}" class="inline-flex min-h-11 items-center underline-offset-4 hover:text-forest-900 hover:underline">Beranda</a></li>
+                    <li aria-hidden="true">/</li>
+                    <li><a href="{{ route('home') }}#tenda" class="inline-flex min-h-11 items-center underline-offset-4 hover:text-forest-900 hover:underline">Semua tenda</a></li>
+                    <li aria-hidden="true">/</li>
+                    <li aria-current="page" class="text-forest-900">{{ $unitType->name }}</li>
+                </ol>
+            </nav>
 
-        <div class="mt-6 grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-            @php($photos = $unitType->photos->sortBy('sort_order')->values())
-            @if($photos->isEmpty())
-                <div class="overflow-hidden rounded-3xl border border-sand">
-                    <x-unit-photo :unit-type="$unitType" minHeight="min-h-[22rem] lg:min-h-[32rem]" />
+            <header class="mt-4 grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-end">
+                <div>
+                    <p class="font-display text-xl italic text-ember-dark">Petang</p>
+                    <h1 class="font-display mt-2 text-[clamp(3.5rem,11vw,8rem)] font-semibold leading-[0.95]">{{ $unitType->name }}</h1>
                 </div>
-            @else
-                <div data-gallery>
-                    <div class="aspect-[3/2] overflow-hidden rounded-3xl border border-sand bg-forest-100">
-                        <img data-gallery-main src="{{ $photos->first()->url }}" alt="{{ $unitType->name }} tenda, foto 1" width="1600" height="1067" fetchpriority="high" decoding="async" class="size-full object-cover">
+                <div>
+                    <dl class="grid grid-cols-2 gap-x-6 gap-y-4 border-t border-forest-900/25 pt-4">
+                        <div>
+                            <dt class="text-xs font-semibold text-ink-soft">Weekday, per malam</dt>
+                            <dd class="font-display text-3xl font-semibold">{{ $formatRupiah($unitType->base_price_weekday) }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold text-ink-soft">Weekend, per malam</dt>
+                            <dd class="font-display text-3xl font-semibold">{{ $formatRupiah($unitType->base_price_weekend) }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold text-ink-soft">Kapasitas</dt>
+                            <dd class="text-lg font-bold">Hingga {{ $unitType->capacity }} orang</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold text-ink-soft">Jumlah unit</dt>
+                            <dd class="text-lg font-bold">{{ $unitType->units_count }} unit</dd>
+                        </div>
+                    </dl>
+                    <a href="#ketersediaan" class="btn btn-primary mt-6 w-full sm:w-auto">Cek ketersediaan</a>
+                </div>
+            </header>
+
+            <div class="mt-10">
+                @if($photos->isEmpty())
+                    <div class="overflow-hidden rounded-3xl border border-sand">
+                        <x-unit-photo :unit-type="$unitType" minHeight="min-h-[22rem] lg:min-h-[32rem]" />
                     </div>
-                    @if($photos->count() > 1)
-                        <ul class="mt-3 grid grid-cols-3 gap-3" aria-label="Foto tenda {{ $unitType->name }}">
-                            @foreach($photos as $photo)
-                                <li>
-                                    <a href="{{ $photo->url }}" data-gallery-thumb data-alt="{{ $unitType->name }} tenda, foto {{ $loop->iteration }}" @if($loop->first) aria-current="true" @endif aria-label="Lihat foto {{ $loop->iteration }} dari {{ $photos->count() }}" class="block aspect-[3/2] overflow-hidden rounded-2xl border-2 border-transparent opacity-70 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember aria-[current=true]:border-ember aria-[current=true]:opacity-100 hover:opacity-100">
-                                        <img src="{{ $photo->url }}" alt="" width="400" height="267" loading="lazy" decoding="async" class="size-full object-cover">
-                                    </a>
+                @else
+                    <div data-gallery class="grid gap-3 @if($photos->count() > 1) lg:grid-cols-[1fr_9rem] @endif">
+                        <div class="aspect-[3/2] overflow-hidden rounded-3xl bg-forest-100 lg:aspect-[16/10]">
+                            <img data-gallery-main src="{{ $photos->first()->url }}" alt="{{ $unitType->name }} tenda, foto 1" width="1600" height="1067" fetchpriority="high" decoding="async" class="size-full object-cover">
+                        </div>
+                        @if($photos->count() > 1)
+                            <ul class="grid grid-cols-4 gap-3 sm:grid-cols-5 lg:grid-cols-1 lg:content-start" aria-label="Foto tenda {{ $unitType->name }}">
+                                @foreach($photos as $photo)
+                                    <li>
+                                        <a href="{{ $photo->url }}" data-gallery-thumb data-alt="{{ $unitType->name }} tenda, foto {{ $loop->iteration }}" @if($loop->first) aria-current="true" @endif aria-label="Lihat foto {{ $loop->iteration }} dari {{ $photos->count() }}" class="block aspect-[3/2] overflow-hidden rounded-2xl border-2 border-transparent opacity-70 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember aria-[current=true]:border-ember aria-[current=true]:opacity-100 hover:opacity-100">
+                                            <img src="{{ $photo->url }}" alt="" width="400" height="267" loading="lazy" decoding="async" class="size-full object-cover">
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </div>
+                @endif
+            </div>
+
+            <div class="mt-16 grid gap-10 lg:grid-cols-[1fr_1.4fr] lg:gap-16" data-reveal>
+                <div>
+                    <h2 class="font-display text-3xl font-semibold sm:text-4xl">Tentang tenda ini</h2>
+                    @if($unitType->description)
+                        <p class="mt-4 max-w-prose leading-relaxed text-ink-soft">{{ $unitType->description }}</p>
+                    @else
+                        <p class="mt-4 max-w-prose leading-relaxed text-ink-soft">Deskripsi tipe ini belum ditulis pengelola. Tanyakan ke pengelola bila ada yang ingin Anda pastikan.</p>
+                    @endif
+                </div>
+                <div>
+                    <h2 class="font-display text-3xl font-semibold sm:text-4xl">Fasilitas</h2>
+                    @if(! empty($unitType->facilities))
+                        <ul class="mt-4 grid gap-x-8 sm:grid-cols-2">
+                            @foreach($unitType->facilities as $facility)
+                                <li class="flex items-center gap-3 border-b border-forest-900/20 py-3 font-semibold">
+                                    <svg class="size-4 shrink-0 text-ember-dark" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                    {{ $facility }}
                                 </li>
                             @endforeach
                         </ul>
+                    @else
+                        <p class="mt-4 text-ink-soft">Daftar fasilitas tipe ini belum diisi pengelola.</p>
                     @endif
                 </div>
-            @endif
-
-            <div>
-                <p class="eyebrow text-ember-dark">Hingga {{ $unitType->capacity }} orang</p>
-                <h1 class="font-display mt-2 text-4xl font-semibold text-forest-900 sm:text-5xl">{{ $unitType->name }}</h1>
-
-                <dl class="mt-6 grid grid-cols-2 gap-4 rounded-2xl bg-cream-deep p-5">
-                    <div>
-                        <dt class="text-xs font-semibold text-ink-soft">Weekday per malam</dt>
-                        <dd class="text-xl font-bold text-forest-900">Rp {{ number_format($unitType->base_price_weekday, 0, ',', '.') }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs font-semibold text-ink-soft">Weekend per malam</dt>
-                        <dd class="text-xl font-bold text-forest-900">Rp {{ number_format($unitType->base_price_weekend, 0, ',', '.') }}</dd>
-                    </div>
-                </dl>
-
-                @if($unitType->description)
-                    <p class="mt-6 leading-relaxed text-ink-soft">{{ $unitType->description }}</p>
-                @endif
-
-                @if(! empty($unitType->facilities))
-                    <h2 class="font-display mt-8 text-xl font-semibold text-forest-900">Fasilitas</h2>
-                    <ul class="mt-3 grid grid-cols-2 gap-3">
-                        @foreach($unitType->facilities as $facility)
-                            <li class="flex items-center gap-2 text-sm font-semibold text-forest-900">
-                                <svg class="size-4 shrink-0 text-ember" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                {{ $facility }}
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
-
-                <form action="{{ route('booking.cek') }}" method="GET" class="mt-8 rounded-3xl border border-sand bg-[#fffdf8] p-5 sm:p-6">
-                    <h2 class="font-display text-xl font-semibold text-forest-900">Cek ketersediaan</h2>
-                    <input type="hidden" name="unit_type_id" value="{{ $unitType->id }}">
-
-                    <div class="mt-4 grid grid-cols-2 gap-3">
-                        <div>
-                            <label for="check_in" class="field-label">Check-in</label>
-                            <input id="check_in" type="date" name="check_in" value="{{ request('check_in', $today) }}" min="{{ $today }}" required class="field-input">
-                        </div>
-                        <div>
-                            <label for="check_out" class="field-label">Check-out</label>
-                            <input id="check_out" type="date" name="check_out" value="{{ request('check_out', $tomorrow) }}" min="{{ $tomorrow }}" required class="field-input">
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <label for="guests" class="field-label">Jumlah tamu</label>
-                        <input id="guests" type="number" name="guests" min="1" max="{{ $unitType->capacity + 2 }}" value="{{ request('guests', 2) }}" required aria-describedby="guests-hint" class="field-input">
-                        <p id="guests-hint" class="mt-2 text-xs text-ink-soft">Kapasitas dasar {{ $unitType->capacity }} orang. Lebih dari itu perlu extra bed.</p>
-                    </div>
-                    @if($errors->any())
-                        <ul class="mt-3 rounded-xl bg-ember-soft px-4 py-3 text-sm font-semibold text-ember-dark" role="alert">
-                            @foreach($errors->unique() as $message)<li>{{ $message }}</li>@endforeach
-                        </ul>
-                    @endif
-                    <button type="submit" class="btn btn-primary mt-5 w-full">Cek dan pesan</button>
-                </form>
             </div>
+
+            @include('public.partials.tenda-availability')
         </div>
+
+        @include('public.partials.tenda-other-types')
+
+        <x-ridge class="text-forest-950" />
     </div>
 @endsection

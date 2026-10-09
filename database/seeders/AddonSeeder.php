@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\AddonUnit;
 use App\Models\Addon;
 use Illuminate\Database\Seeder;
 
@@ -14,9 +15,9 @@ class AddonSeeder extends Seeder
     public function run(): void
     {
         $addons = [
-            ['name' => 'Extra Bed', 'price' => 75000, 'unit' => Addon::UNIT_PER_NIGHT],
-            ['name' => 'Paket Kayu Bakar', 'price' => 50000, 'unit' => Addon::UNIT_PER_ITEM],
-            ['name' => 'Sewa Matras Tambahan', 'price' => 25000, 'unit' => Addon::UNIT_PER_ITEM],
+            ['name' => 'Extra Bed', 'price' => 75000, 'unit' => AddonUnit::PerNight, 'extra_guests' => 1],
+            ['name' => 'Paket Kayu Bakar', 'price' => 50000, 'unit' => AddonUnit::PerItem],
+            ['name' => 'Sewa Matras Tambahan', 'price' => 25000, 'unit' => AddonUnit::PerItem],
         ];
 
         foreach ($addons as $addon) {

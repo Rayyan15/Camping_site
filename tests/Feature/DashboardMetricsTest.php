@@ -2,11 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Widgets\DashboardStats;
 use App\Models\Booking;
 use App\Models\Order;
+use App\Models\User;
 use App\Services\DashboardMetricsService;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class DashboardMetricsTest extends TestCase
@@ -92,6 +97,85 @@ class DashboardMetricsTest extends TestCase
         $this->assertSame(1, $this->metrics->activeFoodOrderCount());
     }
 
+    public function test_active_food_orders_skip_preorders_of_dead_bookings(): void
+    {
+        $today = $this->metrics->today();
+        $customerId = $this->makeCustomer();
+        $paid = $this->makeBooking($customerId, 'B-1', 'paid', $today, $today->addDay());
+        $expired = $this->makeBooking($customerId, 'B-2', 'expired', $today, $today->addDay());
+        $cancelled = $this->makeBooking($customerId, 'B-3', 'cancelled', $today, $today->addDay());
+
+        foreach ([[$paid, 'preorder'], [$expired, 'preorder'], [$cancelled, 'preorder'], [null, 'qr']] as $i => [$bookingId, $source]) {
+            DB::table('orders')->insert([
+                'code' => "O-{$i}", 'source' => $source, 'booking_id' => $bookingId, 'status' => 'baru', 'total' => 10000,
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+        }
+
+        $this->assertSame(2, $this->metrics->activeFoodOrderCount());
+    }
+
+    public function test_preorders_awaiting_payment_count_only_live_pending_holds(): void
+    {
+        $today = $this->metrics->today();
+        $customerId = $this->makeCustomer();
+        $livePending = $this->makeBooking($customerId, 'B-1', 'pending_payment', $today, $today->addDay());
+        $lapsedPending = $this->makeBooking($customerId, 'B-2', 'pending_payment', $today, $today->addDay());
+        DB::table('bookings')->where('id', $livePending)->update(['hold_expires_at' => now()->addMinutes(30)]);
+        DB::table('bookings')->where('id', $lapsedPending)->update(['hold_expires_at' => now()->subMinute()]);
+
+        $others = [
+            $this->makeBooking($customerId, 'B-3', 'expired', $today, $today->addDay()),
+            $this->makeBooking($customerId, 'B-4', 'cancelled', $today, $today->addDay()),
+            $this->makeBooking($customerId, 'B-5', 'paid', $today, $today->addDay()),
+        ];
+
+        $rows = [[$livePending, 'preorder'], [$lapsedPending, 'preorder'], [$livePending, 'qr'], [null, 'walkin']];
+        foreach ([...array_map(fn ($id) => [$id, 'preorder'], $others), ...$rows] as $i => [$bookingId, $source]) {
+            DB::table('orders')->insert([
+                'code' => "O-{$i}", 'source' => $source, 'booking_id' => $bookingId, 'status' => 'baru', 'total' => 10000,
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+        }
+
+        $this->assertSame(1, $this->metrics->preorderAwaitingPaymentCount());
+        $this->assertSame(1, Order::query()->kitchenRelevant()->where('source', 'preorder')->count());
+    }
+
+    public function test_dashboard_stats_show_awaiting_preorders_only_to_permitted_roles(): void
+    {
+        $this->seed(RoleSeeder::class);
+
+        $this->actingAs($this->makeUser(User::ROLE_OWNER));
+        Livewire::test(DashboardStats::class)
+            ->assertSee('Pre-order Menunggu Pembayaran')
+            ->assertSee('Belum masuk antrean dapur');
+
+        $this->actingAs($this->makeUser(User::ROLE_FRONT_OFFICE));
+        Livewire::test(DashboardStats::class)->assertSee('Pre-order Menunggu Pembayaran');
+
+        $this->actingAs($this->makeUser(User::ROLE_CASHIER));
+        $this->assertFalse(DashboardStats::canView());
+    }
+
+    public function test_refund_out_reduces_camping_revenue_without_touching_food(): void
+    {
+        $today = $this->metrics->today();
+        $booking = $this->makeBooking($this->makeCustomer(), 'B-1', 'paid', $today, $today->addDay());
+        $orderId = DB::table('orders')->insertGetId([
+            'code' => 'O-1', 'source' => 'walkin', 'status' => 'baru', 'total' => 50000,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        $this->makePayment(Booking::class, $booking, 750000, 'paid', $today->addHours(10));
+        $this->makePayment(Booking::class, $booking, 500000, 'paid', $today->addHours(12), 'out');
+        $this->makePayment(Booking::class, $booking, 200000, 'pending', $today->addHours(12), 'out');
+        $this->makePayment(Order::class, $orderId, 50000, 'paid', $today->addHours(11));
+        $this->makePayment(Booking::class, $booking, 300000, 'paid', $today->startOfMonth()->subDay(), 'out');
+
+        $this->assertSame(['camping' => 250000, 'food' => 50000], $this->metrics->monthlyRevenue());
+    }
+
     public function test_bookings_per_day_covers_last_fourteen_days(): void
     {
         $today = $this->metrics->today();
@@ -108,6 +192,19 @@ class DashboardMetricsTest extends TestCase
         $this->assertSame(1, $series['data'][0]);
         $this->assertSame(2, $series['data'][13]);
         $this->assertSame(3, array_sum($series['data']));
+    }
+
+    private function makeUser(string $role): User
+    {
+        $user = User::create([
+            'name' => ucfirst($role),
+            'email' => $role.Str::random(6).'@example.test',
+            'password' => Str::random(24),
+            'is_active' => true,
+        ]);
+        $user->assignRole($role);
+
+        return $user;
     }
 
     private function makeCustomer(): int
@@ -157,10 +254,10 @@ class DashboardMetricsTest extends TestCase
         ]);
     }
 
-    private function makePayment(string $type, int $id, int $amount, string $status, $paidAt): void
+    private function makePayment(string $type, int $id, int $amount, string $status, $paidAt, string $direction = 'in'): void
     {
         DB::table('payments')->insert([
-            'payable_type' => (new $type)->getMorphClass(), 'payable_id' => $id, 'method' => 'transfer',
+            'payable_type' => (new $type)->getMorphClass(), 'payable_id' => $id, 'direction' => $direction, 'method' => 'transfer',
             'amount' => $amount, 'status' => $status, 'paid_at' => $paidAt->utc(),
             'created_at' => now(), 'updated_at' => now(),
         ]);

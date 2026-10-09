@@ -69,7 +69,10 @@ class DiningSpotService
                 ->whereDate('check_in', '<=', $today)
                 ->whereDate('check_out', '>=', $today))
             ->with('customer')
-            ->orderBy('check_in')
+            // Checked-in guests first (a no-show still marked paid never wins), then the latest arrival,
+            // so on a turnover day the guest who just checked in is billed, not the one leaving.
+            ->orderByRaw('CASE WHEN status = ? THEN 0 ELSE 1 END', [BookingStatus::CheckedIn->value])
+            ->orderByDesc('check_in')
             ->first();
     }
 

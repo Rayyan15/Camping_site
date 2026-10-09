@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Exceptions\MenuItemUnavailableException;
 use App\Models\Addon;
 use App\Models\MenuItem;
-use App\Models\Setting;
 use App\Models\SpecialPrice;
 use App\Models\UnitType;
 use Carbon\CarbonImmutable;
@@ -27,12 +26,38 @@ class PricingService
      */
     public function priceForNight(UnitType $unitType, CarbonInterface $night): int
     {
-        $special = SpecialPrice::where('unit_type_id', $unitType->id)
-            ->whereDate('date', $night->toDateString())
-            ->value('price');
+        $day = $night->startOfDay();
+
+        return $this->nightPrice($unitType, $day, $this->specialPricesBetween($unitType, $day, $day->addDay()));
+    }
+
+    /**
+     * Total stay price of one unit of the given type. Special prices are loaded once for the whole stay.
+     */
+    public function stayTotal(UnitType $unitType, CarbonInterface|string $checkIn, CarbonInterface|string $checkOut): int
+    {
+        $total = 0;
+        $night = CarbonImmutable::parse($checkIn)->startOfDay();
+        $end = CarbonImmutable::parse($checkOut)->startOfDay();
+        $specials = $this->specialPricesBetween($unitType, $night, $end);
+
+        while ($night->lt($end)) {
+            $total += $this->nightPrice($unitType, $night, $specials);
+            $night = $night->addDay();
+        }
+
+        return $total;
+    }
+
+    /**
+     * @param  array<string, int>  $specials  Y-m-d => price
+     */
+    private function nightPrice(UnitType $unitType, CarbonInterface $night, array $specials): int
+    {
+        $special = $specials[$night->toDateString()] ?? null;
 
         if ($special !== null) {
-            return (int) $special;
+            return $special;
         }
 
         return $this->isWeekendNight($night)
@@ -41,20 +66,19 @@ class PricingService
     }
 
     /**
-     * Total stay price of one unit of the given type.
+     * Nights in [$from, $to) keyed by date, one query regardless of stay length.
+     *
+     * @return array<string, int>
      */
-    public function stayTotal(UnitType $unitType, CarbonInterface|string $checkIn, CarbonInterface|string $checkOut): int
+    private function specialPricesBetween(UnitType $unitType, CarbonInterface $from, CarbonInterface $to): array
     {
-        $total = 0;
-        $night = CarbonImmutable::parse($checkIn)->startOfDay();
-        $end = CarbonImmutable::parse($checkOut)->startOfDay();
-
-        while ($night->lt($end)) {
-            $total += $this->priceForNight($unitType, $night);
-            $night = $night->addDay();
-        }
-
-        return $total;
+        return SpecialPrice::where('unit_type_id', $unitType->id)
+            ->whereDate('date', '>=', $from->toDateString())
+            ->whereDate('date', '<', $to->toDateString())
+            ->orderBy('id')
+            ->get(['date', 'price'])
+            ->mapWithKeys(fn (SpecialPrice $row) => [$row->date->toDateString() => (int) $row->price])
+            ->all();
     }
 
     /**
@@ -114,9 +138,7 @@ class PricingService
 
     public function taxRate(): float
     {
-        $configured = Setting::where('key', 'tax_rate')->value('value');
-
-        return $configured !== null ? (float) $configured : (float) config('booking.tax_rate');
+        return app(SettingRepository::class)->taxRate();
     }
 
     public function taxFor(int $subtotal): int

@@ -4,14 +4,13 @@ namespace App\Services;
 
 use App\Models\Booking;
 use App\Models\Order;
+use App\Models\Payment;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 class DashboardMetricsService
 {
-    private const PAYMENT_PAID = 'paid';
-
     private const ORDER_DONE = 'selesai';
 
     private const UNIT_ACTIVE = 'active';
@@ -68,21 +67,25 @@ class DashboardMetricsService
 
     public function activeFoodOrderCount(): int
     {
-        return Order::query()->where('status', '!=', self::ORDER_DONE)->count();
+        return Order::query()->kitchenRelevant()->where('status', '!=', self::ORDER_DONE)->count();
     }
 
-    /** @return array{camping: int, food: int} integer rupiah for the current month */
+    /** Pre-orders of unpaid bookings with a live hold: hidden from the kitchen until the booking is paid. */
+    public function preorderAwaitingPaymentCount(): int
+    {
+        return Order::query()->awaitingBookingPayment()->count();
+    }
+
+    /** @return array{camping: int, food: int} net integer rupiah (payments in minus refunds) for the current month */
     public function monthlyRevenue(): array
     {
         $start = $this->today()->startOfMonth();
         $end = $start->addMonth();
 
-        $totals = DB::table('payments')
-            ->where('status', self::PAYMENT_PAID)
-            ->where('paid_at', '>=', $start->toDateTimeString())
-            ->where('paid_at', '<', $end->toDateTimeString())
-            ->selectRaw('payable_type, SUM(amount) as total')
-            ->groupBy('payable_type')
+        $totals = Payment::query()
+            ->settled()
+            ->paidBetween($start->toDateTimeString(), $end->toDateTimeString())
+            ->netByPayableType()
             ->pluck('total', 'payable_type');
 
         return [

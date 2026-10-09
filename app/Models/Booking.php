@@ -9,14 +9,27 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Str;
 
 class Booking extends Model
 {
+    public const ACCESS_TOKEN_LENGTH = 40;
+
     protected $fillable = [
         'code', 'invoice_number', 'customer_id', 'check_in', 'check_out', 'guests',
         'status', 'hold_expires_at', 'subtotal', 'tax', 'total',
-        'paid_amount', 'notes',
+        'paid_amount', 'notes', 'review_started_at', 'cancelled_at', 'cancellation_note',
     ];
+
+    /** The access token is a credential for public pages, so it never leaves the model in serialized form. */
+    protected $hidden = ['access_token'];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Booking $booking) {
+            $booking->access_token ??= Str::random(self::ACCESS_TOKEN_LENGTH);
+        });
+    }
 
     protected function casts(): array
     {
@@ -24,6 +37,8 @@ class Booking extends Model
             'check_in' => 'date',
             'check_out' => 'date',
             'hold_expires_at' => 'datetime',
+            'review_started_at' => 'datetime',
+            'cancelled_at' => 'datetime',
             'status' => BookingStatus::class,
             'guests' => 'integer',
             'subtotal' => 'integer',
@@ -45,6 +60,16 @@ class Booking extends Model
                         ->where('hold_expires_at', '>', now());
                 });
         });
+    }
+
+    public function scopeByAccessToken(Builder $query, string $token): Builder
+    {
+        return $query->where('access_token', $token);
+    }
+
+    public function scopeNeedsReview(Builder $query): Builder
+    {
+        return $query->where('status', BookingStatus::NeedsReview);
     }
 
     public function isInvoiceable(): bool

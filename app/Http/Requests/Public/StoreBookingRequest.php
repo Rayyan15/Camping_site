@@ -11,6 +11,8 @@ use Illuminate\Validation\Rule;
 
 class StoreBookingRequest extends FormRequest
 {
+    use ValidatesStayLimits;
+
     private const PHONE_PATTERN = '/^62\d{8,13}$/';
 
     public function authorize(): bool
@@ -38,7 +40,7 @@ class StoreBookingRequest extends FormRequest
             'preorder' => ['nullable', 'array'],
             'preorder.*.menu_item_id' => ['required', 'integer', Rule::exists('menu_items', 'id')->where('is_available', true)],
             'preorder.*.qty' => ['required', 'integer', 'min:1', 'max:'.config('booking.max_preorder_quantity')],
-            'preorder.*.serve_date' => ['required', 'date', 'after_or_equal:check_in', 'before:check_out'],
+            'preorder.*.serve_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:check_in', 'before:check_out'],
             'preorder.*.serve_time' => ['required', Rule::in(config('booking.serve_times'))],
         ];
     }
@@ -64,6 +66,7 @@ class StoreBookingRequest extends FormRequest
             'addons.*.max' => 'Jumlah tambahan melebihi batas yang diizinkan.',
             'preorder.*.menu_item_id.exists' => 'Salah satu menu yang dipilih sedang tidak tersedia.',
             'preorder.*.qty.max' => 'Jumlah menu melebihi batas yang diizinkan.',
+            'preorder.*.serve_date.date_format' => 'Format tanggal penyajian tidak valid.',
             'preorder.*.serve_date.after_or_equal' => 'Tanggal penyajian harus berada dalam masa menginap.',
             'preorder.*.serve_date.before' => 'Tanggal penyajian harus sebelum hari check-out.',
             'preorder.*.serve_time.in' => 'Jam penyajian tidak tersedia.',
@@ -85,6 +88,8 @@ class StoreBookingRequest extends FormRequest
     public function after(): array
     {
         return [function (Validator $validator): void {
+            $this->validateStayLimits($validator);
+
             if ($validator->errors()->isNotEmpty()) {
                 return;
             }
@@ -123,10 +128,11 @@ class StoreBookingRequest extends FormRequest
 
     private function extraBedCount(): int
     {
-        $perNightIds = Addon::where('unit', Addon::UNIT_PER_NIGHT)->pluck('id')->all();
+        $extraGuests = Addon::where('extra_guests', '>', 0)->pluck('extra_guests', 'id');
 
         return (int) collect($this->input('addons', []))
-            ->only($perNightIds)
+            ->only($extraGuests->keys()->all())
+            ->map(fn ($qty, $id) => (int) $qty * $extraGuests[$id])
             ->sum();
     }
 

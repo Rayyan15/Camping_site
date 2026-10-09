@@ -16,7 +16,11 @@ enum PaymentStatus: string
     {
         return match ($transactionStatus) {
             'settlement' => self::Paid,
-            'capture' => $fraudStatus === 'challenge' ? self::Pending : self::Paid,
+            'capture' => match ($fraudStatus) {
+                'challenge' => self::Pending,
+                'deny' => self::Failed,
+                default => self::Paid,
+            },
             'expire' => self::Expired,
             'deny', 'cancel', 'failure' => self::Failed,
             default => self::Pending,

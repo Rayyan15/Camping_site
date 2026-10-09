@@ -64,7 +64,7 @@
             <section class="mt-8 rounded-2xl bg-cream-deep p-6">
                 <h2 class="font-bold text-forest-900">Tenda sedang ditahan untuk Anda</h2>
                 <p class="mt-1 text-ink-soft">Selesaikan pembayaran sebelum {{ $booking->hold_expires_at->format('H:i') }} WIB, sisa {{ (int) now()->diffInMinutes($booking->hold_expires_at, false) }} menit.</p>
-                <a href="{{ route('checkout.show', $booking->code) }}" class="btn btn-primary mt-4">Lanjut ke pembayaran</a>
+                <a href="{{ route('checkout.show', $booking->access_token) }}" class="btn btn-primary mt-4">Lanjut ke pembayaran</a>
             </section>
         @endif
 
@@ -127,18 +127,23 @@
             <section class="mt-8 rounded-3xl border border-ember-soft bg-[#fffdf8] p-6 sm:p-8">
                 <h2 class="font-display text-2xl font-semibold text-forest-900">Batalkan booking</h2>
                 @if($quote)
-                    <p class="mt-2 text-ink-soft">
-                        {{ $quote->daysBefore }} hari sebelum check-in, dana yang dapat kembali
-                        <strong class="text-forest-900">{{ $quote->percent }}% atau {{ $money($quote->amount) }}</strong>.
-                        Pengajuan ditinjau pemilik sebelum disetujui.
-                    </p>
+                    <p class="mt-2 text-ink-soft">{{ $quote->daysBefore }} hari sebelum check-in.</p>
+                    @if($quote->amount > 0)
+                        <p class="mt-2 text-ink">
+                            Jika dibatalkan sekarang, dana yang dikembalikan:
+                            <strong class="text-forest-900">{{ $money($quote->amount) }} ({{ $quote->percent }}%)</strong>.
+                            Pengajuan ditinjau pemilik sebelum disetujui.
+                        </p>
+                    @else
+                        <p class="mt-2 font-semibold text-ember-dark">Pembatalan ini tidak mendapat pengembalian dana.</p>
+                    @endif
                 @else
                     <p class="mt-2 text-ink-soft">Booking belum dibayar, jadi pembatalan tidak dikenai biaya dan tenda langsung dilepas.</p>
                 @endif
 
                 <details class="mt-5">
                     <summary class="btn btn-outline cursor-pointer list-none">Ajukan pembatalan</summary>
-                    <form method="POST" action="{{ route('booking.cancel', $booking->code) }}" class="mt-5 space-y-4">
+                    <form method="POST" action="{{ route('booking.cancel', $booking->access_token) }}" class="mt-5 space-y-4">
                         @csrf
                         <div>
                             <label for="reason" class="field-label">Alasan pembatalan</label>
@@ -147,7 +152,13 @@
                         </div>
                         <label class="flex items-start gap-3 text-sm text-ink-soft">
                             <input type="checkbox" required class="mt-0.5 size-5 accent-forest-800">
-                            Saya paham pembatalan tidak dapat diurungkan.
+                            @if($quote && $quote->amount > 0)
+                                Saya paham pembatalan tidak dapat diurungkan dan dana yang dikembalikan sebesar {{ $money($quote->amount) }}.
+                            @elseif($quote)
+                                Saya paham pembatalan tidak dapat diurungkan dan tidak ada dana yang dikembalikan.
+                            @else
+                                Saya paham pembatalan tidak dapat diurungkan.
+                            @endif
                         </label>
                         <button type="submit" class="btn btn-primary">Konfirmasi pembatalan</button>
                     </form>

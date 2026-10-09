@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Addons\Schemas;
 
+use App\Enums\AddonUnit;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
@@ -25,9 +27,21 @@ class AddonForm
                                 ->required()
                                 ->numeric()
                                 ->prefix('Rp'),
-                            TextInput::make('unit')
-                                ->label('Satuan (Misal: pax, porsi, unit)')
+                            Select::make('unit')
+                                ->label('Satuan')
+                                ->options(AddonUnit::options())
+                                ->default(AddonUnit::PerItem->value)
+                                ->helperText('Per malam dikalikan jumlah malam menginap, per item dihitung sekali.')
                                 ->required(),
+                            TextInput::make('extra_guests')
+                                ->label('Tambahan tamu per item')
+                                ->numeric()
+                                ->integer()
+                                ->minValue(0)
+                                ->maxValue(4)
+                                ->default(0)
+                                ->required()
+                                ->helperText('Isi 1 untuk extra bed. Isi 0 untuk add-on yang tidak menambah kapasitas tenda.'),
                             Toggle::make('is_active')
                                 ->label('Tersedia / Aktif')
                                 ->required()

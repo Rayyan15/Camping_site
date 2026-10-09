@@ -109,7 +109,7 @@
 
     <table class="totals">
         <tr><td>Subtotal</td><td class="right">{{ $rupiah($subtotal) }}</td></tr>
-        <tr><td>Pajak</td><td class="right">{{ $rupiah($booking->tax) }}</td></tr>
+        <tr><td>Pajak</td><td class="right">{{ $rupiah($tax) }}</td></tr>
         <tr class="grand"><td>Total</td><td class="right">{{ $rupiah($grandTotal) }}</td></tr>
         <tr><td>Dibayar</td><td class="right">{{ $rupiah($booking->paid_amount) }}</td></tr>
         <tr><td>Sisa tagihan</td><td class="right">{{ $rupiah($balance) }}</td></tr>

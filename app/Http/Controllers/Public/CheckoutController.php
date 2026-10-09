@@ -3,51 +3,81 @@
 namespace App\Http\Controllers\Public;
 
 use App\Enums\BookingStatus;
+use App\Exceptions\PaymentException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Public\PayCheckoutRequest;
 use App\Models\Booking;
+use App\Services\BookingBilling;
 use App\Services\Payment\PaymentService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 
 class CheckoutController extends Controller
 {
-    public function show(string $code): View|RedirectResponse
+    public function show(string $token, BookingBilling $billing): View|RedirectResponse
     {
-        $booking = $this->findBooking($code);
+        $booking = $this->findBooking($token);
 
         if (! $this->belongsOnCheckout($booking)) {
-            return redirect()->route('booking.status', $booking->code);
+            return redirect()->route('booking.status', $booking->access_token);
         }
 
         return view('public.checkout', [
             'booking' => $booking,
             'holdActive' => $booking->isHoldActive(),
+            'outstanding' => $billing->outstanding($booking),
+            'downPayment' => $billing->downPaymentAmount($booking),
         ]);
     }
 
-    public function pay(string $code, PaymentService $payments): RedirectResponse
+    public function pay(PayCheckoutRequest $request, string $token, PaymentService $payments): RedirectResponse
     {
-        $booking = $this->findBooking($code);
+        $booking = $this->findBooking($token);
 
         if (! $this->belongsOnCheckout($booking)) {
-            return redirect()->route('booking.status', $booking->code);
+            return redirect()->route('booking.status', $booking->access_token);
         }
 
         if (! $booking->isHoldActive()) {
-            return redirect()->route('checkout.show', $booking->code);
+            return redirect()->route('checkout.show', $booking->access_token);
         }
 
-        return redirect()->away($payments->initiate($booking)->redirectUrl);
+        try {
+            return redirect()->away($payments->initiate($booking, $request->wantsDownPayment())->redirectUrl);
+        } catch (PaymentException $exception) {
+            return $this->paymentFailedResponse($booking, $exception);
+        }
     }
 
-    private function findBooking(string $code): Booking
+    /**
+     * The exception text can carry gateway detail, so the visitor only gets fixed copy.
+     */
+    private function paymentFailedResponse(Booking $booking, PaymentException $exception): RedirectResponse
+    {
+        Log::warning('Checkout payment could not be started.', [
+            'booking_code' => $booking->code,
+            'already_paid' => $exception->isAlreadyPaid(),
+            'reason' => $exception->getMessage(),
+        ]);
+
+        if ($exception->isAlreadyPaid()) {
+            return redirect()->route('booking.status', $booking->access_token)
+                ->with('success', 'Pembayaran sudah diterima. Terima kasih.');
+        }
+
+        return redirect()->route('checkout.show', $booking->access_token)
+            ->with('error', 'Pembayaran belum bisa diproses saat ini. Silakan coba lagi sebentar lagi.');
+    }
+
+    private function findBooking(string $token): Booking
     {
         return Booking::with([
             'customer',
             'bookingUnits.unit.unitType',
             'addons.addon',
             'orders.items.menuItem',
-        ])->where('code', $code)->firstOrFail();
+        ])->byAccessToken($token)->firstOrFail();
     }
 
     /**

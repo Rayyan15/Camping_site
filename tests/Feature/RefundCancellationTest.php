@@ -170,7 +170,7 @@ class RefundCancellationTest extends TestCase
     {
         $booking = $this->booking(10);
 
-        $this->get(route('booking.status', $booking->code))
+        $this->get(route('booking.status', $booking->access_token))
             ->assertOk()
             ->assertSee($booking->code)
             ->assertSee('Lunas');
@@ -183,10 +183,10 @@ class RefundCancellationTest extends TestCase
     {
         $booking = $this->booking(10);
 
-        $this->post(route('booking.cancel', $booking->code), ['reason' => ''])->assertSessionHasErrors('reason');
+        $this->post(route('booking.cancel', $booking->access_token), ['reason' => ''])->assertSessionHasErrors('reason');
 
-        $this->post(route('booking.cancel', $booking->code), ['reason' => 'Sakit mendadak'])
-            ->assertRedirect(route('booking.status', $booking->code));
+        $this->post(route('booking.cancel', $booking->access_token), ['reason' => 'Sakit mendadak'])
+            ->assertRedirect(route('booking.status', $booking->access_token));
 
         $this->assertSame(1, Refund::count());
     }

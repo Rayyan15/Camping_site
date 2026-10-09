@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\AddonUnit;
 use App\Models\Addon;
 use App\Models\Setting;
 use Illuminate\Database\Seeder;
@@ -29,9 +30,9 @@ class ProductionSeeder extends Seeder
 
     /** Inactive at price 0 so nothing is sold until the owner sets a real price and activates it. */
     private const ADDONS = [
-        ['name' => 'Extra Bed', 'unit' => Addon::UNIT_PER_NIGHT],
-        ['name' => 'Paket Kayu Bakar', 'unit' => Addon::UNIT_PER_ITEM],
-        ['name' => 'Sewa Matras Tambahan', 'unit' => Addon::UNIT_PER_ITEM],
+        ['name' => 'Extra Bed', 'unit' => AddonUnit::PerNight, 'extra_guests' => 1],
+        ['name' => 'Paket Kayu Bakar', 'unit' => AddonUnit::PerItem],
+        ['name' => 'Sewa Matras Tambahan', 'unit' => AddonUnit::PerItem],
     ];
 
     public function run(): void
@@ -62,7 +63,7 @@ class ProductionSeeder extends Seeder
         foreach (self::ADDONS as $addon) {
             Addon::firstOrCreate(
                 ['name' => $addon['name']],
-                ['price' => 0, 'unit' => $addon['unit'], 'is_active' => false],
+                ['price' => 0, 'unit' => $addon['unit'], 'extra_guests' => $addon['extra_guests'] ?? 0, 'is_active' => false],
             );
         }
     }

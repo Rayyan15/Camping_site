@@ -23,7 +23,7 @@ class CleaningLogResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Laporan';
+        return 'Laporan & Keuangan';
     }
 
     public static function getNavigationSort(): ?int

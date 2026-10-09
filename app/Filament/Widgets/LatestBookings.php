@@ -9,16 +9,6 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class LatestBookings extends BaseWidget
 {
-    private const STATUS_LABELS = [
-        'pending_payment' => 'Menunggu Bayar',
-        'paid' => 'Lunas',
-        'checked_in' => 'Check-in',
-        'checked_out' => 'Check-out',
-        'expired' => 'Kedaluwarsa',
-        'cancelled' => 'Dibatalkan',
-        'refunded' => 'Dikembalikan',
-    ];
-
     protected static ?int $sort = 5;
 
     public static function canView(): bool
@@ -41,14 +31,7 @@ class LatestBookings extends BaseWidget
                     ->weight('bold'),
                 TextColumn::make('status')
                     ->label('Status')
-                    ->badge()
-                    ->formatStateUsing(fn (string $state): string => self::STATUS_LABELS[$state] ?? $state)
-                    ->color(fn (string $state): string => match ($state) {
-                        'pending_payment' => 'warning',
-                        'paid', 'checked_in' => 'success',
-                        'cancelled', 'expired', 'refunded' => 'danger',
-                        default => 'gray',
-                    }),
+                    ->badge(),
             ])
             ->paginated(false);
     }

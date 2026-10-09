@@ -5,7 +5,6 @@ namespace App\Services\Payment;
 use App\Contracts\PaymentGateway;
 use App\Enums\PaymentStatus;
 use App\Exceptions\PaymentException;
-use App\Models\Booking;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
@@ -13,18 +12,16 @@ class MidtransGateway implements PaymentGateway
 {
     private const REQUEST_TIMEOUT_SECONDS = 15;
 
-    public function createTransaction(Booking $booking, string $orderId, int $amount): string
+    public function createTransaction(GatewayCharge $charge): string
     {
-        $booking->loadMissing('customer');
-
         try {
             $response = Http::withBasicAuth($this->serverKey(), '')
                 ->acceptJson()
                 ->asJson()
                 ->timeout(self::REQUEST_TIMEOUT_SECONDS)
-                ->post(config('services.midtrans.snap_url'), $this->transactionBody($booking, $orderId, $amount));
+                ->post(config('services.midtrans.snap_url'), $this->transactionBody($charge));
         } catch (ConnectionException $e) {
-            throw PaymentException::gatewayUnavailable($e->getMessage());
+            throw PaymentException::gatewayUnreachable($e->getMessage());
         }
 
         $redirectUrl = $response->json('redirect_url');
@@ -36,6 +33,9 @@ class MidtransGateway implements PaymentGateway
         return $redirectUrl;
     }
 
+    /**
+     * @throws PaymentException when the server key is not configured
+     */
     public function isAuthentic(array $payload): bool
     {
         $signature = $payload['signature_key'] ?? null;
@@ -44,8 +44,10 @@ class MidtransGateway implements PaymentGateway
             return false;
         }
 
+        $serverKey = $this->serverKey();
+
         $expected = hash('sha512',
-            ($payload['order_id'] ?? '').($payload['status_code'] ?? '').($payload['gross_amount'] ?? '').$this->serverKey()
+            ($payload['order_id'] ?? '').($payload['status_code'] ?? '').($payload['gross_amount'] ?? '').$serverKey
         );
 
         return hash_equals($expected, $signature);
@@ -62,28 +64,40 @@ class MidtransGateway implements PaymentGateway
     /**
      * @return array<string, mixed>
      */
-    private function transactionBody(Booking $booking, string $orderId, int $amount): array
+    private function transactionBody(GatewayCharge $charge): array
     {
-        return [
-            'transaction_details' => ['order_id' => $orderId, 'gross_amount' => $amount],
+        return array_filter([
+            'transaction_details' => ['order_id' => $charge->reference, 'gross_amount' => $charge->amount],
             'item_details' => [[
-                'id' => $booking->code,
-                'name' => 'Booking '.$booking->code,
-                'price' => $amount,
+                'id' => $charge->reference,
+                'name' => $charge->label,
+                'price' => $charge->amount,
                 'quantity' => 1,
             ]],
             'customer_details' => array_filter([
-                'first_name' => $booking->customer?->name,
-                'phone' => $booking->customer?->phone,
-                'email' => $booking->customer?->email,
+                'first_name' => $charge->customer['name'] ?? null,
+                'phone' => $charge->customer['phone'] ?? null,
+                'email' => $charge->customer['email'] ?? null,
             ]),
+            'enabled_payments' => $charge->enabledPayments,
             'expiry' => ['unit' => 'minutes', 'duration' => config('booking.hold_minutes')],
-            'callbacks' => ['finish' => route('booking.status', $booking->code)],
-        ];
+            'callbacks' => ['finish' => $charge->finishUrl],
+        ]);
     }
 
+    /**
+     * An empty key would let anyone compute a valid signature, so it is never usable.
+     *
+     * @throws PaymentException
+     */
     private function serverKey(): string
     {
-        return (string) config('services.midtrans.server_key');
+        $key = (string) config('services.midtrans.server_key');
+
+        if ($key === '') {
+            throw PaymentException::gatewayNotConfigured();
+        }
+
+        return $key;
     }
 }

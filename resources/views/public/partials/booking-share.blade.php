@@ -2,7 +2,7 @@
 
 <div class="flex flex-col gap-3 sm:flex-row">
     @if($booking->isInvoiceable())
-        <a href="{{ route('booking.invoice', $booking->code) }}" class="btn btn-primary inline-flex items-center justify-center gap-2">
+        <a href="{{ route('booking.invoice', $booking->access_token) }}" class="btn btn-primary inline-flex items-center justify-center gap-2">
             <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
             Unduh invoice
         </a>

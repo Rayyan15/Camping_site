@@ -6,10 +6,12 @@
         'Fasilitas' => $home.'#fasilitas',
         'FAQ' => $home.'#faq',
     ];
+    $accountHref = auth()->check() ? route('account.index') : route('login');
+    $accountLabel = auth()->check() ? 'Akun saya' : 'Masuk';
 @endphp
 <header class="sticky top-0 z-50 border-b border-sand/70 bg-cream/95 backdrop-blur">
     <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <a href="{{ $home }}" class="flex items-center text-forest-900" aria-label="{{ config('site.name') }}, beranda">
+        <a href="{{ $home }}" class="flex min-h-11 items-center text-forest-900" aria-label="{{ config('site.name') }}, beranda">
             <span class="font-display text-2xl font-semibold tracking-tight">Raynad</span>
         </a>
 
@@ -20,6 +22,7 @@
         </nav>
 
         <div class="flex items-center gap-2">
+            <a href="{{ $accountHref }}" class="hidden min-h-11 items-center px-3 text-sm font-semibold text-ink-soft transition hover:text-forest-900 md:inline-flex">{{ $accountLabel }}</a>
             <a href="{{ $home }}#cari" class="btn btn-primary hidden !min-h-10 !px-5 sm:inline-flex">Cek tanggal</a>
 
             <details class="group relative md:hidden">
@@ -31,6 +34,7 @@
                     @foreach($navLinks as $label => $href)
                         <a href="{{ $href }}" class="block rounded-xl px-4 py-3 font-semibold text-forest-900 hover:bg-cream-deep">{{ $label }}</a>
                     @endforeach
+                    <a href="{{ $accountHref }}" class="mt-1 block rounded-xl border-t border-sand px-4 py-3 font-semibold text-ink-soft hover:bg-cream-deep">{{ $accountLabel }}</a>
                     <a href="{{ $home }}#cari" class="btn btn-primary mt-1 w-full">Cek tanggal</a>
                 </nav>
             </details>

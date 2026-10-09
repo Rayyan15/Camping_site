@@ -4,14 +4,19 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Public\LandingSearchRequest;
+use App\Models\MenuItem;
 use App\Models\UnitType;
 use App\Services\BookingService;
+use App\Services\RefundPolicySummary;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 
 class LandingController extends Controller
 {
-    public function __construct(private readonly BookingService $bookingService) {}
+    public function __construct(
+        private readonly BookingService $bookingService,
+        private readonly RefundPolicySummary $refundPolicy,
+    ) {}
 
     public function index(LandingSearchRequest $request): View
     {
@@ -30,8 +35,24 @@ class LandingController extends Controller
             'totalUnits' => $unitTypes->sum('units_count'),
             'holdMinutes' => config('booking.hold_minutes'),
             'search' => $request->safe()->only(['check_in', 'check_out', 'guests']),
+            'menuByCategory' => $this->menuByCategory(),
+            'refundSummary' => $this->refundPolicy->sentence(),
             'structuredData' => $this->structuredData($unitTypes),
         ]);
+    }
+
+    /**
+     * Only items guests can order right now, so the page never advertises a sold-out dish.
+     *
+     * @return Collection<string, Collection<int, MenuItem>> items keyed by category name
+     */
+    private function menuByCategory(): Collection
+    {
+        return MenuItem::available()
+            ->with('category')
+            ->get()
+            ->sortBy([['category.sort_order', 'asc'], ['sort_order', 'asc']])
+            ->groupBy(fn (MenuItem $item) => $item->category->name);
     }
 
     /**

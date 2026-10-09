@@ -23,7 +23,11 @@ class UnitForm
                                 ->required(),
                             TextInput::make('code')
                                 ->label('Nomor/Kode Tenda')
-                                ->required(),
+                                ->required()
+                                ->unique(ignoreRecord: true)
+                                ->validationMessages([
+                                    'unique' => 'Kode tenda sudah dipakai unit lain.',
+                                ]),
                             Select::make('status')
                                 ->label('Status')
                                 ->options([

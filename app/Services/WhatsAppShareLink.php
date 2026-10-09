@@ -59,7 +59,7 @@ class WhatsAppShareLink
             'Tanggal: '.$booking->check_in->format('d/m/Y').' sampai '.$booking->check_out->format('d/m/Y'),
             $units !== '' ? 'Unit: '.$units : null,
             'Total: Rp '.number_format($booking->total, 0, ',', '.'),
-            'Status booking: '.route('booking.status', $booking->code),
+            'Status booking: '.route('booking.status', $booking->access_token),
         ]));
     }
 }

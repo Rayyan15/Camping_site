@@ -5,7 +5,7 @@
 
     $rupiah = fn (int $amount) => 'Rp '.number_format($amount, 0, ',', '.');
     $previous = collect(old('items', []))->keyBy('menu_item_id');
-    $availableChoices = $booking ? QrPaymentChoice::cases() : [QrPaymentChoice::Cashier];
+    $availableChoices = $canBillToBooking ?QrPaymentChoice::cases() : [QrPaymentChoice::Cashier];
     $selectedChoice = old('payment_choice', QrPaymentChoice::Cashier->value);
 @endphp
 
@@ -96,7 +96,7 @@
 
                 <div class="mt-4">
                     <label for="customer_name" class="field-label">Nama</label>
-                    <input id="customer_name" name="customer_name" type="text" required maxlength="80" autocomplete="name" value="{{ old('customer_name', $booking?->customer?->name) }}" class="field-input">
+                    <input id="customer_name" name="customer_name" type="text" required maxlength="80" autocomplete="name" value="{{ old('customer_name') }}" class="field-input">
                 </div>
                 <div class="mt-4">
                     <label for="customer_phone" class="field-label">Nomor WhatsApp (opsional)</label>
@@ -111,11 +111,7 @@
                                 <input type="radio" name="payment_choice" value="{{ $choice->value }}" required @checked($selectedChoice === $choice->value) class="size-5 accent-forest-800">
                                 <span class="font-semibold text-forest-900">
                                     {{ $choice->label() }}
-                                    @if($choice === QrPaymentChoice::Booking)
-                                        <span class="block text-sm font-medium text-ink-soft">Masuk ke tagihan booking {{ $booking->code }}</span>
-                                    @else
-                                        <span class="block text-sm font-medium text-ink-soft">Bayar saat pesanan sampai atau di kasir</span>
-                                    @endif
+                                    <span class="block text-sm font-medium text-ink-soft">{{ $choice->hint() }}</span>
                                 </span>
                             </label>
                         @endforeach

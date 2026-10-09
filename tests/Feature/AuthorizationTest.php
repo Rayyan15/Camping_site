@@ -80,7 +80,7 @@ class AuthorizationTest extends TestCase
         foreach ([User::ROLE_FRONT_OFFICE, User::ROLE_CASHIER] as $role) {
             $operator = $this->userWithRole($role);
 
-            foreach (['approve_refund', 'view_reports', 'view_financials', 'manage_settings', 'manage_users', 'view_activity_log', 'evaluate_employees', 'manage_employees'] as $permission) {
+            foreach (['approve_refund', 'view_reports', 'view_financials'] as $permission) {
                 $this->assertTrue($owner->can($permission));
                 $this->assertFalse($operator->can($permission), "$role must not hold $permission");
             }

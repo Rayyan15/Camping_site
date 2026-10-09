@@ -18,6 +18,16 @@ use Filament\Tables\Table;
 
 class OrdersTable
 {
+    /**
+     * Methods a cashier may record on the spot.
+     *
+     * @return array<int, PaymentMethod>
+     */
+    public static function cashierMethods(): array
+    {
+        return [PaymentMethod::Cash, PaymentMethod::Manual, PaymentMethod::Transfer];
+    }
+
     public static function configure(Table $table): Table
     {
         return $table
@@ -70,7 +80,7 @@ class OrdersTable
                     ->icon('heroicon-o-banknotes')
                     ->visible(fn (Order $record) => ! $record->isPaid()
                         && ! $record->bill_to_booking
-                        && auth()->user()?->can('process_orders'))
+                        && auth()->user()?->can('record_order_payment'))
                     ->schema([
                         Select::make('method')
                             ->label('Metode')
@@ -82,6 +92,8 @@ class OrdersTable
                             ->required(),
                     ])
                     ->action(function (Order $record, array $data) {
+                        abort_unless(auth()->user()?->can('record_order_payment'), 403);
+
                         try {
                             app(OrderService::class)->markPaidAtCashier($record, PaymentMethod::from($data['method']), auth()->id());
                             Notification::make()->title('Pembayaran dicatat')->success()->send();

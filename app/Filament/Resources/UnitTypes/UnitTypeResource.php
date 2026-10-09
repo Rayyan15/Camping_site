@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources\UnitTypes;
 
+use App\Filament\Resources\SpecialPrices\RelationManagers\SpecialPricesRelationManager;
 use App\Filament\Resources\UnitTypes\Pages\CreateUnitType;
 use App\Filament\Resources\UnitTypes\Pages\EditUnitType;
 use App\Filament\Resources\UnitTypes\Pages\ListUnitTypes;
+use App\Filament\Resources\UnitTypes\RelationManagers\PhotosRelationManager;
 use App\Filament\Resources\UnitTypes\Schemas\UnitTypeForm;
 use App\Filament\Resources\UnitTypes\Tables\UnitTypesTable;
 use App\Models\UnitType;
@@ -23,7 +25,7 @@ class UnitTypeResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Kelola Tenda';
+        return 'Manajemen Tenda';
     }
 
     public static function getNavigationSort(): ?int
@@ -49,7 +51,8 @@ class UnitTypeResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            PhotosRelationManager::class,
+            SpecialPricesRelationManager::class,
         ];
     }
 

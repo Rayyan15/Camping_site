@@ -75,11 +75,69 @@ class InvoiceTest extends TestCase
         $this->assertStringEndsWith('-0002', $second->fresh()->invoice_number);
     }
 
+    public function test_unit_line_price_times_qty_equals_subtotal_when_the_nightly_average_is_fractional(): void
+    {
+        $booking = $this->makeBooking('BK-AVG', 'paid');
+        // Two special-price nights totalling 350.000 are stored with a rounded-down average of 174.999.
+        $booking->bookingUnits()->update(['price_per_night' => 174999, 'subtotal' => 350000]);
+
+        $line = (new InvoiceService)->invoiceData($booking->fresh())['unitLines'][0];
+
+        $this->assertSame(350000, $line['subtotal']);
+        $this->assertSame($line['subtotal'], $line['price'] * (int) $line['qty']);
+    }
+
+    public function test_extra_food_is_taxed_on_the_invoice(): void
+    {
+        $booking = $this->makeBooking('BK-TAX', 'paid');
+        $category = MenuCategory::create(['name' => 'Minuman', 'sort_order' => 1]);
+        $coffee = MenuItem::create(['category_id' => $category->id, 'name' => 'Kopi', 'price' => 10000, 'is_available' => true]);
+        $booking->orders()->create([
+            'code' => 'ORD-QR', 'source' => Order::SOURCE_QR, 'status' => 'baru',
+            'total' => 100000, 'payment_status' => 'unpaid', 'bill_to_booking' => true,
+        ])->items()->create(['menu_item_id' => $coffee->id, 'qty' => 10, 'price' => 10000]);
+
+        $data = (new InvoiceService)->invoiceData($booking);
+
+        $this->assertSame(1100000, $data['subtotal']);
+        $this->assertSame(121000, $data['tax']);
+        $this->assertSame(1221000, $data['grandTotal']);
+        $this->assertSame(111000, $data['balance']);
+        $this->assertFalse($data['isSettled']);
+    }
+
+    public function test_invoice_number_retries_when_the_sequence_was_taken_concurrently(): void
+    {
+        $first = $this->makeBooking('BK-R1', 'paid');
+        $second = $this->makeBooking('BK-R2', 'paid');
+        $taken = (new InvoiceService)->ensureInvoiceNumber($first);
+
+        // Simulates a competing request that read the sequence before the first invoice was saved.
+        $service = new class extends InvoiceService
+        {
+            public int $calls = 0;
+
+            public string $stale = '';
+
+            protected function nextNumber(): string
+            {
+                return $this->calls++ === 0 ? $this->stale : parent::nextNumber();
+            }
+        };
+        $service->stale = $taken;
+
+        $number = $service->ensureInvoiceNumber($second);
+
+        $this->assertNotSame($taken, $number);
+        $this->assertSame($number, $second->fresh()->invoice_number);
+        $this->assertSame(2, $service->calls);
+    }
+
     public function test_paid_booking_downloads_pdf(): void
     {
-        $this->makeBooking('BK-PAID', 'paid');
+        $booking = $this->makeBooking('BK-PAID', 'paid');
 
-        $response = $this->get(route('booking.invoice', 'BK-PAID'));
+        $response = $this->get(route('booking.invoice', $booking->access_token));
 
         $response->assertOk();
         $this->assertStringContainsString('application/pdf', $response->headers->get('Content-Type'));
@@ -101,9 +159,9 @@ class InvoiceTest extends TestCase
 
     public function test_pending_booking_is_forbidden(): void
     {
-        $this->makeBooking('BK-PEND', 'pending_payment');
+        $booking = $this->makeBooking('BK-PEND', 'pending_payment');
 
-        $this->get(route('booking.invoice', 'BK-PEND'))->assertForbidden();
+        $this->get(route('booking.invoice', $booking->access_token))->assertForbidden();
     }
 
     public function test_unknown_code_is_not_found(): void
@@ -122,7 +180,7 @@ class InvoiceTest extends TestCase
         $this->assertStringContainsString('BK-WA', $text);
         $this->assertStringContainsString('1 x Dome', $text);
         $this->assertStringContainsString('Rp 1.110.000', $text);
-        $this->assertStringContainsString(route('booking.status', 'BK-WA'), $text);
+        $this->assertStringContainsString(route('booking.status', $booking->access_token), $text);
 
         $this->assertStringStartsWith('https://wa.me/6281234567890?text=', $links->forCustomer($booking));
     }

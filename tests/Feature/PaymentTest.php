@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\BookingStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
+use App\Exceptions\InvalidPaymentSignatureException;
 use App\Exceptions\PaymentException;
 use App\Models\Booking;
 use App\Models\Customer;
@@ -102,12 +103,13 @@ class PaymentTest extends TestCase
         });
     }
 
-    public function test_second_attempt_gets_a_new_reference(): void
+    public function test_attempt_after_the_first_link_lapsed_gets_a_new_reference(): void
     {
         $this->fakeSnap();
         $booking = $this->book();
 
         app(PaymentService::class)->initiate($booking);
+        $this->travel(config('booking.hold_minutes') + 1)->minutes();
         $second = app(PaymentService::class)->initiate($booking);
 
         $this->assertSame($booking->code.'-2', $second->reference);
@@ -259,5 +261,52 @@ class PaymentTest extends TestCase
     public function test_midtrans_gateway_rejects_missing_signature(): void
     {
         $this->assertFalse((new MidtransGateway)->isAuthentic(['order_id' => 'X']));
+    }
+
+    public function test_empty_server_key_is_rejected_instead_of_trusted(): void
+    {
+        config(['services.midtrans.server_key' => '']);
+
+        $this->expectException(PaymentException::class);
+        (new MidtransGateway)->isAuthentic(['order_id' => 'X', 'signature_key' => 'abc']);
+    }
+
+    public function test_signature_computed_with_empty_key_never_authenticates(): void
+    {
+        $this->fakeSnap();
+        $booking = $this->book();
+        $intent = app(PaymentService::class)->initiate($booking);
+        $forged = hash('sha512', $intent->reference.'200222000.00');
+        config(['services.midtrans.server_key' => '']);
+
+        $this->postJson(route('webhook.payment'), $this->notification($intent->reference, 222000, 'settlement', $forged))
+            ->assertStatus(500);
+
+        $this->assertSame(PaymentStatus::Pending, Payment::firstOrFail()->status);
+        $this->assertSame(BookingStatus::PendingPayment, $booking->refresh()->status);
+    }
+
+    public function test_amount_mismatch_is_rejected_and_changes_nothing(): void
+    {
+        $this->fakeSnap();
+        $booking = $this->book();
+        $intent = app(PaymentService::class)->initiate($booking);
+
+        $this->postJson(route('webhook.payment'), $this->notification($intent->reference, 1000))
+            ->assertForbidden();
+
+        $this->assertSame(PaymentStatus::Pending, Payment::firstOrFail()->status);
+        $booking->refresh();
+        $this->assertSame(BookingStatus::PendingPayment, $booking->status);
+        $this->assertSame(0, $booking->paid_amount);
+    }
+
+    public function test_amount_mismatch_throws_a_signature_family_exception(): void
+    {
+        $this->fakeSnap();
+        $intent = app(PaymentService::class)->initiate($this->book());
+
+        $this->expectException(InvalidPaymentSignatureException::class);
+        app(PaymentService::class)->handleNotification($this->notification($intent->reference, 221999));
     }
 }

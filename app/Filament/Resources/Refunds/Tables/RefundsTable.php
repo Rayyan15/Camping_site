@@ -25,7 +25,7 @@ class RefundsTable
                     ->weight('bold'),
                 TextColumn::make('amount')
                     ->label('Nominal')
-                    ->money('IDR', locale: 'id')
+                    ->money('IDR', locale: 'id', decimalPlaces: 0)
                     ->sortable(),
                 TextColumn::make('reason')
                     ->label('Alasan')

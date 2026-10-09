@@ -2,10 +2,13 @@
 
 namespace App\Http\Requests\Public;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CheckAvailabilityRequest extends FormRequest
 {
+    use ValidatesStayLimits;
+
     public function authorize(): bool
     {
         return true;
@@ -22,6 +25,14 @@ class CheckAvailabilityRequest extends FormRequest
             'check_out' => ['required', 'date', 'after:check_in'],
             'guests' => ['required', 'integer', 'min:1', 'max:50'],
         ];
+    }
+
+    /**
+     * @return array<int, callable(Validator): void>
+     */
+    public function after(): array
+    {
+        return [fn (Validator $validator) => $this->validateStayLimits($validator)];
     }
 
     /**

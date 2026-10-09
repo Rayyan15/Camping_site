@@ -48,7 +48,7 @@ class UnitsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()->authorizeIndividualRecords('delete'),
                 ]),
             ])
             ->emptyStateHeading('Belum ada data')

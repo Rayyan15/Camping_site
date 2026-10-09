@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Enums\BookingStatus;
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use Illuminate\Database\Eloquent\Builder;
@@ -45,15 +44,13 @@ class KitchenQueueService
         $startOfToday = now()->startOfDay();
         $endOfTomorrow = now()->addDay()->endOfDay();
 
-        return Order::query()->where(function (Builder $query) use ($startOfToday, $endOfTomorrow) {
+        return Order::query()->kitchenRelevant()->where(function (Builder $query) use ($startOfToday, $endOfTomorrow) {
             $query->where(function (Builder $walkInAndQr) use ($startOfToday) {
                 $walkInAndQr->whereIn('source', [Order::SOURCE_QR, Order::SOURCE_WALKIN])
                     ->where('created_at', '>=', $startOfToday);
             })->orWhere(function (Builder $preorder) use ($startOfToday, $endOfTomorrow) {
                 $preorder->where('source', Order::SOURCE_PREORDER)
-                    ->whereBetween('scheduled_at', [$startOfToday, $endOfTomorrow])
-                    ->whereHas('booking', fn (Builder $booking) => $booking
-                        ->whereIn('status', [BookingStatus::Paid, BookingStatus::CheckedIn]));
+                    ->whereBetween('scheduled_at', [$startOfToday, $endOfTomorrow]);
             });
         });
     }

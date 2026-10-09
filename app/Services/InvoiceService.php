@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Booking;
 use App\Models\Order;
 use Barryvdh\DomPDF\PDF;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 
@@ -13,6 +14,8 @@ class InvoiceService
     private const NUMBER_PREFIX = 'INV';
 
     private const SEQUENCE_WIDTH = 4;
+
+    private const NUMBER_ATTEMPTS = 5;
 
     public function render(Booking $booking): PDF
     {
@@ -30,22 +33,21 @@ class InvoiceService
     /**
      * Lines and totals shown on the invoice.
      *
-     * @return array{unitLines: array, addonLines: array, foodLines: array, subtotal: int, grandTotal: int, balance: int, isSettled: bool}
+     * @return array{unitLines: array, addonLines: array, foodLines: array, subtotal: int, tax: int, grandTotal: int, balance: int, isSettled: bool}
      */
     public function invoiceData(Booking $booking): array
     {
         $booking->loadMissing(['customer', 'bookingUnits.unit.unitType', 'addons.addon']);
 
-        $foodLines = $this->foodLines($booking);
-        // Pre-orders are priced into booking.total at checkout; only later room-billed orders are extra.
-        $extraFoodTotal = (int) collect($foodLines)->where('in_booking_total', false)->sum('subtotal');
-        $grandTotal = $booking->total + $extraFoodTotal;
+        $billing = app(BookingBilling::class)->breakdown($booking);
+        $grandTotal = $billing['total'];
 
         return [
             'unitLines' => $this->unitLines($booking),
             'addonLines' => $this->addonLines($booking),
-            'foodLines' => $foodLines,
-            'subtotal' => $booking->subtotal + $extraFoodTotal,
+            'foodLines' => $this->foodLines($booking),
+            'subtotal' => $billing['subtotal'],
+            'tax' => $billing['tax'],
             'grandTotal' => $grandTotal,
             'balance' => max(0, $grandTotal - $booking->paid_amount),
             'isSettled' => $booking->paid_amount >= $grandTotal,
@@ -61,6 +63,21 @@ class InvoiceService
             return $booking->invoice_number;
         }
 
+        // The sequence is shared across bookings but only this booking row is locked, so two
+        // invoices created at once can pick the same number; the unique index rejects the loser.
+        for ($attempt = 1; ; $attempt++) {
+            try {
+                return $this->assignNumber($booking);
+            } catch (UniqueConstraintViolationException $e) {
+                if ($attempt >= self::NUMBER_ATTEMPTS) {
+                    throw $e;
+                }
+            }
+        }
+    }
+
+    private function assignNumber(Booking $booking): string
+    {
         return DB::transaction(function () use ($booking) {
             $locked = Booking::query()->lockForUpdate()->findOrFail($booking->id);
 
@@ -75,7 +92,7 @@ class InvoiceService
         });
     }
 
-    private function nextNumber(): string
+    protected function nextNumber(): string
     {
         $prefix = sprintf('%s-%s-', self::NUMBER_PREFIX, Date::now()->format('ymd'));
 
@@ -93,15 +110,17 @@ class InvoiceService
      */
     private function unitLines(Booking $booking): array
     {
+        // Grouping by subtotal keeps price x qty equal to the line subtotal even when special
+        // prices make the average nightly rate a fraction.
         return $booking->bookingUnits
-            ->groupBy(fn ($row) => $row->unit?->unitType?->name.'|'.$row->price_per_night.'|'.$row->nights)
+            ->groupBy(fn ($row) => $row->unit?->unitType?->name.'|'.$row->subtotal.'|'.$row->nights)
             ->map(function ($rows) {
                 $first = $rows->first();
 
                 return [
                     'description' => ($first->unit?->unitType?->name ?? 'Unit').' ('.$first->nights.' malam)',
                     'qty' => (string) $rows->count(),
-                    'price' => $first->price_per_night * $first->nights,
+                    'price' => (int) $first->subtotal,
                     'subtotal' => (int) $rows->sum('subtotal'),
                 ];
             })
