@@ -1,5 +1,7 @@
 # Daftar Pekerjaan
 
+> Prioritas berikutnya: alur transfer manual, hapus bayar online di QR, tombol WhatsApp ke admin, keputusan email. Rincian di `docs/internal/next-steps-client-answers-2026-10-09.md`.
+
 Diperbarui 9 Oktober 2026. Sumber: audit dua agent (bug hunt dan modul setengah jadi) pada sesi yang sama. Centang butir yang sudah selesai dan tulis buktinya (nama test atau commit). Keputusan yang menunggu owner ada di `OPEN-QUESTIONS.md`.
 
 ## Selesai di gelombang ini

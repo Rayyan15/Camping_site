@@ -163,7 +163,7 @@
         min-height: 3rem;
         padding: 0.625rem 0.875rem;
         border-radius: 0.75rem;
-        border: 1.5px solid var(--color-sand);
+        border: 1.5px solid var(--color-sand-dark);
         background: #fffdf8;
         color: var(--color-ink);
         font-weight: 600;
@@ -269,6 +269,12 @@
             right: 0;
             width: 21rem;
         }
+        .ss-popover.is-below {
+            top: 100%;
+            bottom: auto;
+            margin-top: 0.75rem;
+            margin-bottom: 0;
+        }
     }
 
     .ss-nav,
@@ -276,9 +282,9 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 2.25rem;
-        height: 2.25rem;
-        border: 1px solid var(--color-sand);
+        width: 2.75rem;
+        height: 2.75rem;
+        border: 1px solid var(--color-sand-dark);
         border-radius: 999px;
         color: var(--color-forest-900);
         transition: background-color 0.15s;
@@ -495,6 +501,10 @@
 
     .tent-rail > ul > li {
         scroll-snap-align: start;
+    }
+
+    .tent-rail.is-drifting {
+        scroll-snap-type: none;
     }
 
     @media (scripting: none) {

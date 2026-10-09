@@ -53,6 +53,9 @@ class BookingActions
     public static function checkIn(): Action
     {
         return self::statusAction('check_in', 'Check-in', 'heroicon-o-arrow-right-end-on-rectangle', BookingStatus::CheckedIn, 'checkIn')
+            // Shown from the check-in date only; BookingStatusTransition refuses an earlier move anyway.
+            ->visible(fn (Booking $record): bool => app(BookingStatusTransition::class)->canMove($record->status, BookingStatus::CheckedIn)
+                && ! $record->check_in->isAfter(today()))
             ->modalHeading('Check-in tamu')
             ->modalDescription(fn (Booking $record): string => "Konfirmasi tamu booking {$record->code} sudah tiba dan menempati unit.");
     }

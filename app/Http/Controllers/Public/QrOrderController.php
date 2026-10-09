@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Public;
 
 use App\Enums\OrderStatus;
-use App\Enums\QrPaymentChoice;
 use App\Exceptions\MenuItemUnavailableException;
 use App\Exceptions\OrderBillingException;
 use App\Exceptions\PaymentException;
@@ -42,8 +41,7 @@ class QrOrderController extends Controller
         return view('public.qr-menu', [
             'spot' => $spot,
             'categories' => $categories,
-            'canBillToBooking' => $this->diningSpots->activeBooking($spot) !== null,
-            'choices' => QrPaymentChoice::cases(),
+            'choices' => $this->diningSpots->paymentChoicesFor($spot),
         ]);
     }
 

@@ -1,5 +1,7 @@
 # Pertanyaan Terbuka
 
+> Jawaban client 9 Oktober 2026 (pembayaran transfer manual, tanpa gateway, tanpa WA otomatis, rekomendasi mesin absensi) dan rencana kerjanya ada di `docs/internal/next-steps-client-answers-2026-10-09.md`.
+
 Daftar hal yang hanya bisa dijawab owner atau yang masih menggantung. Pertanyaan PRD bagian 6.4 yang belum terjawab ikut dicantumkan.
 
 ## Menunggu keputusan owner

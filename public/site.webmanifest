@@ -1,6 +1,6 @@
 {
-    "name": "Raynad Camping",
-    "short_name": "Raynad",
+    "name": "Halimun Highland",
+    "short_name": "Halimun",
     "lang": "id",
     "start_url": "/",
     "display": "browser",
@@ -8,7 +8,6 @@
     "theme_color": "#1c3526",
     "icons": [
         { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-        { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
-        { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+        { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
     ]
 }

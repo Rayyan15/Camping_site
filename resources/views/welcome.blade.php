@@ -48,7 +48,7 @@
 
 @section('content')
     {{-- Phase marker: real in-page links, current phase follows the scroll. --}}
-    <nav aria-label="Fase menginap" class="fixed left-4 top-1/2 z-30 hidden -translate-y-1/2 xl:block">
+    <nav aria-label="Fase menginap" class="fixed left-4 top-1/2 z-30 hidden -translate-y-1/2 min-[1360px]:block">
         <ol class="space-y-2">
             @foreach($phases as $id => $label)
                 <li><a href="#{{ $id }}" data-phase-link="{{ $id }}" aria-current="{{ $loop->first ? 'true' : 'false' }}" class="phase-link">{{ $label }}</a></li>
@@ -113,8 +113,8 @@
         @if($unitTypes->isEmpty())
             <p class="mx-auto mt-10 max-w-6xl rounded-2xl bg-cream p-8 text-center text-ink-soft sm:mx-6 lg:mx-auto">Tipe tenda belum tersedia. Silakan kembali lagi nanti.</p>
         @else
-            {{-- On wide screens the scroller starts at the content edge, so cards clip there instead of sliding under the phase marker. --}}
-            <div data-rail="tenda" role="region" aria-label="Daftar tipe tenda, geser ke samping" tabindex="0" class="tent-rail mt-10 overflow-x-auto pb-6 xl:ml-[calc((100vw_-_72rem)/2)]">
+            {{-- The rail shares the max-w-6xl column with every other section, so its edges line up with the headings above and below. --}}
+            <div data-rail="tenda" role="region" aria-label="Daftar tipe tenda, geser ke samping" tabindex="0" class="tent-rail mx-auto mt-10 max-w-6xl scroll-px-4 overflow-x-auto pb-6 sm:scroll-px-6">
                 <ul class="flex w-max gap-4 px-4 sm:gap-6 sm:px-6">
                     @foreach($unitTypes as $type)
                         @php
@@ -268,7 +268,7 @@
     {{-- SUBUH: questions, then book. --}}
     <section id="subuh" data-phase="subuh" class="bg-forest-100 pt-16 text-forest-900 sm:pt-20" aria-labelledby="judul-faq">
         <div id="faq" class="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_1.7fr] lg:gap-16">
-            <div class="lg:sticky lg:top-28 lg:self-start" data-reveal>
+            <div class="lg:self-start" data-reveal>
                 <p class="font-display text-xl italic text-ember-dark">Subuh</p>
                 <h2 id="judul-faq" class="font-display mt-2 text-4xl font-semibold leading-[1.05] sm:text-5xl">Sebelum Anda memesan.</h2>
                 <p class="mt-5 max-w-sm text-ink-soft">Sudah punya booking? <a href="{{ route('booking.find') }}" class="font-bold text-forest-900 underline underline-offset-4">Cek status booking</a> dengan kode booking Anda.</p>

@@ -29,7 +29,7 @@
                 <a href="{{ route('home') }}#cari" class="btn btn-primary mt-6">Cari tanggal lagi</a>
             </div>
         @else
-            <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_20rem]">
+            <div class="mt-8 grid items-start gap-8 lg:grid-cols-[1fr_20rem]">
                 <section class="rounded-3xl border border-sand bg-[#fffdf8] p-6 sm:p-8" aria-labelledby="sum-title">
                     <h2 id="sum-title" class="font-display text-xl font-semibold text-forest-900">Rincian pesanan</h2>
                     <p class="mt-1 text-sm text-ink-soft">
@@ -105,12 +105,12 @@
                         @if($downPayment !== null)
                             <fieldset class="mb-5 grid gap-2">
                                 <legend class="mb-2 text-sm text-forest-300">Cara bayar</legend>
-                                <label class="flex min-h-14 cursor-pointer items-center gap-3 rounded-xl border-[1.5px] border-forest-700 px-4 py-3 has-[:checked]:border-cream has-[:checked]:bg-forest-800">
-                                    <input type="radio" name="plan" value="full" checked class="size-5 accent-ember">
+                                <label class="flex min-h-14 cursor-pointer items-center gap-3 rounded-xl border-[1.5px] border-forest-300 px-4 py-3 has-[:checked]:border-cream has-[:checked]:bg-forest-800 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-cream">
+                                    <input type="radio" name="plan" value="full" checked class="size-5 shrink-0 appearance-none rounded-full border-2 border-cream checked:border-[6px]">
                                     <span><span class="block font-semibold">Bayar penuh</span><span class="block text-sm text-forest-300">{{ $rupiah($outstanding) }}</span></span>
                                 </label>
-                                <label class="flex min-h-14 cursor-pointer items-center gap-3 rounded-xl border-[1.5px] border-forest-700 px-4 py-3 has-[:checked]:border-cream has-[:checked]:bg-forest-800">
-                                    <input type="radio" name="plan" value="down_payment" class="size-5 accent-ember">
+                                <label class="flex min-h-14 cursor-pointer items-center gap-3 rounded-xl border-[1.5px] border-forest-300 px-4 py-3 has-[:checked]:border-cream has-[:checked]:bg-forest-800 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-cream">
+                                    <input type="radio" name="plan" value="down_payment" class="size-5 shrink-0 appearance-none rounded-full border-2 border-cream checked:border-[6px]">
                                     <span><span class="block font-semibold">Bayar DP dulu</span><span class="block text-sm text-forest-300">{{ $rupiah($downPayment) }} sekarang, sisa {{ $rupiah($outstanding - $downPayment) }} paling lambat saat check-in</span></span>
                                 </label>
                             </fieldset>

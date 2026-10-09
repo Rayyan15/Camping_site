@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\BookingStatus;
+use App\Enums\QrPaymentChoice;
 use App\Models\Booking;
 use App\Models\DiningSpot;
 use Illuminate\Support\Str;
@@ -74,6 +75,22 @@ class DiningSpotService
             ->orderByRaw('CASE WHEN status = ? THEN 0 ELSE 1 END', [BookingStatus::CheckedIn->value])
             ->orderByDesc('check_in')
             ->first();
+    }
+
+    /**
+     * Ways a guest at this spot may pay. Billing to a booking only exists while someone stays in the tent.
+     *
+     * @return array<int, QrPaymentChoice>
+     */
+    public function paymentChoicesFor(DiningSpot $spot): array
+    {
+        $choices = [QrPaymentChoice::Cashier, QrPaymentChoice::Online];
+
+        if ($this->activeBooking($spot) !== null) {
+            $choices[] = QrPaymentChoice::Booking;
+        }
+
+        return $choices;
     }
 
     private function uniqueToken(): string

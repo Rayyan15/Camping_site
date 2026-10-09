@@ -117,9 +117,31 @@ class StaySearch {
             this.cursor = this.pickCursor(field);
             this.view = firstOfMonth(this.cursor);
             this.renderMonths();
+        }
+
+        this.place(this.popovers[name]);
+
+        if (name === 'dates') {
             this.focusCursor();
         } else {
-            this.root.querySelector('[data-ss-plus]').focus();
+            this.root.querySelector('[data-ss-plus]').focus({ preventScroll: true });
+        }
+    }
+
+    /**
+     * On wide screens the popover opens above the bar. When the bar sits too close to the sticky
+     * header for that, it opens below instead, so the month titles are never hidden.
+     */
+    place(popover) {
+        popover.classList.remove('is-below');
+        const header = document.querySelector('body > header, header.sticky')?.getBoundingClientRect().bottom ?? 0;
+        const room = this.root.getBoundingClientRect().top - header;
+        if (room < popover.offsetHeight + 16) popover.classList.add('is-below');
+
+        // Brings a popover that opened below the fold into view without hiding it under the header.
+        const rect = popover.getBoundingClientRect();
+        if (rect.bottom > window.innerHeight) {
+            window.scrollBy({ top: Math.min(rect.bottom - window.innerHeight + 16, rect.top - header - 16), behavior: 'auto' });
         }
     }
 
@@ -214,7 +236,7 @@ class StaySearch {
     }
 
     focusCursor() {
-        this.monthsEl.querySelector(`.cal-day[data-date="${toIso(this.cursor)}"]`)?.focus();
+        this.monthsEl.querySelector(`.cal-day[data-date="${toIso(this.cursor)}"]`)?.focus({ preventScroll: true });
     }
 
     pick(date) {

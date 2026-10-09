@@ -86,14 +86,9 @@ class StoreQrOrderRequest extends FormRequest
      */
     private function allowedPaymentChoices(): array
     {
-        $choices = [QrPaymentChoice::Cashier->value, QrPaymentChoice::Online->value];
         $spots = app(DiningSpotService::class);
         $spot = $spots->findByToken((string) $this->route('token'));
 
-        if ($spot !== null && $spots->activeBooking($spot) !== null) {
-            $choices[] = QrPaymentChoice::Booking->value;
-        }
-
-        return $choices;
+        return $spot === null ? [] : array_map(fn (QrPaymentChoice $choice) => $choice->value, $spots->paymentChoicesFor($spot));
     }
 }

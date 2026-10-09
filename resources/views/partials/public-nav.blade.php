@@ -12,21 +12,22 @@
 <header class="sticky top-0 z-50 border-b border-sand/70 bg-cream/95 backdrop-blur">
     <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <a href="{{ $home }}" class="flex min-h-11 items-center text-forest-900" aria-label="{{ config('site.name') }}, beranda">
-            <span class="font-display text-2xl font-semibold tracking-tight">Raynad</span>
+            <img src="{{ asset(config('site.logo')) }}" alt="" width="44" height="44" class="size-11 shrink-0">
+            <span class="ml-2.5 font-display text-xl font-semibold leading-none tracking-tight">{{ config('site.name') }}</span>
         </a>
 
         <nav aria-label="Navigasi utama" class="hidden items-center gap-8 text-sm font-semibold text-ink-soft md:flex">
             @foreach($navLinks as $label => $href)
-                <a href="{{ $href }}" class="py-2 transition hover:text-forest-900">{{ $label }}</a>
+                <a href="{{ $href }}" class="inline-flex min-h-11 items-center transition hover:text-forest-900">{{ $label }}</a>
             @endforeach
         </nav>
 
         <div class="flex items-center gap-2">
             <a href="{{ $accountHref }}" class="hidden min-h-11 items-center px-3 text-sm font-semibold text-ink-soft transition hover:text-forest-900 md:inline-flex">{{ $accountLabel }}</a>
-            <a href="{{ $home }}#cari" class="btn btn-primary hidden !min-h-10 !px-5 sm:inline-flex">Cek tanggal</a>
+            <a href="{{ $home }}#cari" class="btn btn-primary hidden !px-5 sm:inline-flex">Cek tanggal</a>
 
             <details class="group relative md:hidden">
-                <summary class="flex size-11 cursor-pointer list-none items-center justify-center rounded-full border border-sand text-forest-900 [&::-webkit-details-marker]:hidden" aria-label="Buka menu">
+                <summary class="flex size-11 cursor-pointer list-none items-center justify-center rounded-full border border-sand-dark text-forest-900 [&::-webkit-details-marker]:hidden" aria-label="Buka menu">
                     <svg class="size-6 group-open:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/></svg>
                     <svg class="hidden size-6 group-open:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></svg>
                 </summary>

@@ -10,6 +10,10 @@
         'diantar' => 'Pesanan sedang menuju lokasi Anda.',
         'selesai' => 'Pesanan sudah sampai. Selamat menikmati.',
     ];
+
+    if ($order->awaitsOnlinePayment()) {
+        $stepHints['baru'] = 'Pesanan tercatat. Dapur menerimanya setelah pembayaran masuk.';
+    }
 @endphp
 
 @section('title', 'Pesanan '.$order->code.' - '.config('site.name'))

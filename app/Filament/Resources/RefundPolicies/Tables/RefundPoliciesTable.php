@@ -14,8 +14,8 @@ class RefundPoliciesTable
         return $table
             ->columns([
                 TextColumn::make('min_days_before')
-                    ->label('Dibatalkan paling lambat')
-                    ->formatStateUsing(fn (int $state): string => $state === 0 ? 'Kapan saja sebelum check-in' : $state.' hari sebelum check-in'),
+                    ->label('Batal minimal')
+                    ->formatStateUsing(fn (int $state): string => $state === 0 ? 'Kurang dari tier lain' : $state.' hari sebelum check-in'),
                 TextColumn::make('percent')
                     ->label('Refund')
                     ->suffix('%'),
@@ -27,7 +27,6 @@ class RefundPoliciesTable
             ->emptyStateHeading('Belum ada aturan refund')
             ->emptyStateDescription('Tanpa tier, setiap pembatalan dihitung refund 0%. Tambahkan tier pertama.')
             ->emptyStateIcon('heroicon-o-receipt-refund')
-            ->paginated(false)
             ->defaultSort('min_days_before', 'desc');
     }
 }

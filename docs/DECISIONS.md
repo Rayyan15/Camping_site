@@ -48,6 +48,10 @@ Setiap keputusan: apa yang dipilih, kenapa, dan konsekuensinya. Keputusan yang m
 
 **Geser otomatis rail tenda.** Satu kartu tiap 4,5 detik, berhenti saat dihover, difokus, disentuh, tidak terlihat, atau tab tersembunyi; menunggu 8 detik setelah input manual; mati bila pengguna meminta kurangi gerakan. Scrollbar dan bar progres disembunyikan atas permintaan owner. Tombol jeda tetap ada di DOM dan hanya tampak saat difokus keyboard (WCAG 2.2.2).
 
+## Brand
+
+**Nama tampilan: Halimun Highland.** Sesuai logo dari owner (9 Oktober 2026). Nama ada di satu tempat (`config('site.name')`), dipakai header, footer, judul tab, invoice, pesan WA, dan panel. Logo asli di `public/images/brand/halimun-highland.png`; versi 160 px untuk tampilan dan versi berlingkaran krem untuk latar gelap. Logo biru tua tidak ditarik ke palet hijau situs; ia ditaruh di atas krem supaya kontrasnya 13:1.
+
 ## Proses
 
 **`CLAUDE.md` bagian 6: antislop wajib untuk setiap kerja frontend.** Urutan: lihat, baca (muat skill lewat Skill tool), pahami (Design Read dan dial), sebut, ingat ulang. Arahan desain wajib ada sebelum UI dibangun: catatan di `docs/internal/design-notes.md` atau gambar referensi dari owner.

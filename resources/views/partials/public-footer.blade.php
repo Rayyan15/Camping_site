@@ -7,18 +7,24 @@
 <footer class="bg-forest-950 text-forest-300">
     <div class="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
-            <p class="font-display text-2xl font-semibold text-cream">{{ config('site.name') }}</p>
+            <div class="flex items-center gap-4">
+                {{-- The badge is navy line art on transparent, so it sits on a cream disc to read on the dark footer. --}}
+                <span class="grid size-20 shrink-0 place-items-center rounded-full bg-cream">
+                    <img src="{{ asset(config('site.logo')) }}" alt="Logo {{ config('site.name') }}" width="72" height="72" class="size-[4.5rem]">
+                </span>
+                <p class="font-display text-2xl font-semibold text-cream">{{ config('site.name') }}</p>
+            </div>
             <p class="mt-3 max-w-sm text-sm leading-relaxed">32 unit dalam 7 tipe tenda. Pesan online, bayar online, dan pesan makanan dari resto atau coffeeshop lewat QR di tenda.</p>
         </div>
 
         <nav aria-label="Tautan footer">
             <p class="font-display text-lg italic text-cream">Jelajahi</p>
             <ul class="mt-4 space-y-2 text-sm">
-                <li><a class="inline-block py-2 hover:text-cream" href="{{ route('home') }}#tenda">Tipe tenda</a></li>
-                <li><a class="inline-block py-2 hover:text-cream" href="{{ route('home') }}#cara-pesan">Cara pesan</a></li>
-                <li><a class="inline-block py-2 hover:text-cream" href="{{ route('home') }}#fasilitas">Fasilitas</a></li>
-                <li><a class="inline-block py-2 hover:text-cream" href="{{ route('home') }}#faq">Pertanyaan umum</a></li>
-                <li><a class="inline-block py-2 hover:text-cream" href="{{ route('booking.find') }}">Cek status booking</a></li>            </ul>
+                <li><a class="inline-flex min-h-11 items-center hover:text-cream" href="{{ route('home') }}#tenda">Tipe tenda</a></li>
+                <li><a class="inline-flex min-h-11 items-center hover:text-cream" href="{{ route('home') }}#cara-pesan">Cara pesan</a></li>
+                <li><a class="inline-flex min-h-11 items-center hover:text-cream" href="{{ route('home') }}#fasilitas">Fasilitas</a></li>
+                <li><a class="inline-flex min-h-11 items-center hover:text-cream" href="{{ route('home') }}#faq">Pertanyaan umum</a></li>
+                <li><a class="inline-flex min-h-11 items-center hover:text-cream" href="{{ route('booking.find') }}">Cek status booking</a></li>            </ul>
         </nav>
 
         <div>

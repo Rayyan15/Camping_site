@@ -1,7 +1,10 @@
 <?php
 
 return [
-    'name' => 'Raynad Camping',
+    'name' => 'Halimun Highland',
+
+    /* Round badge supplied by the owner; 160 px so it stays sharp at 80 px on retina screens. */
+    'logo' => 'images/brand/halimun-highland-160.png',
 
     /*
     | Contact details come from the environment so nothing is invented in code.

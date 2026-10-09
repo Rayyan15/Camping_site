@@ -62,9 +62,15 @@
 
         @if($holdActive)
             <section class="mt-8 rounded-2xl bg-cream-deep p-6">
-                <h2 class="font-bold text-forest-900">Tenda sedang ditahan untuk Anda</h2>
-                <p class="mt-1 text-ink-soft">Selesaikan pembayaran sebelum {{ $booking->hold_expires_at->format('H:i') }} WIB, sisa {{ (int) now()->diffInMinutes($booking->hold_expires_at, false) }} menit.</p>
-                <a href="{{ route('checkout.show', $booking->access_token) }}" class="btn btn-primary mt-4">Lanjut ke pembayaran</a>
+                @if($booking->paid_amount > 0)
+                    <h2 class="font-bold text-forest-900">DP Rp {{ number_format($booking->paid_amount, 0, ',', '.') }} sudah diterima</h2>
+                    <p class="mt-1 text-ink-soft">Tenda dipegang sampai {{ $booking->hold_expires_at->locale('id')->translatedFormat('j F Y, H:i') }} WIB. Lunasi sisanya sebelum itu, atau saat check-in.</p>
+                    <a href="{{ route('checkout.show', $booking->access_token) }}" class="btn btn-primary mt-4">Lunasi sisa tagihan</a>
+                @else
+                    <h2 class="font-bold text-forest-900">Tenda sedang ditahan untuk Anda</h2>
+                    <p class="mt-1 text-ink-soft">Selesaikan pembayaran sebelum {{ $booking->hold_expires_at->format('H:i') }} WIB, sisa {{ (int) now()->diffInMinutes($booking->hold_expires_at, false) }} menit.</p>
+                    <a href="{{ route('checkout.show', $booking->access_token) }}" class="btn btn-primary mt-4">Lanjut ke pembayaran</a>
+                @endif
             </section>
         @endif
 
