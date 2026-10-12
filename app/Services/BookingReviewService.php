@@ -23,6 +23,21 @@ class BookingReviewService
     ) {}
 
     /**
+     * Why staff cannot finish the review yet, or null when they can. A review ends with the booking marked
+     * Paid, so it must wait until the money has actually been confirmed.
+     */
+    public function blockedReason(Booking $booking): ?string
+    {
+        try {
+            $this->assertMoneyReceived($booking);
+        } catch (BookingReviewException $e) {
+            return $e->getMessage();
+        }
+
+        return null;
+    }
+
+    /**
      * Moves every conflicted unit line to a free unit of the same type and confirms the booking as paid.
      * It becomes Paid and never CheckedIn: a late payment lands before the stay, and check-in stays a
      * separate front desk step. All or nothing: one line without a free unit rejects the whole move.
@@ -39,6 +54,8 @@ class BookingReviewService
             if ($locked->status !== BookingStatus::NeedsReview) {
                 throw BookingReviewException::notInReview();
             }
+
+            $this->assertMoneyReceived($locked);
 
             $lines = $locked->bookingUnits()->with('unit')->lockForUpdate()->get();
             $moves = $this->reassignConflictedLines($locked, $lines);
@@ -90,6 +107,20 @@ class BookingReviewService
             ->orderBy('id')
             ->lockForUpdate()
             ->first();
+    }
+
+    /**
+     * @throws BookingReviewException
+     */
+    private function assertMoneyReceived(Booking $booking): void
+    {
+        if ($booking->payments()->awaitingProofReview()->exists()) {
+            throw BookingReviewException::proofAwaitingReview();
+        }
+
+        if ($booking->paid_amount < $booking->total) {
+            throw BookingReviewException::notFullyPaid($booking->total - $booking->paid_amount);
+        }
     }
 
     private function assertOwner(User $actor): void

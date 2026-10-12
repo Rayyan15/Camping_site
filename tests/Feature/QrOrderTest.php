@@ -18,7 +18,6 @@ use App\Models\UnitType;
 use App\Models\User;
 use App\Services\DiningSpotService;
 use App\Services\OrderService;
-use App\Services\Payment\PaymentService;
 use Database\Seeders\DiningSpotSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -296,40 +295,6 @@ class QrOrderTest extends TestCase
         $this->assertSame($count, DiningSpot::count());
         $this->assertSame($token, DiningSpot::where('name', 'Meja 2')->value('qr_token'));
         $this->assertSame(1, DiningSpot::where('unit_id', $this->unit->id)->count());
-    }
-
-    public function test_online_order_stays_out_of_the_kitchen_until_the_gateway_settles_it(): void
-    {
-        $this->post(route('qr.store', $this->table->qr_token), $this->payload(['payment_choice' => 'online']))
-            ->assertRedirect();
-
-        $order = Order::firstOrFail();
-        $this->assertTrue($order->awaitsOnlinePayment());
-        $this->assertFalse(Order::kitchenRelevant()->whereKey($order->id)->exists());
-
-        $payment = $order->payments()->firstOrFail();
-        $this->assertSame($order->total, $payment->amount);
-
-        app(PaymentService::class)->handleNotification([
-            'order_id' => $payment->gateway_ref,
-            'transaction_status' => 'settlement',
-        ]);
-
-        $this->assertTrue($order->fresh()->isPaid());
-        $this->assertTrue(Order::kitchenRelevant()->whereKey($order->id)->exists());
-    }
-
-    public function test_unpaid_online_order_can_reopen_payment_from_the_tracking_page(): void
-    {
-        $this->post(route('qr.store', $this->table->qr_token), $this->payload(['payment_choice' => 'online']));
-        $order = Order::firstOrFail();
-
-        $this->get(route('qr.track', [$this->table->qr_token, $order->code]))
-            ->assertOk()
-            ->assertSee('Buka pembayaran QRIS');
-
-        $this->post(route('qr.pay', [$this->table->qr_token, $order->code]))->assertRedirect();
-        $this->assertSame(1, $order->payments()->count());
     }
 
     public function test_turnover_day_bills_the_guest_who_checked_in_not_the_one_leaving(): void

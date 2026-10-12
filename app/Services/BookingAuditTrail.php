@@ -12,6 +12,8 @@ class BookingAuditTrail
 {
     public const ACTION_CANCELLED_WITHOUT_REFUND = 'cancelled_without_refund';
 
+    public const ACTION_RESCHEDULED = 'rescheduled';
+
     public const ACTION_REVIEW_MOVED_UNIT = 'review_moved_unit';
 
     public const ACTION_REVIEW_CANCELLED_FULL_REFUND = 'review_cancelled_full_refund';

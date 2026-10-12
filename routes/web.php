@@ -23,19 +23,19 @@ Route::get('/booking/cek', [BookingController::class, 'checkAvailability'])->mid
 Route::post('/booking', [BookingController::class, 'store'])->middleware('throttle:10,1')->name('booking.store');
 
 Route::get('/checkout/{token}', [CheckoutController::class, 'show'])->middleware('throttle:booking-lookup')->name('checkout.show');
-Route::post('/checkout/{token}/pay', [CheckoutController::class, 'pay'])->middleware('throttle:10,1')->name('checkout.pay');
+Route::post('/checkout/{token}/bukti', [CheckoutController::class, 'uploadProof'])->middleware('throttle:10,1')->name('checkout.proof');
 
 Route::get('/cek-booking', [BookingLookupController::class, 'form'])->name('booking.find');
 Route::post('/cek-booking', [BookingLookupController::class, 'find'])->middleware('throttle:booking-find')->name('booking.find.submit');
 
 Route::get('/booking/{token}', [BookingStatusController::class, 'show'])->middleware('throttle:booking-lookup')->name('booking.status');
 Route::post('/booking/{token}/cancel', [BookingStatusController::class, 'cancel'])->middleware('throttle:5,1')->name('booking.cancel');
+Route::post('/booking/{token}/reschedule', [BookingStatusController::class, 'reschedule'])->middleware('throttle:5,1')->name('booking.reschedule');
 Route::get('/booking/{token}/invoice', [InvoiceController::class, 'download'])->middleware('throttle:booking-lookup')->name('booking.invoice');
 
 Route::get('/order/{token}', [QrOrderController::class, 'show'])->middleware('throttle:booking-lookup')->name('qr.show');
 Route::post('/order/{token}', [QrOrderController::class, 'store'])->middleware('throttle:10,1')->name('qr.store');
 Route::get('/order/{token}/pesanan/{code}', [QrOrderController::class, 'track'])->middleware('throttle:booking-lookup')->name('qr.track');
-Route::post('/order/{token}/pesanan/{code}/bayar', [QrOrderController::class, 'pay'])->middleware('throttle:10,1')->name('qr.pay');
 
 // CSRF exclusion for this route lives in bootstrap/app.php
 Route::post('/webhook/payment', [PaymentWebhookController::class, 'handle'])->name('webhook.payment');

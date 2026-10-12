@@ -18,7 +18,6 @@ use App\Exceptions\UnitUnavailableException;
 use App\Exceptions\UnknownPaymentException;
 use App\Models\Booking;
 use App\Models\BookingUnit;
-use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Unit;
 use App\Services\BookingBilling;
@@ -38,9 +37,6 @@ class PaymentService
         private readonly UnitNightLedger $ledger,
         private readonly BookingBilling $billing,
     ) {}
-
-    /** QR orders are paid on the guest's phone, so the hosted page offers QR and e-wallet methods only. */
-    private const ORDER_ENABLED_PAYMENTS = ['other_qris', 'gopay', 'shopeepay'];
 
     /**
      * Opens a gateway payment for whatever is still owed on the booking, or for the down payment
@@ -64,26 +60,6 @@ class PaymentService
                 'email' => $booking->customer?->email,
             ],
             finishUrl: route('booking.status', $booking->access_token),
-        ));
-    }
-
-    /**
-     * Opens a QRIS or e-wallet payment for a QR order the guest chose to pay online (FR-47).
-     *
-     * @throws PaymentException
-     */
-    public function initiateForOrder(Order $order): PaymentIntent
-    {
-        $payment = DB::transaction(fn () => $this->createPendingOrderPayment($order));
-        $order->loadMissing('diningSpot');
-
-        return $this->openHostedPage($payment, new GatewayCharge(
-            reference: (string) $payment->gateway_ref,
-            amount: $payment->amount,
-            label: 'Pesanan '.$order->code,
-            customer: ['name' => $order->customer_name, 'phone' => $order->customer_phone],
-            finishUrl: route('qr.track', [$order->diningSpot->qr_token, $order->code]),
-            enabledPayments: self::ORDER_ENABLED_PAYMENTS,
         ));
     }
 
@@ -116,7 +92,8 @@ class PaymentService
     }
 
     /**
-     * Closes the booking's open gateway links so the hosted pages stop accepting money for it.
+     * Closes the booking's open gateway links so the hosted pages stop accepting money for it, and flags
+     * any unchecked transfer proof for refund review.
      * Called inside the transaction that cancels or refunds the booking.
      */
     public function expirePendingPayments(Booking $booking): void
@@ -125,6 +102,17 @@ class PaymentService
             ->where('method', PaymentMethod::Gateway)
             ->where('status', PaymentStatus::Pending)
             ->update(['status' => PaymentStatus::Expired]);
+
+        // The guest may already have sent the money; the proof stays pending so staff can still
+        // check the bank, and the flag puts it in the refund review list.
+        $flagged = $booking->payments()
+            ->awaitingProofReview()
+            ->whereNull('review_reason')
+            ->update(['review_reason' => PaymentReviewReason::ProofPendingOnCancel->value]);
+
+        if ($flagged > 0) {
+            Log::warning('Booking closed with an unchecked transfer proof; flagged for refund review', ['booking' => $booking->code]);
+        }
     }
 
     /**
@@ -206,6 +194,20 @@ class PaymentService
 
             throw InvalidPaymentAmountException::forReference((string) $payment->gateway_ref);
         }
+    }
+
+    /**
+     * Applies a transfer proof staff just confirmed, with the same rules as a manual payment:
+     * a down payment extends the hold, full payment moves the booking to paid. Call inside a
+     * transaction with the booking row locked.
+     *
+     * @return int the part of $amount that exceeded the balance and was not applied
+     */
+    public function applyConfirmedTransfer(Booking $lockedBooking, int $amount): int
+    {
+        $this->extendHoldForDownPayment($lockedBooking, $amount);
+
+        return $this->applyToBooking($lockedBooking, $amount);
     }
 
     /**
@@ -320,21 +322,7 @@ class PaymentService
         return $this->reusableOrNewGatewayPayment($locked, $locked->code, $amount);
     }
 
-    /**
-     * @throws PaymentException
-     */
-    private function createPendingOrderPayment(Order $order): Payment
-    {
-        $locked = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
-
-        if ($locked->isPaid() || $locked->bill_to_booking) {
-            throw PaymentException::nothingToPay();
-        }
-
-        return $this->reusableOrNewGatewayPayment($locked, $locked->code, $locked->total);
-    }
-
-    private function reusableOrNewGatewayPayment(Booking|Order $payable, string $code, int $amount): Payment
+    private function reusableOrNewGatewayPayment(Booking $payable, string $code, int $amount): Payment
     {
         $reusable = $payable->payments()
             ->where('method', PaymentMethod::Gateway)
@@ -367,12 +355,6 @@ class PaymentService
      */
     private function settle(Payment $payment): void
     {
-        if ($payment->payable_type === (new Order)->getMorphClass()) {
-            $this->settleOrder($payment);
-
-            return;
-        }
-
         $booking = $payment->payable()->lockForUpdate()->firstOrFail();
 
         // A cancellation is final: an old link paid afterwards must not bring the booking back.
@@ -400,24 +382,6 @@ class PaymentService
             'booking' => $booking->code,
             'excess' => $excess,
         ]);
-    }
-
-    /**
-     * A QR order paid online becomes visible to the kitchen once marked paid. A second paid link for
-     * an order already settled at the cashier is kept and flagged for refund.
-     */
-    private function settleOrder(Payment $payment): void
-    {
-        $order = Order::whereKey($payment->payable_id)->lockForUpdate()->firstOrFail();
-
-        if ($order->isPaid()) {
-            $payment->forceFill(['review_reason' => PaymentReviewReason::Overpaid])->save();
-            Log::warning('Online payment for an order that was already paid', ['reference' => $payment->gateway_ref]);
-
-            return;
-        }
-
-        $order->update(['payment_status' => Order::PAYMENT_PAID]);
     }
 
     /**

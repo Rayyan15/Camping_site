@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Resources\Payments\PaymentResource;
 use App\Services\DashboardMetricsService;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -43,6 +44,13 @@ class DashboardStats extends BaseWidget
                 ->description('Belum masuk antrean dapur')
                 ->descriptionIcon('heroicon-m-clock'),
         ];
+
+        if (auth()->user()?->can('record_manual_payment')) {
+            $stats[] = Stat::make('Bukti Transfer Menunggu', $metrics->awaitingTransferProofCount())
+                ->description('Cocokkan dengan mutasi rekening')
+                ->descriptionIcon('heroicon-m-document-check')
+                ->url(PaymentResource::getUrl('index', ['tableFilters' => ['awaiting_proof_review' => ['isActive' => true]]]));
+        }
 
         return auth()->user()?->can('view_financials')
             ? [...$stats, ...$this->revenueStats($metrics)]

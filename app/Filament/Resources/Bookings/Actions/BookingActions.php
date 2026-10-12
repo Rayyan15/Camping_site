@@ -4,21 +4,27 @@ namespace App\Filament\Resources\Bookings\Actions;
 
 use App\Enums\BookingStatus;
 use App\Enums\PaymentMethod;
+use App\Exceptions\BookingRescheduleException;
 use App\Exceptions\BookingReviewException;
 use App\Exceptions\InvalidBookingTransitionException;
 use App\Exceptions\PaymentException;
 use App\Exceptions\RefundException;
+use App\Filament\Resources\Payments\Actions\TransferProofActions;
 use App\Models\Booking;
+use App\Models\Payment;
+use App\Services\BookingRescheduleService;
 use App\Services\BookingReviewService;
 use App\Services\BookingStatusTransition;
 use App\Services\Payment\PaymentService;
 use App\Services\RefundService;
 use Filament\Actions\Action;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -135,6 +141,71 @@ class BookingActions
             });
     }
 
+    public static function reschedule(): Action
+    {
+        return Action::make('reschedule')
+            ->label('Jadwal ulang')
+            ->icon('heroicon-o-calendar-days')
+            ->color('gray')
+            ->authorize('reschedule')
+            ->visible(fn (Booking $record): bool => $record->status === BookingStatus::Paid)
+            ->modalHeading('Jadwal ulang booking')
+            ->modalDescription(fn (Booking $record): string => app(BookingRescheduleService::class)->blockedReason($record)
+                ?? 'Satu kali per booking, paling lambat '.config('booking.reschedule.min_days_before_check_in').' hari sebelum check-in. Harga dihitung ulang oleh sistem.')
+            ->modalSubmitActionLabel('Pindahkan jadwal')
+            ->schema([
+                DatePicker::make('check_in')->label('Check-in baru')->native(false)->minDate(today())->required(),
+                DatePicker::make('check_out')->label('Check-out baru')->native(false)->after('check_in')->required(),
+                Toggle::make('accept_price_increase')
+                    ->label('Terima selisih harga bila lebih mahal')
+                    ->helperText('Booking tetap Lunas, selisih ditagih lewat Catat pembayaran. Bila harga turun, kelebihan bayar dicatat untuk refund manual.'),
+            ])
+            ->action(function (array $data, Booking $record, Component $livewire): void {
+                try {
+                    $result = app(BookingRescheduleService::class)->reschedule(
+                        $record,
+                        $data['check_in'],
+                        $data['check_out'],
+                        (bool) ($data['accept_price_increase'] ?? false),
+                        Auth::id(),
+                    );
+                } catch (BookingRescheduleException $e) {
+                    Notification::make()->title('Jadwal tidak diubah')->body($e->getMessage())->danger()->send();
+
+                    return;
+                }
+
+                Notification::make()->title('Jadwal booking diubah')->body(self::rescheduleSummary($result->priceDifference))->success()->send();
+                self::refreshPage($livewire);
+            });
+    }
+
+    private static function rescheduleSummary(int $difference): string
+    {
+        $amount = number_format(abs($difference), 0, ',', '.');
+
+        return match (true) {
+            $difference > 0 => "Tamu masih harus membayar selisih Rp {$amount}.",
+            $difference < 0 => "Kelebihan bayar Rp {$amount} dicatat untuk refund manual.",
+            default => 'Harga tidak berubah.',
+        };
+    }
+
+    public static function confirmTransfer(): Action
+    {
+        return TransferProofActions::confirm(self::pendingProof(...), 'recordPayment', 'confirm_transfer');
+    }
+
+    public static function rejectTransferProof(): Action
+    {
+        return TransferProofActions::reject(self::pendingProof(...), 'recordPayment', 'reject_proof');
+    }
+
+    private static function pendingProof(Booking $booking): ?Payment
+    {
+        return $booking->payments()->awaitingProofReview()->latest('id')->first();
+    }
+
     public static function resolveReview(): Action
     {
         return Action::make('resolve_review')
@@ -143,6 +214,8 @@ class BookingActions
             ->color('warning')
             ->authorize('resolveReview')
             ->visible(fn (Booking $record): bool => $record->status === BookingStatus::NeedsReview)
+            ->disabled(fn (Booking $record): bool => app(BookingReviewService::class)->blockedReason($record) !== null)
+            ->tooltip(fn (Booking $record): ?string => app(BookingReviewService::class)->blockedReason($record))
             ->modalHeading('Selesaikan review booking')
             ->modalDescription(fn (Booking $record): string => "Booking {$record->code} sudah dibayar Rp ".number_format($record->paid_amount, 0, ',', '.').' tetapi unitnya sudah diambil tamu lain. Pilih satu hasil.')
             ->modalSubmitActionLabel('Selesaikan')

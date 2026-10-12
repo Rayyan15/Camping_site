@@ -74,7 +74,7 @@
                                                 </button>
                                                 <input type="number" name="items[{{ $item->id }}][qty]" value="{{ $qty }}" min="0" max="{{ \App\Http\Requests\Public\StoreQrOrderRequest::MAX_QTY }}" inputmode="numeric"
                                                        aria-label="Jumlah {{ $item->name }}" data-qty
-                                                       class="w-9 appearance-none border-0 bg-transparent p-0 text-center font-bold text-forest-900 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none">
+                                                       class="h-11 w-9 appearance-none border-0 bg-transparent p-0 text-center font-bold text-forest-900 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none">
                                                 <button type="button" data-step="1" class="grid size-11 place-items-center rounded-full text-forest-800 transition hover:bg-forest-100 disabled:opacity-35" aria-label="Tambah {{ $item->name }}">
                                                     <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
                                                 </button>

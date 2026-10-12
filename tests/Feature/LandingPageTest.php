@@ -69,9 +69,9 @@ class LandingPageTest extends TestCase
             ->assertSee('Kurang dari 10 hari sebelum check-in: tidak ada pengembalian.');
     }
 
-    public function test_page_makes_no_promise_about_check_in_hours(): void
+    public function test_page_states_the_standard_check_in_and_check_out_hours(): void
     {
-        $this->get(route('home'))->assertSee('Jam check-in dan check-out ditentukan pengelola');
+        $this->get(route('home'))->assertSee('Check-in mulai pukul 14.00 dan check-out paling lambat pukul 12.00');
     }
 
     public function test_contact_block_is_hidden_until_configured(): void

@@ -8,7 +8,7 @@ export function initCheckoutCountdown() {
 
     const tick = () => {
         const left = Math.max(0, Math.round((deadline - Date.now()) / 1000));
-        el.textContent = `${pad(Math.floor(left / 60))}:${pad(left % 60)}`;
+        el.textContent = `${pad(Math.floor(left / 3600))}:${pad(Math.floor((left % 3600) / 60))}:${pad(left % 60)}`;
         if (left === 0) {
             window.location.reload();
             return;

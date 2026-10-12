@@ -87,7 +87,10 @@ class BookingsTable
             ->recordActions([
                 BookingActions::checkIn(),
                 BookingActions::checkOut(),
+                BookingActions::confirmTransfer(),
+                BookingActions::rejectTransferProof(),
                 BookingActions::recordPayment(),
+                BookingActions::reschedule(),
                 BookingActions::resolveReview(),
                 EditAction::make(),
             ])

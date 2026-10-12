@@ -84,7 +84,7 @@ class DiningSpotService
      */
     public function paymentChoicesFor(DiningSpot $spot): array
     {
-        $choices = [QrPaymentChoice::Cashier, QrPaymentChoice::Online];
+        $choices = [QrPaymentChoice::Cashier];
 
         if ($this->activeBooking($spot) !== null) {
             $choices[] = QrPaymentChoice::Booking;

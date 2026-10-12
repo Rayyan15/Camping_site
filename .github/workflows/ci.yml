@@ -28,6 +28,8 @@ jobs:
         run: vendor/bin/pint --test
       - name: Composer audit
         run: composer audit
+      - name: Larastan
+        run: composer analyse -- --no-progress
 
   tests-sqlite:
     runs-on: ubuntu-latest
@@ -97,4 +99,3 @@ jobs:
       - name: Tests (mysql)
         run: php artisan test --configuration=phpunit.mysql.xml
 
-# Next step: Larastan level 6 (PRD 7.1) once its findings are triaged into a baseline.

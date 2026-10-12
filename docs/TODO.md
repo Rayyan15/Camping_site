@@ -13,6 +13,14 @@ Diperbarui 9 Oktober 2026. Sumber: audit dua agent (bug hunt dan modul setengah 
 - [x] **Pemeriksaan laporan kebersihan.** Aksi "Setujui" dan "Minta bersihkan ulang" (alasan wajib, tersimpan di catatan). Status tidak lagi dipilih bebas di form. Izin baru `review_cleaning_logs`, default hanya owner. Bukti: `CleaningLogReviewTest`.
 - [x] **Sinkron fingerprint selalu terjadwal.** Job jalan tiap malam dan mencatat "skipped" di log selama `ATTENDANCE_LOG_PATH` kosong. Path didokumentasikan di kedua `.env` contoh.
 
+## Gelombang jawaban client 10 Oktober 2026
+
+- [x] Seeder refund dua tier, `SettingsSeeder` (pajak 0, DP 0, jam 14.00 dan 12.00), `EvaluationCriteriaSeeder`, kapasitas 4 + 2 di validasi booking, kontak dan TikTok di landing. Bukti: `ClientAnswersSeedTest`, `RefundCancellationTest`.
+- [ ] Owner mengisi harga add-on `Extra Bed` dan mengaktifkannya (nominal belum diberikan).
+- [ ] Konfirmasi harga 150rb per malam untuk tipe mana, lalu sesuaikan harga tipe.
+
+- [ ] **Ditahan:** integrasi mesin absensi fingerprint (endpoint ADMS). Absensi manual lewat panel dulu.
+
 ## Tidak dikerjakan, dengan alasan
 
 - **Rotasi token QR tenda saat check-out.** Tidak dibangun karena QR tenda dicetak dan ditempel. Rotasi tiap check-out berarti mencetak ulang stiker setiap tamu. Risikonya sudah tertutup: tagihan ke booking hanya bisa ke booking berstatus Paid atau CheckedIn (`DiningSpotService::activeBooking`), jadi tamu yang sudah check-out tidak bisa menagihkan apa pun. Rotasi manual tetap ada di menu Titik QR.
@@ -55,6 +63,22 @@ Prioritas rendah:
 ## Operasional dan tooling
 
 - [ ] Uji browser untuk checkout (termasuk pilihan DP), status booking, menu QR (termasuk QRIS), antrean dapur.
-- [ ] Larastan level 6.
-- [ ] Backup di luar server.
+- [x] Larastan level 6 (`composer analyse`, langkah CI). 433 temuan lama masuk `phpstan-baseline.neon`; kurangi bertahap.
+- [ ] Perbaiki `EditUser::handleRecordUpdate` (return setelah `halt()`), lalu hapus `excludePaths` di `phpstan.neon`.
+- [x] Backup di luar server siap di config: `app:backup-database` harian 02:30, salinan ke disk `BACKUP_DISK` (adapter S3 terpasang).
+- [ ] Owner mengisi `BACKUP_DISK=s3` dan kredensial `AWS_*` di `.env` server, lalu uji `php artisan app:backup-database`.
 - [ ] Commit semua perubahan yang masih menggantung.
+
+## Alur transfer manual (10 Oktober 2026)
+
+- [x] Hold 2 jam, perpanjangan 24 jam saat bukti masuk (config), rekening dari config, mode `manual`. Bukti: `TransferProofFlowTest`.
+- [x] Unggah bukti di checkout, konfirmasi dan tolak di panel (Pembayaran dan Booking), filter, lencana, kartu dashboard, notifikasi staf.
+- [x] Status booking menampilkan bukti menunggu atau ditolak; `ReleaseExpiredHolds` tidak meng-expire booking dengan bukti pending.
+- [x] Tombol WhatsApp ke admin, email tamu (4 Mailable), `MAIL_*` di `.env.example`.
+- [ ] Owner mengisi rekening bank, kredensial SMTP, dan nomor WhatsApp admin di `.env` server.
+- [ ] Uji browser alur unggah bukti di server nyata.
+
+- [x] Aksi "Selesaikan review" dikunci bila bukti transfer pending atau belum lunas. Bukti: `NeedsReviewResolutionTest` (tiga test baru).
+- [x] Booking batal dengan bukti pending ditandai `proof_pending_on_cancel` untuk refund. Bukti: `test_cancelling_with_an_unchecked_proof_flags_it_for_refund_review`.
+- [x] Sisa tagihan setelah reschedule dikirim ke halaman status (`outstanding`) dan email `RescheduleConfirmed`. Bukti: `BookingRescheduleTest` (tiga test baru).
+- [ ] View email `resources/views/mail/reschedule-confirmed.blade.php` dan tampilan `outstanding` di `public/booking-status.blade.php` (tugas frontend).

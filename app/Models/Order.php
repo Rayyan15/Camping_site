@@ -61,8 +61,7 @@ class Order extends Model
     }
 
     /**
-     * Orders the kitchen should act on. QR and walk-in orders count, except a QR order the guest
-     * chose to pay online and has not paid yet. A pre-order only counts while its booking is paid or
+     * Orders the kitchen should act on. QR and walk-in orders always count, paid or not. A pre-order only counts while its booking is paid or
      * checked in. Pending payment is hidden because the stay is not confirmed, and needs_review is
      * hidden until staff settle the doubtful payment.
      *
@@ -72,11 +71,7 @@ class Order extends Model
     {
         $query->where(function (Builder $query) {
             $query->where(function (Builder $direct) {
-                $direct->whereIn('source', [self::SOURCE_QR, self::SOURCE_WALKIN])
-                    ->where(fn (Builder $paid) => $paid
-                        ->whereNull('payment_choice')
-                        ->orWhere('payment_choice', '!=', QrPaymentChoice::Online->value)
-                        ->orWhere('payment_status', self::PAYMENT_PAID));
+                $direct->whereIn('source', [self::SOURCE_QR, self::SOURCE_WALKIN]);
             })
                 ->orWhere(function (Builder $preorder) {
                     $preorder->where('source', self::SOURCE_PREORDER)
@@ -108,11 +103,6 @@ class Order extends Model
     public function isPaid(): bool
     {
         return $this->payment_status === self::PAYMENT_PAID;
-    }
-
-    public function awaitsOnlinePayment(): bool
-    {
-        return $this->payment_choice === QrPaymentChoice::Online && ! $this->isPaid();
     }
 
     /**

@@ -2,7 +2,9 @@
 
 return [
     /*
-    | Active payment gateway: 'midtrans' (Snap) or 'fake' (development and tests only).
+    | Active payment mode. 'manual' (default): the guest transfers to the bank account in config/site.php
+    | and uploads a proof that staff confirm. 'midtrans' (Snap) and 'fake' (development and tests only)
+    | keep the hosted-gateway code available but unused.
     */
-    'gateway' => env('PAYMENT_GATEWAY', 'fake'),
+    'gateway' => env('PAYMENT_GATEWAY', 'manual'),
 ];

@@ -96,7 +96,7 @@ class BookingPricingTest extends TestCase
 
         $this->assertTrue($service->checkAvailability($this->unitType->id, '2027-01-04', '2027-01-06')->isEmpty());
 
-        $this->travelTo(now()->addMinutes(16));
+        $this->travelTo(now()->addMinutes(config('booking.hold_minutes') + 1));
 
         $this->assertCount(1, $service->checkAvailability($this->unitType->id, '2027-01-04', '2027-01-06'));
     }
@@ -104,7 +104,7 @@ class BookingPricingTest extends TestCase
     public function test_release_job_marks_expired_pending_bookings(): void
     {
         $booking = $this->book('2027-01-04', '2027-01-06');
-        $this->travelTo(now()->addMinutes(16));
+        $this->travelTo(now()->addMinutes(config('booking.hold_minutes') + 1));
 
         (new ReleaseExpiredHolds)->handle();
 

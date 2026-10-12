@@ -2,9 +2,16 @@
 
 return [
     /*
-    | Minutes a pending_payment booking blocks its units before it expires.
+    | Minutes a pending_payment booking blocks its units before it expires. Two hours: the guest
+    | transfers by bank and uploads the proof (client decision, 10 Oct 2026).
     */
-    'hold_minutes' => (int) env('BOOKING_HOLD_MINUTES', 15),
+    'hold_minutes' => (int) env('BOOKING_HOLD_MINUTES', 120),
+
+    /*
+    | Hours staff get to check a transfer proof. The units stay held that long from the moment the guest
+    | uploads it, so the hold does not lapse mid-review (owner decision: 24 hours).
+    */
+    'proof_review_hours' => (int) env('BOOKING_PROOF_REVIEW_HOURS', 24),
 
     /*
     | Minutes a pending_payment booking keeps its units after staff records a partial manual
@@ -19,9 +26,22 @@ return [
     'db_transaction_attempts' => max(1, (int) env('BOOKING_DB_TRANSACTION_ATTEMPTS', 3)),
 
     /*
-    | Default tax rate (0.11 = 11%). The `tax_rate` row in the settings table overrides it.
+    | Fallback tax rate (0.11 = 11%) used only when the `tax_rate` settings row is missing. The client
+    | confirmed on 10 Oct 2026 that no tax is charged, so SettingsSeeder stores 0 and production sets
+    | BOOKING_TAX_RATE=0.
     */
     'tax_rate' => (float) env('BOOKING_TAX_RATE', 0.11),
+
+    /*
+    | Most guests a single tent takes beyond its type capacity, through extra_guests add-ons.
+    | Client answer of 10 Oct 2026: base capacity 4, at most 2 more.
+    */
+    'max_extra_guests_per_unit' => (int) env('BOOKING_MAX_EXTRA_GUESTS_PER_UNIT', 2),
+
+    /*
+    | The base nightly price already includes breakfast (client answer, 10 Oct 2026).
+    */
+    'base_price_includes_breakfast' => true,
 
     /*
     | ISO weekday numbers (Mon=1 ... Sun=7) whose night is priced at the weekend rate.
@@ -60,5 +80,14 @@ return [
     'serve_times' => [
         '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
         '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00',
+    ],
+
+    /*
+    | Reschedule rule (client decision, 10 Oct 2026): a paid booking may change its dates once, and
+    | only while check-in is at least this many days away.
+    */
+    'reschedule' => [
+        'max_times' => (int) env('BOOKING_RESCHEDULE_MAX_TIMES', 1),
+        'min_days_before_check_in' => (int) env('BOOKING_RESCHEDULE_MIN_DAYS', 7),
     ],
 ];

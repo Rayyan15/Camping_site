@@ -10,10 +10,6 @@
         'diantar' => 'Pesanan sedang menuju lokasi Anda.',
         'selesai' => 'Pesanan sudah sampai. Selamat menikmati.',
     ];
-
-    if ($order->awaitsOnlinePayment()) {
-        $stepHints['baru'] = 'Pesanan tercatat. Dapur menerimanya setelah pembayaran masuk.';
-    }
 @endphp
 
 @section('title', 'Pesanan '.$order->code.' - '.config('site.name'))
@@ -28,17 +24,6 @@
     <div class="flex-1 px-4 pb-10 pt-6">
         @if(session('error'))
             <p class="mb-5 rounded-2xl bg-ember-soft px-5 py-4 font-semibold text-ember-dark" role="alert">{{ session('error') }}</p>
-        @endif
-
-        @if($order->awaitsOnlinePayment())
-            <section class="mb-6 rounded-3xl border-[1.5px] border-ember-dark bg-ember-soft p-5" aria-labelledby="judul-bayar">
-                <h2 id="judul-bayar" class="font-display text-xl font-semibold text-forest-900">Menunggu pembayaran</h2>
-                <p class="mt-2 text-ink">Dapur mulai menyiapkan setelah pembayaran {{ $rupiah($order->total) }} diterima. Kalau halaman pembayaran tertutup, buka lagi dari sini atau bayar ke kasir.</p>
-                <form action="{{ route('qr.pay', [$spot->qr_token, $order->code]) }}" method="POST" class="mt-4">
-                    @csrf
-                    <button type="submit" class="btn btn-primary w-full">Buka pembayaran QRIS</button>
-                </form>
-            </section>
         @endif
 
         <p id="status-hint" role="status" aria-live="polite" class="text-lg font-semibold text-forest-900">{{ $stepHints[$progress['status']] }}</p>
@@ -80,8 +65,6 @@
                     Ditagihkan ke booking Anda.
                 @elseif($order->isPaid())
                     Sudah dibayar.
-                @elseif($order->awaitsOnlinePayment())
-                    Menunggu pembayaran online.
                 @else
                     Belum dibayar. Bayar ke kasir.
                 @endif

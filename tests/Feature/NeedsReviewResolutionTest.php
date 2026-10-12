@@ -3,6 +3,9 @@
 namespace Tests\Feature;
 
 use App\Enums\BookingStatus;
+use App\Enums\PaymentDirection;
+use App\Enums\PaymentMethod;
+use App\Enums\PaymentStatus;
 use App\Enums\RefundStatus;
 use App\Exceptions\BookingReviewException;
 use App\Filament\Resources\Bookings\BookingResource;
@@ -275,5 +278,60 @@ class NeedsReviewResolutionTest extends TestCase
     public function test_navigation_badge_is_empty_without_review_bookings(): void
     {
         $this->assertNull(BookingResource::getNavigationBadge());
+    }
+
+    public function test_move_is_refused_while_a_transfer_proof_is_unchecked(): void
+    {
+        $taken = $this->unit('D-01');
+        $this->unit('D-02');
+        $this->takeUnit($taken);
+        $booking = $this->reviewBooking($taken);
+        $booking->payments()->create([
+            'direction' => PaymentDirection::In, 'method' => PaymentMethod::Transfer,
+            'amount' => 1000000, 'status' => PaymentStatus::Pending, 'proof_path' => 'payment-proofs/bukti.png',
+        ]);
+
+        try {
+            app(BookingReviewService::class)->moveToFreeUnit($booking, $this->userWithRole('owner'));
+            $this->fail('Expected a rejection while a proof is unchecked.');
+        } catch (BookingReviewException $e) {
+            $this->assertStringContainsString('bukti transfer', $e->getMessage());
+        }
+
+        $this->assertSame(BookingStatus::NeedsReview, $booking->fresh()->status);
+    }
+
+    public function test_move_is_refused_when_the_booking_is_not_fully_paid(): void
+    {
+        $taken = $this->unit('D-01');
+        $this->unit('D-02');
+        $this->takeUnit($taken);
+        $booking = $this->reviewBooking($taken);
+        $booking->update(['paid_amount' => 400000]);
+
+        try {
+            app(BookingReviewService::class)->moveToFreeUnit($booking, $this->userWithRole('owner'));
+            $this->fail('Expected a rejection for an unpaid balance.');
+        } catch (BookingReviewException $e) {
+            $this->assertStringContainsString('Rp 600.000', $e->getMessage());
+        }
+
+        $this->assertSame(BookingStatus::NeedsReview, $booking->fresh()->status);
+    }
+
+    public function test_resolve_action_is_disabled_until_the_money_is_confirmed(): void
+    {
+        $taken = $this->unit('D-01');
+        $this->unit('D-02');
+        $this->takeUnit($taken);
+        $booking = $this->reviewBooking($taken);
+        $booking->update(['paid_amount' => 0]);
+        $this->actingAs($this->userWithRole('owner'));
+
+        Livewire::test(ListBookings::class)
+            ->assertTableActionDisabled('resolve_review', $booking)
+            ->callTableAction('resolve_review', $booking, ['outcome' => 'move']);
+
+        $this->assertSame(BookingStatus::NeedsReview, $booking->fresh()->status);
     }
 }

@@ -32,6 +32,18 @@ class PaymentResource extends Resource
         return 'Laporan & Keuangan';
     }
 
+    public static function getNavigationBadge(): ?string
+    {
+        $waiting = static::getEloquentQuery()->awaitingProofReview()->count();
+
+        return $waiting > 0 ? (string) $waiting : null;
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Bukti transfer menunggu konfirmasi';
+    }
+
     public static function getNavigationSort(): ?int
     {
         return 2;

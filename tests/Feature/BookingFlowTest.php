@@ -14,8 +14,6 @@ use App\Models\Order;
 use App\Models\Unit;
 use App\Models\UnitType;
 use App\Services\OrderService;
-use App\Services\Payment\PaymentIntent;
-use App\Services\Payment\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -92,7 +90,7 @@ class BookingFlowTest extends TestCase
         $this->assertSame(41140, $booking->tax);
         $this->assertSame(374000 + 41140, $booking->total);
         $this->assertSame(BookingStatus::PendingPayment, $booking->status);
-        $this->assertEquals(now()->addMinutes(15), $booking->hold_expires_at);
+        $this->assertEquals(now()->addMinutes(config('booking.hold_minutes')), $booking->hold_expires_at);
         $this->assertSame('6281234567890', $booking->customer->phone);
 
         $this->assertSame(150000, $booking->addons->sole()->subtotal);
@@ -166,6 +164,7 @@ class BookingFlowTest extends TestCase
 
     public function test_checkout_page_shows_summary_and_countdown(): void
     {
+        config(['site.bank.name' => 'Bank Uji', 'site.bank.account_number' => '1', 'site.bank.account_holder' => 'Uji']);
         $this->post(route('booking.store'), $this->fullPayload());
         $booking = Booking::firstOrFail();
 
@@ -174,8 +173,8 @@ class BookingFlowTest extends TestCase
             ->assertSee($booking->code)
             ->assertSee('Extra Bed')
             ->assertSee('Kopi')
-            ->assertSee('Bayar sekarang')
-            ->assertSee('data-remaining="900"', false);
+            ->assertSee('Kirim bukti transfer')
+            ->assertSee('data-remaining="7200"', false);
     }
 
     public function test_checkout_shows_expired_state_after_hold_lapses(): void
@@ -183,14 +182,12 @@ class BookingFlowTest extends TestCase
         $this->post(route('booking.store'), $this->payload());
         $booking = Booking::firstOrFail();
 
-        $this->travel(16)->minutes();
+        $this->travel(121)->minutes();
 
         $this->get(route('checkout.show', $booking->access_token))
             ->assertOk()
             ->assertSee('Waktu pembayaran habis')
-            ->assertDontSee('Bayar sekarang');
-
-        $this->post(route('checkout.pay', $booking->access_token))->assertRedirect(route('checkout.show', $booking->access_token));
+            ->assertDontSee('Kirim bukti transfer');
     }
 
     public function test_checkout_unknown_code_is_404_and_paid_booking_redirects(): void
@@ -202,19 +199,6 @@ class BookingFlowTest extends TestCase
         $booking->update(['status' => BookingStatus::Paid]);
 
         $this->get(route('checkout.show', $booking->access_token))->assertRedirect(route('booking.status', $booking->access_token));
-    }
-
-    public function test_pay_redirects_to_gateway_url(): void
-    {
-        $this->mock(PaymentService::class)
-            ->shouldReceive('initiate')
-            ->once()
-            ->andReturn(new PaymentIntent('https://pay.example.test/abc', 'ref-1'));
-
-        $this->post(route('booking.store'), $this->payload());
-        $booking = Booking::firstOrFail();
-
-        $this->post(route('checkout.pay', $booking->access_token))->assertRedirect('https://pay.example.test/abc');
     }
 
     public function test_order_status_only_moves_one_step_forward(): void

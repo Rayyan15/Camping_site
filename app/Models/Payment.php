@@ -17,6 +17,7 @@ class Payment extends Model
         'payable_type', 'payable_id', 'direction', 'method', 'gateway_ref',
         'amount', 'status', 'paid_at', 'proof_path', 'raw_payload', 'recorded_by',
         'redirect_url', 'expires_at', 'failure_reason', 'review_reason',
+        'rejection_reason', 'reviewed_by', 'reviewed_at',
     ];
 
     protected function casts(): array
@@ -28,6 +29,7 @@ class Payment extends Model
             'amount' => 'integer',
             'paid_at' => 'datetime',
             'expires_at' => 'datetime',
+            'reviewed_at' => 'datetime',
             'failure_reason' => PaymentFailureReason::class,
             'review_reason' => PaymentReviewReason::class,
             'raw_payload' => 'array',
@@ -43,6 +45,16 @@ class Payment extends Model
     {
         return $this->status === PaymentStatus::Failed
             && $this->failure_reason === PaymentFailureReason::GatewayUnreachable;
+    }
+
+    /** Transfer proofs uploaded by guests that staff have not looked at yet. */
+    public function scopeAwaitingProofReview(Builder $query): Builder
+    {
+        return $query
+            ->where('direction', PaymentDirection::In->value)
+            ->where('method', PaymentMethod::Transfer->value)
+            ->where('status', PaymentStatus::Pending->value)
+            ->whereNotNull('proof_path');
     }
 
     public function scopeSettled(Builder $query): Builder

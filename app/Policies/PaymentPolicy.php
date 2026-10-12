@@ -48,6 +48,15 @@ class PaymentPolicy extends ResourcePolicy
         return $this->view($user, $payment);
     }
 
+    /** Confirming or rejecting a guest's transfer proof is a booking payment decision. */
+    public function reviewProof(User $user, Payment $payment): bool
+    {
+        return $user->is_active
+            && $user->can('record_manual_payment')
+            && in_array('booking', self::visiblePayableTypes($user), true)
+            && $payment->payable_type === 'booking';
+    }
+
     public function create(User $user): bool
     {
         return false;

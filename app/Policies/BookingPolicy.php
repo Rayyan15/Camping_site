@@ -42,4 +42,9 @@ class BookingPolicy extends ResourcePolicy
     {
         return $user->is_active && $user->can('approve_refund');
     }
+
+    public function reschedule(User $user, mixed $record = null): bool
+    {
+        return $user->is_active && $user->can('record_manual_payment');
+    }
 }

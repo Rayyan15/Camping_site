@@ -121,8 +121,17 @@ class StoreBookingRequest extends FormRequest
             return;
         }
 
-        if ($this->integer('guests') > $unitType->capacity * $quantity + $this->extraBedCount()) {
-            $validator->errors()->add('guests', "Kapasitas {$unitType->name} adalah {$unitType->capacity} orang per unit. Tambah unit atau extra bed.");
+        $maxExtraPerUnit = (int) config('booking.max_extra_guests_per_unit');
+        $extraGuests = $this->extraBedCount();
+
+        if ($extraGuests > $maxExtraPerUnit * $quantity) {
+            $validator->errors()->add('addons', "Tamu tambahan maksimal {$maxExtraPerUnit} orang per tenda.");
+
+            return;
+        }
+
+        if ($this->integer('guests') > $unitType->capacity * $quantity + $extraGuests) {
+            $validator->errors()->add('guests', "Kapasitas {$unitType->name} adalah {$unitType->capacity} orang per unit, tambahan maksimal {$maxExtraPerUnit} orang per tenda. Tambah unit atau tamu tambahan.");
         }
     }
 

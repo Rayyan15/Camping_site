@@ -28,6 +28,7 @@ use App\Observers\DeletionGuardObserver;
 use App\Services\AttendanceRecapScoreSource;
 use App\Services\FileFingerprintLogSource;
 use App\Services\Payment\FakeGateway;
+use App\Services\Payment\ManualGateway;
 use App\Services\Payment\MidtransGateway;
 use App\Services\WhatsApp\FonnteGateway;
 use App\Services\WhatsApp\LogWhatsAppGateway;
@@ -58,7 +59,8 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(PaymentGateway::class, fn () => match (config('payment.gateway')) {
             'midtrans' => new MidtransGateway,
-            default => new FakeGateway,
+            'fake' => new FakeGateway,
+            default => new ManualGateway,
         });
 
         $this->app->bind(WhatsAppGateway::class, fn ($app) => match (config('whatsapp.driver')) {

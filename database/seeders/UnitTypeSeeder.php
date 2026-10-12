@@ -15,30 +15,33 @@ class UnitTypeSeeder extends Seeder
 {
     /**
      * Unit counts come from the PRD (section 3.1, 32 units in total).
-     * Capacity, facilities and every price below are PLACEHOLDERS: the owner must confirm them.
+     * Facilities and every price below are PLACEHOLDERS: the owner must confirm them.
      *
      * @var array<int, array{name: string, code: string, units: int, capacity: int, weekday: int, weekend: int, description: string, facilities: array<int, string>}>
      */
+    /** Every tent sleeps 4 (client answer, 10 Oct 2026); up to 2 more guests come through extra_guests add-ons. */
+    private const TENT_CAPACITY = 4;
+
     private const TYPES = [
-        ['name' => 'Dome', 'code' => 'DOM', 'units' => 1, 'capacity' => 4, 'weekday' => 650000, 'weekend' => 800000,
+        ['name' => 'Dome', 'code' => 'DOM', 'units' => 1, 'capacity' => self::TENT_CAPACITY, 'weekday' => 650000, 'weekend' => 800000,
             'description' => 'Satu-satunya tenda berbentuk kubah di area ini, dengan ruang tengah yang lega untuk rombongan kecil.',
             'facilities' => ['Kasur', 'Listrik', 'Kamar mandi dalam', 'Teras']],
-        ['name' => 'Romance', 'code' => 'ROM', 'units' => 2, 'capacity' => 2, 'weekday' => 550000, 'weekend' => 700000,
+        ['name' => 'Romance', 'code' => 'ROM', 'units' => 2, 'capacity' => self::TENT_CAPACITY, 'weekday' => 550000, 'weekend' => 700000,
             'description' => 'Tenda untuk berdua dengan tata ruang yang lebih privat dan tenang.',
             'facilities' => ['Kasur', 'Listrik', 'Kamar mandi dalam']],
-        ['name' => 'Snail', 'code' => 'SNL', 'units' => 2, 'capacity' => 3, 'weekday' => 450000, 'weekend' => 575000,
+        ['name' => 'Snail', 'code' => 'SNL', 'units' => 2, 'capacity' => self::TENT_CAPACITY, 'weekday' => 450000, 'weekend' => 575000,
             'description' => 'Tenda dengan bentuk melengkung seperti rumah siput, cocok untuk keluarga kecil.',
             'facilities' => ['Kasur', 'Listrik', 'Teras']],
-        ['name' => 'Indian', 'code' => 'IND', 'units' => 5, 'capacity' => 4, 'weekday' => 400000, 'weekend' => 500000,
+        ['name' => 'Indian', 'code' => 'IND', 'units' => 5, 'capacity' => self::TENT_CAPACITY, 'weekday' => 400000, 'weekend' => 500000,
             'description' => 'Tenda tipi berpuncak tinggi dengan ruang berdiri yang leluasa.',
             'facilities' => ['Kasur', 'Listrik', 'Teras']],
-        ['name' => 'Pancar', 'code' => 'PNC', 'units' => 11, 'capacity' => 4, 'weekday' => 350000, 'weekend' => 450000,
+        ['name' => 'Pancar', 'code' => 'PNC', 'units' => 11, 'capacity' => self::TENT_CAPACITY, 'weekday' => 350000, 'weekend' => 450000,
             'description' => 'Tenda keluarga standar dan tipe paling banyak di area ini.',
             'facilities' => ['Kasur', 'Listrik', 'Toilet bersama']],
-        ['name' => 'Safari', 'code' => 'SFR', 'units' => 6, 'capacity' => 5, 'weekday' => 500000, 'weekend' => 625000,
+        ['name' => 'Safari', 'code' => 'SFR', 'units' => 6, 'capacity' => self::TENT_CAPACITY, 'weekday' => 500000, 'weekend' => 625000,
             'description' => 'Tenda kanvas besar ala safari dengan ruang untuk rombongan keluarga.',
             'facilities' => ['Kasur', 'Listrik', 'Kamar mandi dalam', 'Teras']],
-        ['name' => 'Salak', 'code' => 'SLK', 'units' => 5, 'capacity' => 6, 'weekday' => 600000, 'weekend' => 750000,
+        ['name' => 'Salak', 'code' => 'SLK', 'units' => 5, 'capacity' => self::TENT_CAPACITY, 'weekday' => 600000, 'weekend' => 750000,
             'description' => 'Tenda berkapasitas terbesar untuk rombongan atau keluarga besar.',
             'facilities' => ['Kasur', 'Listrik', 'Kamar mandi dalam', 'Teras']],
     ];
@@ -85,7 +88,7 @@ class UnitTypeSeeder extends Seeder
 
         Addon::firstOrCreate(
             ['name' => 'Extra Bed'],
-            ['price' => 75000, 'unit' => AddonUnit::PerNight, 'is_active' => true],
+            ['price' => 0, 'unit' => AddonUnit::PerNight, 'extra_guests' => 1, 'is_active' => false],
         );
         Addon::firstOrCreate(
             ['name' => 'Paket Kayu Bakar'],

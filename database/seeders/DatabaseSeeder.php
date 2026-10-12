@@ -29,6 +29,8 @@ class DatabaseSeeder extends Seeder
             DiningSpotSeeder::class,
             DemoUserSeeder::class,
             RefundPolicySeeder::class,
+            SettingsSeeder::class,
+            EvaluationCriteriaSeeder::class,
         ]);
     }
 }

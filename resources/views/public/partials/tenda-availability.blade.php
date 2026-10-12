@@ -16,7 +16,7 @@
             data-check-in-id="check_in"
             data-check-out-id="check_out"
             data-estimate="[data-avail-estimate]"
-            class="avail-cal rounded-3xl border border-sand bg-[#fffdf8] p-4 sm:p-6"
+            class="avail-cal rounded-3xl border border-sand bg-[#fffdf8] p-2 sm:p-6"
             data-reveal
         >
             <noscript>

@@ -107,6 +107,7 @@ class PaymentLabels
         return match (true) {
             $payment->review_reason === PaymentReviewReason::Overpaid => 'Perlu ditinjau: dana masuk melebihi tagihan, kembalikan selisihnya',
             $payment->review_reason === PaymentReviewReason::BookingClosed => 'Perlu ditinjau: dana masuk setelah booking dibatalkan, kembalikan seluruhnya',
+            $payment->review_reason === PaymentReviewReason::ProofPendingOnCancel => 'Perlu ditinjau: booking dibatalkan saat bukti transfer belum diperiksa, cek mutasi dan kembalikan dana bila sudah masuk',
             $payment->failure_reason === PaymentFailureReason::GatewayUnreachable => 'Gagal: gateway tidak terjangkau, transaksi mungkin masih ada di sisi gateway',
             default => null,
         };

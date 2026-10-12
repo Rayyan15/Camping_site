@@ -36,6 +36,8 @@ class EditUser extends EditRecord
         } catch (LastOwnerException $e) {
             Notification::make()->title($e->getMessage())->danger()->send();
             $this->halt();
+
+            return $record;
         }
     }
 }

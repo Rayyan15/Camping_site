@@ -26,6 +26,7 @@ class AddonForm
                                 ->label('Harga')
                                 ->required()
                                 ->numeric()
+                                ->default(0)
                                 ->prefix('Rp'),
                             Select::make('unit')
                                 ->label('Satuan')
@@ -41,7 +42,7 @@ class AddonForm
                                 ->maxValue(4)
                                 ->default(0)
                                 ->required()
-                                ->helperText('Isi 1 untuk extra bed. Isi 0 untuk add-on yang tidak menambah kapasitas tenda.'),
+                                ->helperText('Isi 1 untuk biaya per orang di atas kapasitas 4 (maksimal 2 orang per tenda, harga per malam). Isi 0 untuk add-on yang tidak menambah kapasitas tenda.'),
                             Toggle::make('is_active')
                                 ->label('Tersedia / Aktif')
                                 ->required()

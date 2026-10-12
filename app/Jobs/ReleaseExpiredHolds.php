@@ -35,12 +35,13 @@ class ReleaseExpiredHolds implements ShouldQueue
     }
 
     /**
-     * A booking that already took a down payment never just expires: the money would vanish from
-     * every open view. It goes to manual review, where staff move it or cancel it with a refund.
+     * A booking that already took a down payment, or whose transfer proof nobody reviewed yet, never
+     * just expires: the money would vanish from every open view. It goes to manual review, where staff
+     * move it or cancel it with a refund.
      */
     private function release(Booking $booking): void
     {
-        if ($booking->paid_amount === 0) {
+        if ($booking->paid_amount === 0 && ! $booking->payments()->awaitingProofReview()->exists()) {
             $booking->update(['status' => BookingStatus::Expired]);
 
             return;

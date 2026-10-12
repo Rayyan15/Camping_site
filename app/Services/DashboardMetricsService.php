@@ -27,6 +27,11 @@ class DashboardMetricsService
         return CarbonImmutable::instance(now())->startOfDay();
     }
 
+    public function awaitingTransferProofCount(): int
+    {
+        return Payment::query()->awaitingProofReview()->count();
+    }
+
     public function checkInsToday(): int
     {
         return Booking::query()

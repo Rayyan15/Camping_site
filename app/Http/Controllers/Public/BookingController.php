@@ -10,6 +10,7 @@ use App\Http\Requests\Public\StoreBookingRequest;
 use App\Models\UnitType;
 use App\Services\Account\CustomerAccountService;
 use App\Services\BookingService;
+use App\Services\GuestMailer;
 use App\Services\PricingService;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
@@ -21,6 +22,7 @@ class BookingController extends Controller
     public function __construct(
         private readonly BookingService $bookingService,
         private readonly PricingService $pricing,
+        private readonly GuestMailer $guestMailer,
     ) {}
 
     public function checkAvailability(CheckAvailabilityRequest $request): View
@@ -58,6 +60,8 @@ class BookingController extends Controller
         if ($request->user() !== null) {
             $booking->customer->linkToUser($request->user());
         }
+
+        $this->guestMailer->bookingReceived($booking);
 
         return redirect()->route('checkout.show', $booking->access_token);
     }

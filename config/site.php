@@ -15,4 +15,15 @@ return [
     'address' => env('SITE_ADDRESS'),
     'maps_url' => env('SITE_MAPS_URL'),
     'instagram_url' => env('SITE_INSTAGRAM_URL'),
+
+    /*
+    | Account guests transfer to. Never invented in code: while any part is empty the payment page
+    | shows that the account is not set and hides the proof upload.
+    */
+    'bank' => [
+        'name' => env('SITE_BANK_NAME'),
+        'account_number' => env('SITE_BANK_ACCOUNT_NUMBER'),
+        'account_holder' => env('SITE_BANK_ACCOUNT_HOLDER'),
+    ],
+    'tiktok_url' => env('SITE_TIKTOK_URL'),
 ];

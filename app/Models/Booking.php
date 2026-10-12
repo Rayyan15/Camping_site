@@ -19,6 +19,7 @@ class Booking extends Model
         'code', 'invoice_number', 'customer_id', 'check_in', 'check_out', 'guests',
         'status', 'hold_expires_at', 'subtotal', 'tax', 'total',
         'paid_amount', 'notes', 'review_started_at', 'cancelled_at', 'cancellation_note',
+        'reschedule_count', 'reschedule_credit', 'rescheduled_at',
     ];
 
     /** The access token is a credential for public pages, so it never leaves the model in serialized form. */
@@ -39,6 +40,9 @@ class Booking extends Model
             'hold_expires_at' => 'datetime',
             'review_started_at' => 'datetime',
             'cancelled_at' => 'datetime',
+            'rescheduled_at' => 'datetime',
+            'reschedule_count' => 'integer',
+            'reschedule_credit' => 'integer',
             'status' => BookingStatus::class,
             'guests' => 'integer',
             'subtotal' => 'integer',

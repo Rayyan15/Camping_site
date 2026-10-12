@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Payments\Pages;
 
+use App\Enums\PaymentStatus;
+use App\Filament\Resources\Payments\Actions\TransferProofActions;
 use App\Filament\Resources\Payments\PaymentResource;
 use App\Models\Payment;
 use Filament\Actions\Action;
@@ -13,7 +15,11 @@ class ViewPayment extends ViewRecord
 
     protected function getHeaderActions(): array
     {
+        $awaitingReview = fn (Payment $record): ?Payment => $record->status === PaymentStatus::Pending && filled($record->proof_path) ? $record : null;
+
         return [
+            TransferProofActions::confirm($awaitingReview, 'reviewProof'),
+            TransferProofActions::reject($awaitingReview, 'reviewProof'),
             Action::make('view_proof')
                 ->label('Lihat bukti')
                 ->icon('heroicon-o-document-magnifying-glass')

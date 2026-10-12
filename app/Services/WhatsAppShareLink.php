@@ -30,6 +30,24 @@ class WhatsAppShareLink
         return 'https://wa.me/'.$phone.'?text='.rawurlencode($this->message($booking));
     }
 
+    /**
+     * Chat with the admin number from SITE_WHATSAPP_NUMBER, pre-filled with the booking details the
+     * guest sends themselves. Null while the number is not configured.
+     */
+    public function forAdmin(Booking $booking): ?string
+    {
+        $phone = $this->normalizePhone((string) config('site.whatsapp_number'));
+
+        if ($phone === null) {
+            return null;
+        }
+
+        $greeting = 'Halo admin '.config('site.name').', saya '.$booking->customer?->name.'. Saya ingin bertanya tentang booking ini.';
+
+        return 'https://wa.me/'.$phone.'?text='.rawurlencode($greeting.'
+'.$this->message($booking));
+    }
+
     public function normalizePhone(string $raw): ?string
     {
         $digits = preg_replace('/\D+/', '', $raw);

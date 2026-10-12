@@ -34,7 +34,7 @@ class RefundCancellationTest extends TestCase
     {
         parent::setUp();
 
-        foreach ([[7, 100], [3, 50], [0, 0]] as [$days, $percent]) {
+        foreach ([[7, 100], [0, 0]] as [$days, $percent]) {
             RefundPolicy::create(['min_days_before' => $days, 'percent' => $percent]);
         }
 
@@ -71,9 +71,9 @@ class RefundCancellationTest extends TestCase
     public function test_calculation_follows_policy_tiers_and_rounds_down(): void
     {
         $this->assertSame(1000001, $this->service->calculate($this->booking(10))->amount);
-        $this->assertSame(500000, $this->service->calculate($this->booking(4))->amount);
-        $this->assertSame(50, $this->service->calculate($this->booking(3))->percent);
-        $this->assertSame(0, $this->service->calculate($this->booking(2))->amount);
+        $this->assertSame(1000001, $this->service->calculate($this->booking(7))->amount);
+        $this->assertSame(0, $this->service->calculate($this->booking(6))->amount);
+        $this->assertSame(0, $this->service->calculate($this->booking(3))->percent);
         $this->assertSame(7, $this->service->calculate($this->booking(7))->daysBefore);
     }
 

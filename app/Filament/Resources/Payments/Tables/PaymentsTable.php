@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Payments\Tables;
 
+use App\Enums\PaymentStatus;
+use App\Filament\Resources\Payments\Actions\TransferProofActions;
 use App\Filament\Resources\Payments\PaymentLabels;
 use App\Models\Payment;
 use App\Models\User;
@@ -74,6 +76,10 @@ class PaymentsTable
                     ->query(fn (Builder $query, array $data): Builder => $query
                         ->when($data['from'] ?? null, fn (Builder $q, string $date) => $q->whereDate('paid_at', '>=', $date))
                         ->when($data['until'] ?? null, fn (Builder $q, string $date) => $q->whereDate('paid_at', '<=', $date))),
+                Filter::make('awaiting_proof_review')
+                    ->label('Bukti transfer menunggu')
+                    ->toggle()
+                    ->query(fn (Builder $query): Builder => $query->awaitingProofReview()),
                 Filter::make('needs_review')
                     ->label('Perlu ditinjau')
                     ->toggle()
@@ -81,12 +87,20 @@ class PaymentsTable
             ])
             ->recordActions([
                 ViewAction::make()->label('Detail'),
+                TransferProofActions::confirm(self::awaitingReview(...), 'reviewProof'),
+                TransferProofActions::reject(self::awaitingReview(...), 'reviewProof'),
             ])
             ->emptyStateHeading('Belum ada pembayaran')
             ->emptyStateDescription('Pembayaran dari tamu dan pengembalian dana akan muncul di sini.')
             ->emptyStateIcon('heroicon-o-credit-card')
             ->striped()
             ->defaultSort('created_at', 'desc');
+    }
+
+    /** The payment itself while it is a guest's unreviewed transfer proof, otherwise null. */
+    private static function awaitingReview(Payment $record): ?Payment
+    {
+        return $record->status === PaymentStatus::Pending && filled($record->proof_path) ? $record : null;
     }
 
     /** One lookup per request, so the toggleable column never causes a query per row. */
