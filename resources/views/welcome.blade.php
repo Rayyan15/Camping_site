@@ -25,7 +25,7 @@
     $steps = [
         ['title' => 'Pilih tanggal', 'text' => 'Isi check-in, check-out, dan jumlah tamu. Sistem menampilkan tipe tenda yang masih kosong beserta sisa unitnya.'],
         ['title' => 'Pilih tenda dan tambahan', 'text' => 'Pilih unit, tambah tamu bila perlu, dan jadwalkan makanan atau kopi yang ingin disiapkan sebelum Anda datang.'],
-        ['title' => 'Bayar dan terima kode', 'text' => 'Bayar online dalam '.$holdMinutes.' menit. Setelah itu kode booking dibuat dan dapat dipakai untuk cek status.'],
+        ['title' => 'Transfer dan kirim bukti', 'text' => 'Transfer ke rekening yang tampil di halaman pembayaran, lalu unggah bukti dalam '.$holdMinutes.' menit. Konfirmasi admin dikirim lewat email.'],
     ];
 
     $facilities = [
@@ -42,7 +42,7 @@
         ['q' => 'Berapa lama tenda ditahan sebelum saya bayar?', 'a' => 'Tenda ditahan '.$holdMinutes.' menit sejak checkout dibuat. Bila belum dibayar, tahanan dilepas otomatis dan tenda kembali tersedia.'],
         ['q' => 'Tamu saya melebihi kapasitas tenda. Bagaimana?', 'a' => 'Tiap tenda menampung 4 orang. Anda bisa menambah paling banyak '.$extraGuestLimit.' orang per tenda lewat add-on tamu tambahan saat memilih tenda.'],
         ['q' => 'Bisakah memesan makanan sebelum datang?', 'a' => 'Bisa. Pilih menu, tanggal, dan jam penyajian saat booking. Setelah menginap, pesan tambahan lewat QR di tenda.'],
-        ['q' => 'Metode pembayaran apa yang tersedia?', 'a' => 'Pembayaran online lewat virtual account bank, QRIS, dan e-wallet.'],
+        ['q' => 'Metode pembayaran apa yang tersedia?', 'a' => 'Transfer bank ke rekening yang tampil di halaman pembayaran, lalu unggah foto bukti transfer. Admin mencocokkan dengan mutasi dan mengirim konfirmasi lewat email.'],
         ['q' => 'Bagaimana cek status booking saya?', 'a' => 'Buka halaman Cek status booking, lalu isi kode booking dan 4 digit terakhir nomor telepon atau email yang Anda pakai saat memesan.'],
     ];
 @endphp
@@ -223,12 +223,14 @@
 
             <div class="relative lg:col-span-6" data-reveal data-reveal-delay="120">
                 <img src="{{ asset('images/tent-rocks-800.webp') }}" srcset="{{ asset('images/tent-rocks-480.webp') }} 480w, {{ asset('images/tent-rocks-800.webp') }} 800w, {{ asset('images/tent-rocks-1200.webp') }} 1200w" sizes="(min-width: 1152px) 560px, (min-width: 1024px) 45vw, 100vw" alt="Tenda kanvas putih terbuka di antara batu dan pepohonan" width="1200" height="800" loading="lazy" decoding="async" class="aspect-[4/5] w-full rounded-[2rem] object-cover sm:aspect-[5/4]">
-                <div class="absolute -bottom-8 left-4 w-60 rounded-3xl bg-cream p-5 text-forest-900 shadow-2xl shadow-black/40 sm:left-auto sm:-right-4">
-                    <p class="font-display text-lg italic text-ember-dark">QR di tenda</p>
-                    <svg class="mt-2 size-28 text-forest-950" viewBox="0 0 21 21" shape-rendering="crispEdges" fill="currentColor" aria-label="Ilustrasi kode QR" role="img">
+                <div class="absolute -bottom-8 left-4 flex w-72 items-center gap-4 rounded-3xl bg-cream p-4 text-forest-900 shadow-2xl shadow-black/40 sm:left-auto sm:-right-4">
+                    <svg class="size-20 shrink-0 rounded-xl bg-white p-1.5 text-forest-950" viewBox="0 0 21 21" shape-rendering="crispEdges" fill="currentColor" aria-label="Ilustrasi kode QR" role="img">
                         <path d="M0 0h7v7H0zM1 1v5h5V1zM2 2h3v3H2zM14 0h7v7h-7zM15 1v5h5V1zM16 2h3v3h-3zM0 14h7v7H0zM1 15v5h5v-5zM2 16h3v3H2zM8 0h2v2H8zM9 3h2v2H9zM8 6h1v2H8zM11 8h2v2h-2zM8 9h2v2H8zM0 8h2v2H0zM3 9h2v2H3zM5 8h1v1H5zM14 8h2v2h-2zM17 9h3v2h-3zM19 8h2v1h-2zM8 13h2v2H8zM11 12h2v3h-2zM14 14h3v2h-3zM18 14h3v2h-3zM8 17h3v2H8zM12 18h2v3h-2zM16 17h2v2h-2zM19 18h2v3h-2zM10 20h1v1h-1z"/>
                     </svg>
-                    <p class="mt-2 text-sm text-ink-soft">Scan, pilih menu, pesan ke lokasi Anda.</p>
+                    <div>
+                        <p class="font-display text-lg italic leading-tight text-ember-dark">QR di tenda</p>
+                        <p class="mt-1 text-sm leading-snug text-ink-soft">Scan, pilih menu, pesanan diantar ke tenda Anda.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -295,11 +297,11 @@
 
         @if($hasContact)
             <div class="mx-auto mt-16 max-w-6xl px-4 sm:px-6" data-reveal>
-                <dl class="grid gap-6 border-t border-forest-900/20 pt-8 sm:grid-cols-2 lg:grid-cols-5">
-                    @if($address)<div><dt class="font-display text-lg italic text-ember-dark">Alamat</dt><dd class="mt-1 text-ink-soft">{{ $address }}</dd></div>@endif
-                    @if($mapsUrl)<div><dt class="font-display text-lg italic text-ember-dark">Peta</dt><dd class="mt-1"><a href="{{ $mapsUrl }}" target="_blank" rel="noopener" class="font-bold underline underline-offset-4">Buka di peta</a></dd></div>@endif
-                    @if($whatsapp)<div><dt class="font-display text-lg italic text-ember-dark">WhatsApp</dt><dd class="mt-1"><a href="https://wa.me/{{ $whatsapp }}" target="_blank" rel="noopener" class="font-bold underline underline-offset-4">Kirim pesan</a></dd></div>@endif
-                    @if($instagram)<div><dt class="font-display text-lg italic text-ember-dark">Instagram</dt><dd class="mt-1"><a href="{{ $instagram }}" target="_blank" rel="noopener" class="font-bold underline underline-offset-4">Buka Instagram</a></dd></div>@endif
+                <dl class="grid gap-6 border-t border-forest-900/20 pt-8 text-center sm:grid-cols-2 lg:grid-cols-5">
+                    @if($address)<div><dt class="font-display text-lg italic text-ember-dark">Alamat</dt><dd class="mx-auto mt-1 max-w-56 text-ink-soft">{{ $address }}</dd></div>@endif
+                    @if($mapsUrl)<div><dt class="font-display text-lg italic text-ember-dark">Peta</dt><dd class="mt-1"><a href="{{ $mapsUrl }}" target="_blank" rel="noopener" class="inline-flex min-h-11 items-center gap-2 font-bold underline underline-offset-4">Buka di peta</a></dd></div>@endif
+                    @if($whatsapp)<div><dt class="font-display text-lg italic text-ember-dark">WhatsApp</dt><dd class="mt-1"><a href="https://wa.me/{{ $whatsapp }}" target="_blank" rel="noopener" class="inline-flex min-h-11 items-center gap-2 font-bold underline underline-offset-4">Kirim pesan</a></dd></div>@endif
+                    @if($instagram)<div><dt class="font-display text-lg italic text-ember-dark">Instagram</dt><dd class="mt-1"><a href="{{ $instagram }}" target="_blank" rel="noopener" class="inline-flex min-h-11 items-center gap-2 font-bold underline underline-offset-4">Buka Instagram</a></dd></div>@endif
                     @if($tiktok)<div><dt class="font-display text-lg italic text-ember-dark">TikTok</dt><dd class="mt-1"><a href="{{ $tiktok }}" target="_blank" rel="noopener" class="inline-flex min-h-11 items-center gap-2 font-bold underline underline-offset-4"><svg class="size-5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.6 3c.3 2.4 1.7 3.9 4 4.1v3.1a7.2 7.2 0 0 1-4-1.3v6.1a5.6 5.6 0 1 1-5.6-5.6c.3 0 .6 0 .9.1v3.2a2.5 2.5 0 1 0 1.6 2.3V3h3.1Z"/></svg>Buka TikTok</a></dd></div>@endif
                 </dl>
             </div>

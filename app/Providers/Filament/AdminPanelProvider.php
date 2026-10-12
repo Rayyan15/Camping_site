@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\Login;
 use App\Http\Middleware\AuthenticateActiveUser;
 use App\Http\Middleware\EnsureOwnerHasTwoFactor;
 use App\Http\Middleware\SecurityHeaders;
@@ -19,7 +20,6 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
-use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -30,7 +30,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login(Login::class)
             ->profile()
             ->databaseNotifications()
             ->multiFactorAuthentication(
@@ -44,8 +44,9 @@ class AdminPanelProvider extends PanelProvider
             ->darkModeBrandLogo(asset('images/brand/halimun-highland-160-on-dark.png'))
             ->brandLogoHeight('2.75rem')
             ->favicon(asset('favicon-32.png'))
-            // Light, dark or follow the device, one click away instead of buried in the user menu.
-            ->renderHook(PanelsRenderHook::USER_MENU_BEFORE, fn (): string => Blade::render('<x-filament-panels::theme-switcher />'))
+            ->renderHook(PanelsRenderHook::USER_MENU_BEFORE, fn (): string => view('filament.theme-toggle')->render())
+            ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => view('filament.sidebar-scrollbar')->render())
+            ->sidebarCollapsibleOnDesktop()
             ->colors([
                 'primary' => Color::Emerald,
             ])

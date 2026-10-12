@@ -7,6 +7,7 @@ import { initCheckoutCountdown } from './modules/checkout-countdown';
 import { initQrCart } from './modules/qr-cart';
 import { initQrTrack } from './modules/qr-track';
 import { initAvailabilityCalendar } from './modules/availability-calendar';
+import { initPasswordToggle } from './modules/password-toggle';
 
 initStaySearch();
 initReveal();
@@ -17,3 +18,4 @@ initCheckoutCountdown();
 initQrCart();
 initQrTrack();
 initAvailabilityCalendar();
+initPasswordToggle();

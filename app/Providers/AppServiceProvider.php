@@ -32,6 +32,9 @@ use App\Services\Payment\ManualGateway;
 use App\Services\Payment\MidtransGateway;
 use App\Services\WhatsApp\FonnteGateway;
 use App\Services\WhatsApp\LogWhatsAppGateway;
+use Filament\Actions\Action;
+use Filament\Tables\Columns\Column;
+use Filament\Tables\Table;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Middleware\TrustProxies;
@@ -79,6 +82,7 @@ class AppServiceProvider extends ServiceProvider
         $this->forceHttpsInProduction();
         $this->configureRateLimiters();
         $this->configureAccountRateLimiters();
+        $this->configureFilamentTables();
 
         Relation::enforceMorphMap(config('morph_map'));
 
@@ -139,5 +143,18 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->isProduction() && str_starts_with((string) config('app.url'), 'https://')) {
             URL::forceScheme('https');
         }
+    }
+
+    /**
+     * Owner preference for every data table: centered columns and icon-only row actions.
+     * The label stays as tooltip and accessible name, so the icon is never the only cue.
+     */
+    private function configureFilamentTables(): void
+    {
+        Column::configureUsing(fn (Column $column) => $column->alignCenter());
+
+        Table::configureUsing(fn (Table $table) => $table->modifyUngroupedRecordActionsUsing(
+            fn (Action $action) => $action->iconButton()->tooltip(fn (Action $action): ?string => $action->getLabel()),
+        ));
     }
 }
