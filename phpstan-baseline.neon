@@ -475,12 +475,6 @@ parameters:
 			path: app/Http/Requests/Admin/ExportReportRequest.php
 
 		-
-			message: '#^Method App\\Http\\Requests\\Public\\LandingSearchRequest\:\:messages\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Http/Requests/Public/LandingSearchRequest.php
-
-		-
 			message: '#^Unable to resolve the template type TKey in call to function collect$#'
 			identifier: argument.templateType
 			count: 1
@@ -2261,9 +2255,3 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Services/WhatsAppShareLink.php
-
-		-
-			message: '#^Access to constant ATTR_SSL_CA on an unknown class Pdo\\Mysql\.$#'
-			identifier: class.notFound
-			count: 2
-			path: config/database.php
