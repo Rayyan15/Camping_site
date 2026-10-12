@@ -12,6 +12,9 @@ enum SettingKey: string
     case CheckOutTime = 'check_out_time';
     case DownPaymentPercent = 'down_payment_percent';
     case PendingOwnerConfirmation = 'pending_owner_confirmation';
+    case BankName = 'bank_name';
+    case BankAccountNumber = 'bank_account_number';
+    case BankAccountHolder = 'bank_account_holder';
 
     public const DEFAULT_CHECK_IN_TIME = '14:00';
 
@@ -27,6 +30,9 @@ enum SettingKey: string
             self::CheckOutTime => 'Jam check-out standar',
             self::DownPaymentPercent => 'Persentase uang muka (DP)',
             self::PendingOwnerConfirmation => 'Pengaturan menunggu konfirmasi pemilik',
+            self::BankName => 'Nama bank',
+            self::BankAccountNumber => 'Nomor rekening',
+            self::BankAccountHolder => 'Atas nama rekening',
         };
     }
 }

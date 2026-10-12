@@ -13,6 +13,7 @@ use App\Models\UnitType;
 use App\Models\User;
 use App\Services\BookingService;
 use App\Services\SettingRepository;
+use App\Support\BankAccount;
 use Database\Seeders\RoleSeeder;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -137,6 +138,39 @@ class SettingResourceTest extends TestCase
         Livewire::test(ManageSettings::class)->fillForm($this->values())->call('save');
 
         $this->assertTrue(ActivityLog::where('subject_type', 'setting')->where('user_id', $owner->id)->exists());
+    }
+
+    public function test_owner_sets_the_bank_account_that_guests_see(): void
+    {
+        config(['site.bank' => ['name' => null, 'account_number' => null, 'account_holder' => null]]);
+        $this->actingAs($this->userWithRole(User::ROLE_OWNER));
+        $this->assertFalse(BankAccount::current()->isComplete());
+
+        Livewire::test(ManageSettings::class)
+            ->fillForm($this->values(['bank_name' => 'BCA', 'bank_account_number' => '123 456 7890', 'bank_account_holder' => 'PT Raynad Cipta Makmur']))
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $account = BankAccount::current();
+        $this->assertTrue($account->isComplete());
+        $this->assertSame('123 456 7890', $account->accountNumber);
+    }
+
+    public function test_bank_account_number_rejects_letters(): void
+    {
+        $this->actingAs($this->userWithRole(User::ROLE_OWNER));
+
+        Livewire::test(ManageSettings::class)
+            ->fillForm($this->values(['bank_account_number' => 'abc123']))
+            ->call('save')
+            ->assertHasFormErrors(['bank_account_number' => 'regex']);
+    }
+
+    public function test_empty_setting_falls_back_to_the_env_account(): void
+    {
+        config(['site.bank' => ['name' => 'Mandiri', 'account_number' => '999', 'account_holder' => 'Halimun']]);
+
+        $this->assertSame('Mandiri', BankAccount::current()->bankName);
     }
 
     public function test_front_office_and_cashier_cannot_access_settings(): void

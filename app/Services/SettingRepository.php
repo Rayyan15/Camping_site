@@ -47,7 +47,7 @@ class SettingRepository
     }
 
     /**
-     * @return array{tax_rate_percent: float, check_in_time: string, check_out_time: string, down_payment_percent: int}
+     * @return array{tax_rate_percent: float, check_in_time: string, check_out_time: string, down_payment_percent: int, bank_name: ?string, bank_account_number: ?string, bank_account_holder: ?string}
      */
     public function formValues(): array
     {
@@ -56,11 +56,14 @@ class SettingRepository
             'check_in_time' => $this->checkInTime(),
             'check_out_time' => $this->checkOutTime(),
             'down_payment_percent' => $this->downPaymentPercent(),
+            'bank_name' => $this->get(SettingKey::BankName),
+            'bank_account_number' => $this->get(SettingKey::BankAccountNumber),
+            'bank_account_holder' => $this->get(SettingKey::BankAccountHolder),
         ];
     }
 
     /**
-     * @param  array{tax_rate_percent: int|float|string, check_in_time: string, check_out_time: string, down_payment_percent: int|string}  $values
+     * @param  array{tax_rate_percent: int|float|string, check_in_time: string, check_out_time: string, down_payment_percent: int|string, bank_name?: ?string, bank_account_number?: ?string, bank_account_holder?: ?string}  $values
      */
     public function saveFormValues(array $values): void
     {
@@ -69,6 +72,9 @@ class SettingRepository
             $this->put(SettingKey::CheckInTime, $values['check_in_time']);
             $this->put(SettingKey::CheckOutTime, $values['check_out_time']);
             $this->put(SettingKey::DownPaymentPercent, (string) (int) $values['down_payment_percent']);
+            $this->put(SettingKey::BankName, trim((string) ($values['bank_name'] ?? '')));
+            $this->put(SettingKey::BankAccountNumber, trim((string) ($values['bank_account_number'] ?? '')));
+            $this->put(SettingKey::BankAccountHolder, trim((string) ($values['bank_account_holder'] ?? '')));
 
             // The owner has now reviewed every placeholder the production seeder listed.
             Setting::where('key', SettingKey::PendingOwnerConfirmation->value)->get()->each->delete();

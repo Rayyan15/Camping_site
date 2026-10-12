@@ -18,6 +18,6 @@ class BookingReceived extends BookingMail
 
     protected function extraData(): array
     {
-        return ['bank' => BankAccount::fromConfig()];
+        return ['bank' => BankAccount::current()];
     }
 }

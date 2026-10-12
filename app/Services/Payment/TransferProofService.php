@@ -46,7 +46,7 @@ class TransferProofService
      */
     public function submit(Booking $booking, UploadedFile $file, bool $downPayment = false): Payment
     {
-        if (! BankAccount::fromConfig()->isComplete()) {
+        if (! BankAccount::current()->isComplete()) {
             throw TransferProofException::bankAccountNotSet();
         }
 

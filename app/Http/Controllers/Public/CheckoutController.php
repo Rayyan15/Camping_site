@@ -28,7 +28,7 @@ class CheckoutController extends Controller
             'booking' => $booking,
             'holdActive' => $booking->isHoldActive(),
             'outstanding' => $billing->outstanding($booking),
-            'bank' => BankAccount::fromConfig(),
+            'bank' => BankAccount::current(),
             'proof' => $proofs->latestProof($booking),
         ]);
     }

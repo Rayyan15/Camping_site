@@ -2,8 +2,12 @@
 
 namespace App\Support;
 
+use App\Enums\SettingKey;
+use App\Services\SettingRepository;
+
 /**
- * The account guests transfer to. Read from config/site.php so the number is never typed into code;
+ * The account guests transfer to. The owner fills it in Pengaturan; config/site.php (SITE_BANK_*) is the
+ * fallback for a field left empty there. The number is never typed into code;
  * a half-filled account counts as not set, because a guest must never see a partial number.
  */
 final class BankAccount
@@ -14,12 +18,14 @@ final class BankAccount
         public readonly ?string $accountHolder,
     ) {}
 
-    public static function fromConfig(): self
+    public static function current(): self
     {
+        $settings = app(SettingRepository::class);
+
         return new self(
-            self::clean(config('site.bank.name')),
-            self::clean(config('site.bank.account_number')),
-            self::clean(config('site.bank.account_holder')),
+            self::clean($settings->get(SettingKey::BankName)) ?? self::clean(config('site.bank.name')),
+            self::clean($settings->get(SettingKey::BankAccountNumber)) ?? self::clean(config('site.bank.account_number')),
+            self::clean($settings->get(SettingKey::BankAccountHolder)) ?? self::clean(config('site.bank.account_holder')),
         );
     }
 

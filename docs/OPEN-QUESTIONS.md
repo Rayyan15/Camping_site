@@ -25,12 +25,13 @@ Daftar hal yang hanya bisa dijawab owner atau yang masih menggantung. Pertanyaan
 
 ## Menunggu data dari owner
 
-- Nomor rekening bank tujuan transfer manual.
-- Akun email pengirim (alamat dan kredensial SMTP).
+- **Email pengirim konfirmasi booking** (misal booking@halimunhighland.com) beserta akses SMTP: host, port, username, password. Atau izin tim membuatkan. Diisi di `.env` server (`MAIL_*`). Tanpa ini, email tamu (booking diterima, bukti diterima, pembayaran dikonfirmasi, bukti ditolak, jadwal diubah) tidak terkirim.
+- **Tempat backup di luar server** (misal Amazon S3 atau Cloudflare R2): bucket, access key, secret, endpoint. Atau izin tim memilihkan. Diisi di `.env` server (`BACKUP_DISK=s3`, `AWS_*`), lalu uji sekali dengan `php artisan app:backup-database`.
 - Konfirmasi bobot kriteria penilaian (saat ini sama rata).
 
 ## Terjawab
 
+- **Rekening tujuan transfer:** owner mengisi sendiri di menu Pengaturan, bagian Rekening transfer (12 Okt 2026). `SITE_BANK_*` di `.env` hanya cadangan bila kolom di panel kosong. Bukti: `SettingResourceTest`.
 - **Harga 150rb per tipe dan harga Extra Bed:** terjawab, owner mengisi sendiri lewat panel (12 Okt 2026). Harga weekday dan weekend per tipe di menu Tipe Unit, harga tanggal khusus di menu Harga Khusus, Extra Bed di menu Add-on (isi harga lalu aktifkan).
 - **Biaya per orang di atas kapasitas 4:** terjawab, owner isi sendiri lewat panel (12 Okt 2026). Resource Add-on (tambah, ubah, hapus) dengan kolom "Tambahan tamu per item" dan harga per malam; `PricingService` membaca dari harga add-on. Bawaan 0 dan nonaktif. Bukti: `ExtraGuestAddonTest`.
 - **Jam periksa bukti transfer:** terjawab, 24 jam (usul tim, disetujui user 2026-10-12).

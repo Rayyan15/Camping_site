@@ -74,6 +74,23 @@ class ManageSettings extends Page
                         ->suffix('%')
                         ->required(),
                 ]),
+            Section::make('Rekening transfer')
+                ->description('Rekening tujuan transfer yang tampil di halaman pembayaran dan email tamu. Selama salah satu kosong, tamu tidak bisa mengunggah bukti transfer.')
+                ->columns(3)
+                ->schema([
+                    TextInput::make('bank_name')
+                        ->label('Nama bank')
+                        ->placeholder('Contoh: BCA')
+                        ->maxLength(50),
+                    TextInput::make('bank_account_number')
+                        ->label('Nomor rekening')
+                        ->regex('/^[0-9 .-]+$/')
+                        ->validationMessages(['regex' => 'Nomor rekening hanya boleh berisi angka, spasi, titik, atau tanda hubung.'])
+                        ->maxLength(30),
+                    TextInput::make('bank_account_holder')
+                        ->label('Atas nama')
+                        ->maxLength(100),
+                ]),
         ]);
     }
 
