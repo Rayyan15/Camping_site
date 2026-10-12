@@ -78,7 +78,7 @@ class SettingResourceTest extends TestCase
         $this->actingAs($this->userWithRole(User::ROLE_OWNER));
 
         Livewire::test(ManageSettings::class)->assertFormSet([
-            'tax_rate_percent' => 11,
+            'tax_rate_percent' => 0,
             'check_in_time' => '14:00',
             'check_out_time' => '12:00',
             'down_payment_percent' => 0,
@@ -121,7 +121,7 @@ class SettingResourceTest extends TestCase
     public function test_cache_is_refreshed_after_a_direct_change(): void
     {
         $repository = app(SettingRepository::class);
-        $this->assertSame(0.11, $repository->taxRate());
+        $this->assertSame(0.0, $repository->taxRate());
 
         Setting::create(['key' => SettingKey::TaxRate->value, 'value' => '0.05']);
         $this->assertSame(0.05, $repository->taxRate());

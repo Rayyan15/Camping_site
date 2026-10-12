@@ -26,11 +26,11 @@ return [
     'db_transaction_attempts' => max(1, (int) env('BOOKING_DB_TRANSACTION_ATTEMPTS', 3)),
 
     /*
-    | Fallback tax rate (0.11 = 11%) used only when the `tax_rate` settings row is missing. The client
+    | Fallback tax rate used only when the `tax_rate` settings row is missing. The client
     | confirmed on 10 Oct 2026 that no tax is charged, so SettingsSeeder stores 0 and production sets
     | BOOKING_TAX_RATE=0.
     */
-    'tax_rate' => (float) env('BOOKING_TAX_RATE', 0.11),
+    'tax_rate' => (float) env('BOOKING_TAX_RATE', 0),
 
     /*
     | Most guests a single tent takes beyond its type capacity, through extra_guests add-ons.

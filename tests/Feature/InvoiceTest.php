@@ -89,6 +89,8 @@ class InvoiceTest extends TestCase
 
     public function test_extra_food_is_taxed_on_the_invoice(): void
     {
+        config(['booking.tax_rate' => 0.11]);
+
         $booking = $this->makeBooking('BK-TAX', 'paid');
         $category = MenuCategory::create(['name' => 'Minuman', 'sort_order' => 1]);
         $coffee = MenuItem::create(['category_id' => $category->id, 'name' => 'Kopi', 'price' => 10000, 'is_available' => true]);

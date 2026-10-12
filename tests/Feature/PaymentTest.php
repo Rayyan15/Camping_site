@@ -35,6 +35,9 @@ class PaymentTest extends TestCase
     {
         parent::setUp();
 
+        // Amounts below were written for an 11% tax; the client charges none, so pin the rate here.
+        config(['booking.tax_rate' => 0.11]);
+
         $this->travelTo('2026-12-01 10:00:00');
         config([
             'payment.gateway' => 'midtrans',
