@@ -1,11 +1,11 @@
 <x-filament-panels::page>
     <style>
         .qr-sheet { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); }
-        .qr-card { background: #fff; color: #1f2a22; border: 2px solid #1c3526; border-radius: 1rem; padding: 1.25rem; text-align: center; break-inside: avoid; }
+        .qr-card { background: #fff; color: var(--hh-ink); border: 2px solid var(--hh-forest-900); border-radius: 1rem; padding: 1.25rem; text-align: center; break-inside: avoid; }
         .qr-card h2 { font-family: Georgia, 'Times New Roman', serif; font-size: 1.5rem; font-weight: 700; margin: 0 0 0.25rem; }
         .qr-card p { margin: 0.5rem 0 0; font-size: 0.8125rem; }
-        .qr-card .qr-hint { font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.75rem; color: #b3441f; }
-        .qr-card .qr-url { word-break: break-all; font-size: 0.6875rem; color: #4a5a4f; }
+        .qr-card .qr-hint { font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.75rem; color: var(--hh-ember); }
+        .qr-card .qr-url { word-break: break-all; font-size: 0.6875rem; color: var(--hh-ink-soft); }
         .qr-card svg { width: 100%; height: auto; max-width: 13rem; margin: 0.75rem auto 0; display: block; }
         @media print {
             .fi-sidebar, .fi-topbar, .fi-header, .fi-breadcrumbs, .qr-toolbar { display: none !important; }

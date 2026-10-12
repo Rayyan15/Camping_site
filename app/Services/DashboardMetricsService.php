@@ -11,8 +11,6 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardMetricsService
 {
-    private const ORDER_DONE = 'selesai';
-
     private const UNIT_ACTIVE = 'active';
 
     /** Bookings that hold a unit overnight. */
@@ -38,6 +36,23 @@ class DashboardMetricsService
             ->whereDate('check_in', $this->today()->toDateString())
             ->whereIn('status', self::ARRIVAL_STATUSES)
             ->count();
+    }
+
+    public function needsReviewBookingCount(): int
+    {
+        return Booking::query()->needsReview()->count();
+    }
+
+    /** Guests sleeping on site tonight: the party size of every paid or checked-in stay that spans tonight. */
+    public function stayingGuestCount(): int
+    {
+        $today = $this->today()->toDateString();
+
+        return (int) Booking::query()
+            ->whereIn('status', self::OCCUPYING_STATUSES)
+            ->whereDate('check_in', '<=', $today)
+            ->whereDate('check_out', '>', $today)
+            ->sum('guests');
     }
 
     public function checkOutsToday(): int
@@ -70,15 +85,10 @@ class DashboardMetricsService
         return (int) round($this->occupiedUnitCount() / $active * 100);
     }
 
+    /** Same count as the kitchen queue badge, so the dashboard never promises orders the queue does not show. */
     public function activeFoodOrderCount(): int
     {
-        return Order::query()->kitchenRelevant()->where('status', '!=', self::ORDER_DONE)->count();
-    }
-
-    /** Pre-orders of unpaid bookings with a live hold: hidden from the kitchen until the booking is paid. */
-    public function preorderAwaitingPaymentCount(): int
-    {
-        return Order::query()->awaitingBookingPayment()->count();
+        return app(KitchenQueueService::class)->activeCount();
     }
 
     /** @return array{camping: int, food: int} net integer rupiah (payments in minus refunds) for the current month */

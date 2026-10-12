@@ -2,13 +2,18 @@
 
 namespace App\Filament\Widgets;
 
-use App\Filament\Resources\Payments\PaymentResource;
 use App\Services\DashboardMetricsService;
-use Filament\Widgets\StatsOverviewWidget as BaseWidget;
-use Filament\Widgets\StatsOverviewWidget\Stat;
+use Filament\Widgets\Widget;
 
-class DashboardStats extends BaseWidget
+/**
+ * Compact strip under the cards: the state of the site tonight and, for the owner only, this month's net revenue.
+ */
+class DashboardStats extends Widget
 {
+    protected string $view = 'filament.widgets.dashboard-stats';
+
+    protected int|string|array $columnSpan = 'full';
+
     protected static ?int $sort = 2;
 
     public static function canView(): bool
@@ -16,65 +21,25 @@ class DashboardStats extends BaseWidget
         return (bool) auth()->user()?->can('view_occupancy_dashboard');
     }
 
-    protected ?string $heading = 'Ringkasan Hari Ini';
-
-    protected function getColumns(): int
-    {
-        return auth()->user()?->can('view_financials') ? 4 : 3;
-    }
-
-    protected function getStats(): array
+    /** @return array<string, mixed> */
+    protected function getViewData(): array
     {
         $metrics = app(DashboardMetricsService::class);
+        $rupiah = fn (int $amount): string => 'Rp '.number_format($amount, 0, ',', '.');
 
-        $stats = [
-            Stat::make('Check-in Hari Ini', $metrics->checkInsToday())
-                ->description('Tamu yang tiba hari ini')
-                ->descriptionIcon('heroicon-m-arrow-down-on-square'),
-            Stat::make('Check-out Hari Ini', $metrics->checkOutsToday())
-                ->description('Tamu yang pulang hari ini')
-                ->descriptionIcon('heroicon-m-arrow-up-on-square'),
-            Stat::make('Okupansi', $metrics->occupancyPercent().'%')
-                ->description($metrics->occupiedUnitCount().' dari '.$metrics->activeUnitCount().' unit aktif terisi')
-                ->descriptionIcon('heroicon-m-home-modern'),
-            Stat::make('Pesanan F&B Aktif', $metrics->activeFoodOrderCount())
-                ->description('Belum berstatus selesai')
-                ->descriptionIcon('heroicon-m-fire'),
-            Stat::make('Pre-order Menunggu Pembayaran', $metrics->preorderAwaitingPaymentCount())
-                ->description('Belum masuk antrean dapur')
-                ->descriptionIcon('heroicon-m-clock'),
+        $items = [
+            ['icon' => 'heroicon-o-home-modern', 'value' => $metrics->occupiedUnitCount().' / '.$metrics->activeUnitCount(), 'label' => 'Unit terisi malam ini'],
+            ['icon' => 'heroicon-o-chart-pie', 'value' => $metrics->occupancyPercent().'%', 'label' => 'Okupansi'],
+            ['icon' => 'heroicon-o-users', 'value' => (string) $metrics->stayingGuestCount(), 'label' => 'Tamu menginap'],
+            ['icon' => 'heroicon-o-arrow-left-start-on-rectangle', 'value' => (string) $metrics->checkOutsToday(), 'label' => 'Check-out hari ini'],
         ];
 
-        if (auth()->user()?->can('record_manual_payment')) {
-            $stats[] = Stat::make('Bukti Transfer Menunggu', $metrics->awaitingTransferProofCount())
-                ->description('Cocokkan dengan mutasi rekening')
-                ->descriptionIcon('heroicon-m-document-check')
-                ->url(PaymentResource::getUrl('index', ['tableFilters' => ['awaiting_proof_review' => ['isActive' => true]]]));
+        if (auth()->user()?->can('view_financials')) {
+            $revenue = $metrics->monthlyRevenue();
+            $items[] = ['icon' => 'heroicon-o-banknotes', 'value' => $rupiah($revenue['camping']), 'label' => 'Pendapatan camping bulan ini'];
+            $items[] = ['icon' => 'heroicon-o-cake', 'value' => $rupiah($revenue['food']), 'label' => 'Pendapatan F&B bulan ini'];
         }
 
-        return auth()->user()?->can('view_financials')
-            ? [...$stats, ...$this->revenueStats($metrics)]
-            : $stats;
-    }
-
-    /** @return array<int, Stat> */
-    private function revenueStats(DashboardMetricsService $metrics): array
-    {
-        $revenue = $metrics->monthlyRevenue();
-        $month = 'Bulan '.$metrics->today()->translatedFormat('F Y');
-
-        return [
-            Stat::make('Pendapatan Camping', $this->rupiah($revenue['camping']))
-                ->description($month)
-                ->descriptionIcon('heroicon-m-banknotes'),
-            Stat::make('Pendapatan F&B', $this->rupiah($revenue['food']))
-                ->description($month)
-                ->descriptionIcon('heroicon-m-banknotes'),
-        ];
-    }
-
-    private function rupiah(int $amount): string
-    {
-        return 'Rp '.number_format($amount, 0, ',', '.');
+        return ['items' => $items];
     }
 }

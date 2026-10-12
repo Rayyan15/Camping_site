@@ -2,14 +2,20 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Widgets\Concerns\StylesCharts;
 use App\Services\DashboardMetricsService;
+use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
 
 class BookingChart extends ChartWidget
 {
+    use StylesCharts;
+
+    protected ?string $maxHeight = '280px';
+
     protected ?string $heading = 'Booking Masuk, 14 Hari Terakhir';
 
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 5;
 
     public static function canView(): bool
     {
@@ -27,20 +33,19 @@ class BookingChart extends ChartWidget
                 [
                     'label' => 'Booking',
                     'data' => $series['data'],
-                    'backgroundColor' => '#047857',
+                    'backgroundColor' => config('brand.forest.600'),
                     'borderRadius' => 6,
+                    'borderSkipped' => 'start',
+                    'maxBarThickness' => 28,
                 ],
             ],
             'labels' => $series['labels'],
         ];
     }
 
-    protected function getOptions(): array
+    protected function getOptions(): RawJs
     {
-        return [
-            'scales' => ['y' => ['beginAtZero' => true, 'ticks' => ['precision' => 0]]],
-            'plugins' => ['legend' => ['display' => false]],
-        ];
+        return $this->styledChartOptions(legend: false);
     }
 
     protected function getType(): string

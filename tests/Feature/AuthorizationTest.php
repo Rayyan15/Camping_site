@@ -159,10 +159,10 @@ class AuthorizationTest extends TestCase
         $this->assertTrue(DashboardStats::canView());
         Livewire::test(DashboardStats::class)
             ->assertSee('Okupansi')
-            ->assertDontSee('Pendapatan Camping');
+            ->assertDontSee('Pendapatan camping');
 
         $this->actingAs($this->userWithRole(User::ROLE_OWNER));
-        Livewire::test(DashboardStats::class)->assertSee('Pendapatan Camping');
+        Livewire::test(DashboardStats::class)->assertSee('Pendapatan camping');
     }
 
     public function test_cashier_does_not_see_customer_contact_columns(): void

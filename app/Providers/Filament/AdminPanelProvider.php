@@ -2,18 +2,19 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\AvatarProviders\BrandAvatarProvider;
 use App\Filament\Pages\Auth\Login;
 use App\Http\Middleware\AuthenticateActiveUser;
 use App\Http\Middleware\EnsureOwnerHasTwoFactor;
 use App\Http\Middleware\SecurityHeaders;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
+use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -43,12 +44,17 @@ class AdminPanelProvider extends PanelProvider
             // Navy line art disappears on the dark panel, so dark mode gets the badge on a cream disc.
             ->darkModeBrandLogo(asset('images/brand/halimun-highland-160-on-dark.png'))
             ->brandLogoHeight('2.75rem')
+            ->defaultAvatarProvider(BrandAvatarProvider::class)
+            // Same body face as the public site, served from the build instead of a font CDN.
+            ->font('Plus Jakarta Sans', provider: LocalFontProvider::class)
             ->favicon(asset('favicon-32.png'))
             ->renderHook(PanelsRenderHook::USER_MENU_BEFORE, fn (): string => view('filament.theme-toggle')->render())
-            ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => view('filament.sidebar-scrollbar')->render())
+            ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => view('filament.brand-tokens')->render().view('filament.panel-chrome')->render())
             ->sidebarCollapsibleOnDesktop()
+            // Brand forest as the only accent, and a forest-tinted neutral as gray so every surface shares one hue.
             ->colors([
-                'primary' => Color::Emerald,
+                'primary' => config('brand.forest'),
+                'gray' => config('brand.neutral'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

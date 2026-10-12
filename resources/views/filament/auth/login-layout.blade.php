@@ -19,13 +19,6 @@
         }
 
         .hh-login {
-            --hh-forest-950: #14261b;
-            --hh-forest-700: #2f5a3d;
-            --hh-forest-300: #a9c4b0;
-            --hh-cream: #f7f1e5;
-            --hh-ink: #1f2a22;
-            --hh-ember: #b3441f;
-            --hh-ember-light: #e8845c;
             --hh-surface: var(--hh-cream);
             --hh-text: var(--hh-ink);
             --hh-muted: var(--hh-forest-700);
@@ -132,7 +125,7 @@
         }
 
         .hh-login__form button[type="submit"].fi-btn:hover {
-            background: #8f3416;
+            background: var(--hh-ember-dark);
         }
 
         .hh-login__form button[type="submit"].fi-btn:focus-visible {

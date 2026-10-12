@@ -7,13 +7,13 @@
 
 <x-filament-panels::page>
     {{--
-        Direction: a field ledger for a small campsite. Emerald dominant, amber only for holds, rust only for
+        Direction: a field ledger for a small campsite. Forest dominant (brand tokens), amber only for holds, rust only for
         attention states. Status is always printed as a word and a pattern, never color alone (R-25 non-color feedback).
         Tags carry their own solid label background so every text pair is checked: 8.11, 8.51, 6.41, 12.16, 7.43, 9.46, 9.32, 8.18.
     --}}
     <style>
-        .oc { --oc-line: var(--gray-300); --oc-head: var(--gray-50); --oc-muted: var(--gray-600); --oc-today: rgb(4 120 87 / 0.10); --oc-weekend: rgb(120 113 108 / 0.10); --oc-focus: var(--primary-700); }
-        .dark .oc { --oc-line: var(--gray-700); --oc-head: var(--gray-900); --oc-muted: var(--gray-400); --oc-today: rgb(52 211 153 / 0.14); --oc-weekend: rgb(161 161 170 / 0.12); --oc-focus: var(--primary-400); }
+        .oc { --oc-line: var(--gray-300); --oc-head: var(--gray-50); --oc-muted: var(--gray-600); --oc-today: color-mix(in srgb, var(--hh-forest-700) 10%, transparent); --oc-weekend: rgb(120 113 108 / 0.10); --oc-focus: var(--primary-700); }
+        .dark .oc { --oc-line: var(--gray-700); --oc-head: var(--gray-900); --oc-muted: var(--gray-400); --oc-today: color-mix(in srgb, var(--hh-forest-300) 14%, transparent); --oc-weekend: rgb(161 161 170 / 0.12); --oc-focus: var(--primary-400); }
 
         .oc-summary { display: grid; gap: 1rem 2rem; grid-template-columns: 1fr; align-items: end; margin-bottom: 1rem; }
         .oc-figure { font-size: 3rem; line-height: 1; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
@@ -57,17 +57,17 @@
         .oc-free { color: var(--oc-muted); font-size: 0.75rem; text-align: center; }
 
         /* Tag palette: label background and text pairs are verified for WCAG AA with the contrast tool. */
-        .oc-tag { --bg: #eef1ee; --fg: #3f4a44; --pat: none; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 2.5rem; padding: 2px; border: 1px solid var(--fg); border-radius: 0.375rem; background-color: var(--bg); background-image: var(--pat); color: var(--fg); overflow: hidden; }
+        .oc-tag { --bg: var(--hh-cream); --fg: var(--hh-ink-soft); --pat: none; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 2.5rem; padding: 2px; border: 1px solid var(--fg); border-radius: 0.375rem; background-color: var(--bg); background-image: var(--pat); color: var(--fg); overflow: hidden; }
         .oc-label { display: block; max-width: 100%; padding: 1px 5px; border-radius: 0.25rem; background: var(--bg); text-align: center; font-size: 0.75rem; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .oc-label b { display: block; font-weight: 700; }
         .oc-label i { display: block; font-style: normal; font-size: 0.6875rem; }
-        .oc-held { --bg: #fde9b8; --fg: #5a3b00; --pat: repeating-linear-gradient(45deg, #f2c14e 0 5px, #fde9b8 5px 10px); }
-        .oc-booked { --bg: #1f6b4f; --fg: #ffffff; --pat: none; border-color: #0f3d2e; }
-        .oc-staying { --bg: #0f3d2e; --fg: #ffffff; --pat: radial-gradient(circle, #34a37a 1.5px, transparent 2px); background-size: 8px 8px; }
-        .oc-completed { --bg: #d9dedb; --fg: #3a443e; }
-        .oc-blocked { --bg: #f1d9d4; --fg: #5b1f14; --pat: repeating-linear-gradient(45deg, #c97b6b 0 2px, transparent 2px 7px), repeating-linear-gradient(-45deg, #c97b6b 0 2px, transparent 2px 7px); }
-        .oc-needs_review { --bg: #ffffff; --fg: #8a1c0f; border: 2px dashed var(--fg); }
-        .oc-unavailable { --bg: #cfd4d1; --fg: #2e3733; --pat: repeating-linear-gradient(0deg, #9aa39e 0 1px, transparent 1px 5px); }
+        .oc-held { --bg: var(--hh-ember-soft); --fg: var(--hh-ember-dark); --pat: repeating-linear-gradient(45deg, var(--hh-ember-light) 0 5px, var(--hh-ember-soft) 5px 10px); }
+        .oc-booked { --bg: var(--hh-forest-700); --fg: var(--hh-cream); --pat: none; border-color: var(--hh-forest-950); }
+        .oc-staying { --bg: var(--hh-forest-950); --fg: var(--hh-cream); --pat: radial-gradient(circle, var(--hh-forest-300) 1.5px, transparent 2px); background-size: 8px 8px; }
+        .oc-completed { --bg: var(--hh-forest-100); --fg: var(--hh-ink-soft); }
+        .oc-blocked { --bg: var(--hh-sand); --fg: var(--hh-ink); --pat: repeating-linear-gradient(45deg, var(--hh-sand-dark) 0 2px, transparent 2px 7px), repeating-linear-gradient(-45deg, var(--hh-sand-dark) 0 2px, transparent 2px 7px); }
+        .oc-needs_review { --bg: #ffffff; --fg: var(--hh-ember-dark); border: 2px dashed var(--fg); }
+        .oc-unavailable { --bg: var(--hh-cream-deep); --fg: var(--hh-ink-soft); --pat: repeating-linear-gradient(0deg, var(--hh-sand) 0 1px, transparent 1px 5px); }
         .oc-free-tag { --bg: transparent; --fg: var(--oc-muted); border-style: dotted; }
 
         .oc-seg { display: block; width: 100%; min-height: 2.5rem; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 0.375rem; }

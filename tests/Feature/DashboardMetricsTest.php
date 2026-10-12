@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Filament\Widgets\DashboardStats;
+use App\Filament\Widgets\TodayActions;
 use App\Models\Booking;
 use App\Models\Order;
 use App\Models\User;
@@ -108,11 +109,22 @@ class DashboardMetricsTest extends TestCase
         foreach ([[$paid, 'preorder'], [$expired, 'preorder'], [$cancelled, 'preorder'], [null, 'qr']] as $i => [$bookingId, $source]) {
             DB::table('orders')->insert([
                 'code' => "O-{$i}", 'source' => $source, 'booking_id' => $bookingId, 'status' => 'baru', 'total' => 10000,
+                'scheduled_at' => $source === 'preorder' ? now()->addHour() : null,
                 'created_at' => now(), 'updated_at' => now(),
             ]);
         }
 
         $this->assertSame(2, $this->metrics->activeFoodOrderCount());
+    }
+
+    public function test_active_food_orders_match_the_kitchen_queue_and_skip_stale_orders(): void
+    {
+        DB::table('orders')->insert([
+            'code' => 'O-OLD', 'source' => 'qr', 'status' => 'baru', 'total' => 10000,
+            'created_at' => now()->subDays(2), 'updated_at' => now()->subDays(2),
+        ]);
+
+        $this->assertSame(0, $this->metrics->activeFoodOrderCount());
     }
 
     public function test_preorders_awaiting_payment_count_only_live_pending_holds(): void
@@ -138,24 +150,42 @@ class DashboardMetricsTest extends TestCase
             ]);
         }
 
-        $this->assertSame(1, $this->metrics->preorderAwaitingPaymentCount());
+        $this->assertSame(1, Order::query()->awaitingBookingPayment()->count());
         $this->assertSame(1, Order::query()->kitchenRelevant()->where('source', 'preorder')->count());
     }
 
-    public function test_dashboard_stats_show_awaiting_preorders_only_to_permitted_roles(): void
+    public function test_today_actions_show_each_card_only_to_the_role_that_acts_on_it(): void
     {
         $this->seed(RoleSeeder::class);
 
         $this->actingAs($this->makeUser(User::ROLE_OWNER));
-        Livewire::test(DashboardStats::class)
-            ->assertSee('Pre-order Menunggu Pembayaran')
-            ->assertSee('Belum masuk antrean dapur');
-
-        $this->actingAs($this->makeUser(User::ROLE_FRONT_OFFICE));
-        Livewire::test(DashboardStats::class)->assertSee('Pre-order Menunggu Pembayaran');
+        Livewire::test(TodayActions::class)
+            ->assertSee('Bukti transfer')
+            ->assertSee('Booking ditinjau')
+            ->assertSee('Check-in hari ini')
+            ->assertSee('Dapur sedang kosong');
 
         $this->actingAs($this->makeUser(User::ROLE_CASHIER));
+        Livewire::test(TodayActions::class)
+            ->assertSee('Pesanan dapur')
+            ->assertDontSee('Bukti transfer')
+            ->assertDontSee('Check-in hari ini');
         $this->assertFalse(DashboardStats::canView());
+    }
+
+    public function test_today_actions_count_arrivals_and_flag_waiting_proofs(): void
+    {
+        $this->seed(RoleSeeder::class);
+        $today = $this->metrics->today();
+        $customerId = $this->makeCustomer();
+        $unit = $this->makeUnit($this->makeUnitType('Dome'), 'D-7');
+        $arriving = $this->makeBooking($customerId, 'B-ARR', 'paid', $today, $today->addDay());
+        $this->attachUnit($arriving, $unit);
+
+        $this->actingAs($this->makeUser(User::ROLE_FRONT_OFFICE));
+        Livewire::test(TodayActions::class)
+            ->assertViewHas('cards', fn (array $cards): bool => collect($cards)->firstWhere('label', 'Check-in hari ini')['count'] === 1)
+            ->assertViewHas('cards', fn (array $cards): bool => collect($cards)->every(fn (array $card): bool => $card['needsAction'] === false));
     }
 
     public function test_refund_out_reduces_camping_revenue_without_touching_food(): void

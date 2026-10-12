@@ -2,14 +2,20 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Widgets\Concerns\StylesCharts;
 use App\Services\DashboardMetricsService;
+use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
 
 class ProgressChart extends ChartWidget
 {
+    use StylesCharts;
+
+    protected ?string $maxHeight = '280px';
+
     protected ?string $heading = 'Okupansi per Tipe Unit';
 
-    protected static ?int $sort = 7;
+    protected static ?int $sort = 3;
 
     public static function canView(): bool
     {
@@ -24,22 +30,23 @@ class ProgressChart extends ChartWidget
 
         return [
             'datasets' => [
-                ['label' => 'Terisi', 'data' => $series['occupied'], 'backgroundColor' => '#047857'],
-                ['label' => 'Kosong', 'data' => $series['available'], 'backgroundColor' => '#d1d5db'],
+                ['label' => 'Terisi', 'data' => $series['occupied'], 'backgroundColor' => config('brand.forest.600'), 'borderRadius' => 6, 'borderSkipped' => false, 'maxBarThickness' => 32],
+                [
+                    'label' => 'Kosong',
+                    'data' => $series['available'],
+                    'backgroundColor' => 'rgba(127, 163, 138, 0.35)',
+                    'borderRadius' => 6,
+                    'borderSkipped' => false,
+                    'maxBarThickness' => 32,
+                ],
             ],
             'labels' => $series['labels'],
         ];
     }
 
-    protected function getOptions(): array
+    protected function getOptions(): RawJs
     {
-        return [
-            'scales' => [
-                'x' => ['stacked' => true],
-                'y' => ['stacked' => true, 'beginAtZero' => true, 'ticks' => ['precision' => 0]],
-            ],
-            'plugins' => ['legend' => ['position' => 'bottom']],
-        ];
+        return $this->styledChartOptions(stacked: true);
     }
 
     protected function getType(): string

@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Enums\RevenueGranularity;
+use App\Filament\Widgets\Concerns\StylesCharts;
 use App\Services\Reports\InvalidReportPeriodException;
 use App\Services\Reports\ReportPeriod;
 use App\Services\Reports\RevenueTrendService;
@@ -18,24 +19,21 @@ use Illuminate\Contracts\Support\Htmlable;
 /**
  * Net revenue over time. A line chart fits two series that both read against one rupiah axis;
  * stacked bars would break when a refund pushes camping below zero.
- * Camping is a solid emerald line, food a dashed amber line with square points, so the two
- * stay apart without relying on hue alone. Both pass 3:1 on the light and dark surface.
+ * Camping is a solid forest line, food a dashed sand-dark line with square points, so the two
+ * stay apart without relying on hue alone (forest-600 6.59 on white, sand-dark 5.28 on white and 3.31 on dark).
  */
 class RevenueTrendChart extends ChartWidget
 {
     use HasFiltersSchema;
+    use StylesCharts;
 
-    private const CAMPING_COLOR = '#047857';
-
-    private const FOOD_COLOR = '#B45309';
-
-    protected static ?int $sort = 4;
+    protected static ?int $sort = 6;
 
     protected ?string $heading = 'Pendapatan Bersih';
 
     protected ?string $maxHeight = '320px';
 
-    protected int|string|array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 2;
 
     public static function canView(): bool
     {
@@ -82,47 +80,37 @@ class RevenueTrendChart extends ChartWidget
                 [
                     'label' => 'Camping',
                     'data' => $series['camping'],
-                    'borderColor' => self::CAMPING_COLOR,
-                    'backgroundColor' => self::CAMPING_COLOR,
+                    'borderColor' => config('brand.forest.600'),
+                    'backgroundColor' => 'rgba(60, 102, 73, 0.12)',
+                    'fill' => 'origin',
                     'pointStyle' => 'circle',
                     'borderWidth' => 2,
-                    'pointRadius' => 4,
-                    'tension' => 0,
+                    'pointRadius' => 0,
+                    'pointHoverRadius' => 5,
+                    'tension' => 0.35,
+                    'cubicInterpolationMode' => 'monotone',
                 ],
                 [
                     'label' => 'F&B',
                     'data' => $series['food'],
-                    'borderColor' => self::FOOD_COLOR,
-                    'backgroundColor' => self::FOOD_COLOR,
+                    'borderColor' => config('brand.sand_dark'),
+                    'backgroundColor' => config('brand.sand_dark'),
                     'pointStyle' => 'rect',
                     'borderWidth' => 2,
                     'borderDash' => [6, 4],
-                    'pointRadius' => 4,
-                    'tension' => 0,
+                    'pointRadius' => 0,
+                    'pointHoverRadius' => 5,
+                    'tension' => 0.35,
+                    'cubicInterpolationMode' => 'monotone',
                 ],
             ],
             'labels' => $series['labels'],
         ];
     }
 
-    protected function getOptions(): array
+    protected function getOptions(): RawJs
     {
-        return [
-            'interaction' => ['mode' => 'index', 'intersect' => false],
-            'scales' => [
-                'y' => [
-                    'ticks' => ['callback' => RawJs::make('(value) => "Rp " + Number(value).toLocaleString("id-ID")')],
-                ],
-            ],
-            'plugins' => [
-                'legend' => ['display' => true, 'labels' => ['usePointStyle' => true]],
-                'tooltip' => [
-                    'callbacks' => [
-                        'label' => RawJs::make('(item) => item.dataset.label + ": Rp " + Number(item.parsed.y).toLocaleString("id-ID")'),
-                    ],
-                ],
-            ],
-        ];
+        return $this->styledChartOptions(rupiah: true);
     }
 
     protected function getType(): string

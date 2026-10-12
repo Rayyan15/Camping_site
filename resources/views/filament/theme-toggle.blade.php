@@ -5,7 +5,7 @@
         dark: document.documentElement.classList.contains('dark'),
         toggle() {
             this.dark = ! this.dark
-            $dispatch('theme-changed', this.dark ? 'dark' : 'light')
+            this.$dispatch('theme-changed', this.dark ? 'dark' : 'light')
         },
     }"
     x-on:click="toggle()"
