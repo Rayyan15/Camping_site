@@ -16,6 +16,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use LogicException;
 
 class PhotosRelationManager extends RelationManager
 {
@@ -53,7 +54,7 @@ class PhotosRelationManager extends RelationManager
                 TextColumn::make('sort_order')
                     ->label('Urutan'),
             ])
-            ->description(fn (): ?string => $this->getOwnerRecord()->photos()->doesntExist()
+            ->description(fn (): string => $this->unitType()->photos()->doesntExist()
                 ? 'Tipe tenda ini belum punya foto. Tamu akan melihat tampilan kosong di halaman tenda, unggah minimal satu foto.'
                 : 'Seret baris untuk mengubah urutan. Foto pertama menjadi foto utama di landing dan halaman tenda.')
             ->reorderable('sort_order')
@@ -86,7 +87,7 @@ class PhotosRelationManager extends RelationManager
                     ->image()
                     ->disk(UnitTypePhoto::DISK)
                     ->visibility('public')
-                    ->directory(fn (): string => 'unit-types/'.$this->getOwnerRecord()->slug)
+                    ->directory(fn (): string => 'unit-types/'.$this->unitType()->slug)
                     ->acceptedFileTypes(self::MIME_TYPES)
                     ->maxSize(self::MAX_KILOBYTES)
                     ->getUploadedFileNameForStorageUsing(
@@ -95,8 +96,7 @@ class PhotosRelationManager extends RelationManager
                     ->required(),
             ])
             ->action(function (array $data): void {
-                /** @var UnitType $unitType */
-                $unitType = $this->getOwnerRecord();
+                $unitType = $this->unitType();
                 $nextOrder = (int) $unitType->photos()->max('sort_order') + 1;
 
                 foreach (array_values($data['paths']) as $offset => $path) {
@@ -105,5 +105,16 @@ class PhotosRelationManager extends RelationManager
 
                 Notification::make()->title(count($data['paths']).' foto ditambahkan')->success()->send();
             });
+    }
+
+    private function unitType(): UnitType
+    {
+        $owner = $this->getOwnerRecord();
+
+        if (! $owner instanceof UnitType) {
+            throw new LogicException('PhotosRelationManager is only mounted on UnitType records.');
+        }
+
+        return $owner;
     }
 }

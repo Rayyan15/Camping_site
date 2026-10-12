@@ -122,7 +122,7 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('account-verification', fn (Request $request) => Limit::perMinute(
             config('auth.customer_throttle.verification_per_minute')
-        )->by((string) ($request->user()?->id ?? $request->ip())));
+        )->by((string) ($request->user()->id ?? $request->ip())));
     }
 
     private function configureProxies(): void

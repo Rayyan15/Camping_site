@@ -35,6 +35,7 @@ class EvaluationCriteria extends Model
         });
     }
 
+    /** @return HasMany<EvaluationScore, $this> */
     public function scores(): HasMany
     {
         return $this->hasMany(EvaluationScore::class, 'criteria_id');

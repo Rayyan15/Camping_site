@@ -3,9 +3,11 @@
 namespace App\Filament\Resources\Evaluations\Pages;
 
 use App\Filament\Resources\Evaluations\EvaluationResource;
+use App\Models\Evaluation;
 use App\Services\EvaluationScoreCalculator;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
+use LogicException;
 
 class EditEvaluation extends EditRecord
 {
@@ -27,6 +29,12 @@ class EditEvaluation extends EditRecord
 
     protected function afterSave(): void
     {
-        app(EvaluationScoreCalculator::class)->refreshTotal($this->record);
+        $evaluation = $this->getRecord();
+
+        if (! $evaluation instanceof Evaluation) {
+            throw new LogicException('EditEvaluation can only save Evaluation records.');
+        }
+
+        app(EvaluationScoreCalculator::class)->refreshTotal($evaluation);
     }
 }

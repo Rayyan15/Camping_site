@@ -9,8 +9,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
+/**
+ * @property Carbon $check_in
+ * @property Carbon $check_out
+ * @property ?Carbon $hold_expires_at
+ * @property ?Carbon $review_started_at
+ * @property ?Carbon $cancelled_at
+ * @property ?Carbon $rescheduled_at
+ * @property BookingStatus $status
+ */
 class Booking extends Model
 {
     public const ACCESS_TOKEN_LENGTH = 40;
@@ -92,36 +102,43 @@ class Booking extends Model
             && $this->hold_expires_at->isFuture();
     }
 
+    /** @return BelongsTo<Customer, $this> */
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
 
+    /** @return BelongsToMany<Unit, $this> */
     public function units(): BelongsToMany
     {
         return $this->belongsToMany(Unit::class, 'booking_units');
     }
 
+    /** @return HasMany<BookingUnit, $this> */
     public function bookingUnits(): HasMany
     {
         return $this->hasMany(BookingUnit::class);
     }
 
+    /** @return HasMany<BookingAddon, $this> */
     public function addons(): HasMany
     {
         return $this->hasMany(BookingAddon::class);
     }
 
+    /** @return MorphMany<Payment, $this> */
     public function payments(): MorphMany
     {
         return $this->morphMany(Payment::class, 'payable');
     }
 
+    /** @return HasMany<Refund, $this> */
     public function refunds(): HasMany
     {
         return $this->hasMany(Refund::class);
     }
 
+    /** @return HasMany<Order, $this> */
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);

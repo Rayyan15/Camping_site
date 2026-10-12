@@ -4,11 +4,13 @@ namespace App\Filament\Resources\UnitBlocks\Pages;
 
 use App\Exceptions\UnitBlockConflictException;
 use App\Filament\Resources\UnitBlocks\UnitBlockResource;
+use App\Models\UnitBlock;
 use App\Services\UnitBlockService;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
+use LogicException;
 
 class EditUnitBlock extends EditRecord
 {
@@ -21,6 +23,10 @@ class EditUnitBlock extends EditRecord
 
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
+        if (! $record instanceof UnitBlock) {
+            throw new LogicException('EditUnitBlock can only update UnitBlock records.');
+        }
+
         try {
             return app(UnitBlockService::class)->update($record, $data);
         } catch (UnitBlockConflictException $e) {

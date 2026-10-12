@@ -14,8 +14,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * @property ?Carbon $email_verified_at
+ * @property ?string $app_authentication_secret
+ * @property array<int, string>|null $app_authentication_recovery_codes
+ */
 class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
@@ -62,7 +68,11 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         return $this->is_active && $this->hasAnyRole(self::PANEL_ROLES);
     }
 
-    /** Guest records tied to this account once its email is verified. */
+    /**
+     * Guest records tied to this account once its email is verified.
+     *
+     * @return HasMany<Customer, $this>
+     */
     public function customers(): HasMany
     {
         return $this->hasMany(Customer::class);

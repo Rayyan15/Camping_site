@@ -118,7 +118,7 @@ class InvoiceService
                 $first = $rows->first();
 
                 return [
-                    'description' => ($first->unit?->unitType?->name ?? 'Unit').' ('.$first->nights.' malam)',
+                    'description' => ($first->unit?->unitType->name ?? 'Unit').' ('.$first->nights.' malam)',
                     'qty' => (string) $rows->count(),
                     'price' => (int) $first->subtotal,
                     'subtotal' => (int) $rows->sum('subtotal'),
@@ -134,7 +134,7 @@ class InvoiceService
     private function addonLines(Booking $booking): array
     {
         return $booking->addons->map(fn ($row) => [
-            'description' => $row->addon?->name ?? 'Tambahan',
+            'description' => $row->addon->name ?? 'Tambahan',
             'qty' => (string) $row->qty,
             'price' => $row->price,
             'subtotal' => $row->subtotal,

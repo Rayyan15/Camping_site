@@ -5,9 +5,11 @@ namespace App\Filament\Resources\Bookings\Pages;
 use App\Enums\BookingStatus;
 use App\Filament\Resources\Bookings\Actions\BookingActions;
 use App\Filament\Resources\Bookings\BookingResource;
+use App\Models\Booking;
 use App\Services\BookingStatusTransition;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
+use LogicException;
 
 class EditBooking extends EditRecord
 {
@@ -19,6 +21,10 @@ class EditBooking extends EditRecord
      */
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
+        if (! $record instanceof Booking) {
+            throw new LogicException('EditBooking can only update Booking records.');
+        }
+
         $target = BookingStatus::from($data['status']);
 
         if ($target !== $record->status) {

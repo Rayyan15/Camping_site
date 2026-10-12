@@ -10,7 +10,19 @@ use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property PaymentDirection $direction
+ * @property PaymentMethod $method
+ * @property PaymentStatus $status
+ * @property ?Carbon $paid_at
+ * @property ?Carbon $expires_at
+ * @property ?Carbon $reviewed_at
+ * @property ?PaymentFailureReason $failure_reason
+ * @property ?PaymentReviewReason $review_reason
+ * @property array<string, mixed>|null $raw_payload
+ */
 class Payment extends Model
 {
     protected $fillable = [
@@ -36,6 +48,7 @@ class Payment extends Model
         ];
     }
 
+    /** @return MorphTo<Model, $this> */
     public function payable(): MorphTo
     {
         return $this->morphTo();

@@ -9,6 +9,7 @@ class MenuCategory extends Model
 {
     protected $fillable = ['name', 'sort_order'];
 
+    /** @return HasMany<MenuItem, $this> */
     public function items(): HasMany
     {
         return $this->hasMany(MenuItem::class, 'category_id');

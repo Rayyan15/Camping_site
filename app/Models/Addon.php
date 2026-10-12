@@ -5,6 +5,9 @@ namespace App\Models;
 use App\Enums\AddonUnit;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property AddonUnit $unit
+ */
 class Addon extends Model
 {
     protected $fillable = ['name', 'price', 'unit', 'extra_guests', 'is_active'];

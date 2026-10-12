@@ -44,7 +44,7 @@ class PaymentInfolist
                     TextEntry::make('recorded_by')
                         ->label('Dicatat oleh')
                         ->state(fn (Payment $record): string => $record->recorded_by
-                            ? (User::find($record->recorded_by)?->name ?? 'Akun dihapus')
+                            ? (User::find($record->recorded_by)->name ?? 'Akun dihapus')
                             : 'Sistem'),
                     TextEntry::make('gateway_ref')
                         ->label('Referensi gateway')

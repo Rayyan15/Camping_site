@@ -46,7 +46,7 @@ class ReportService
 
         $rows = $bookings->take(self::MAX_ROWS)->map(fn (Booking $booking) => [
             $booking->code,
-            $booking->customer?->name ?? '-',
+            $booking->customer->name ?? '-',
             $booking->check_in->format('d/m/Y'),
             $booking->check_out->format('d/m/Y'),
             $booking->status->getLabel(),
@@ -169,8 +169,8 @@ class ReportService
         $truncated = $refunds->count() > self::MAX_ROWS;
 
         $rows = $refunds->take(self::MAX_ROWS)->map(fn (Refund $refund) => [
-            $refund->booking?->code ?? '-',
-            $refund->booking?->customer?->name ?? '-',
+            $refund->booking->code ?? '-',
+            $refund->booking?->customer->name ?? '-',
             $refund->created_at->format('d/m/Y'),
             $refund->status->getLabel(),
             $refund->amount,

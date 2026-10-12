@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dev;
 
 use App\Http\Controllers\Controller;
+use App\Models\Booking;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Services\Payment\PaymentService;
@@ -33,9 +34,11 @@ class FakePaymentController extends Controller
 
         $payable = $payment->payable;
 
-        return $payable instanceof Order
-            ? redirect()->route('qr.track', [$payable->diningSpot->qr_token, $payable->code])
-            : redirect()->route('booking.status', $payable->access_token);
+        return match (true) {
+            $payable instanceof Order => redirect()->route('qr.track', [$payable->diningSpot->qr_token, $payable->code]),
+            $payable instanceof Booking => redirect()->route('booking.status', $payable->access_token),
+            default => abort(404),
+        };
     }
 
     private function findPayment(string $reference): Payment

@@ -10,7 +10,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property ?Carbon $scheduled_at
+ * @property ?QrPaymentChoice $payment_choice
+ */
 class Order extends Model
 {
     public const SOURCE_PREORDER = 'preorder';
@@ -40,21 +45,25 @@ class Order extends Model
         ];
     }
 
+    /** @return BelongsTo<Booking, $this> */
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);
     }
 
+    /** @return BelongsTo<DiningSpot, $this> */
     public function diningSpot(): BelongsTo
     {
         return $this->belongsTo(DiningSpot::class);
     }
 
+    /** @return HasMany<OrderItem, $this> */
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
     }
 
+    /** @return MorphMany<Payment, $this> */
     public function payments(): MorphMany
     {
         return $this->morphMany(Payment::class, 'payable');
@@ -111,7 +120,7 @@ class Order extends Model
     public function displayName(): string
     {
         return $this->customer_name
-            ?? $this->booking?->customer?->name
+            ?? $this->booking?->customer->name
             ?? 'Tanpa nama';
     }
 }

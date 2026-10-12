@@ -5,7 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property Carbon $check_in
+ * @property Carbon $check_out
+ */
 class BookingUnit extends Model
 {
     protected $fillable = [
@@ -24,16 +29,19 @@ class BookingUnit extends Model
         ];
     }
 
+    /** @return BelongsTo<Booking, $this> */
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);
     }
 
+    /** @return BelongsTo<Unit, $this> */
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class);
     }
 
+    /** @return HasMany<BookingUnitNight, $this> */
     public function nights(): HasMany
     {
         return $this->hasMany(BookingUnitNight::class);

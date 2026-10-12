@@ -3,8 +3,10 @@
 namespace App\Filament\Resources\Evaluations\Pages;
 
 use App\Filament\Resources\Evaluations\EvaluationResource;
+use App\Models\Evaluation;
 use App\Services\EvaluationScoreCalculator;
 use Filament\Resources\Pages\CreateRecord;
+use LogicException;
 
 class CreateEvaluation extends CreateRecord
 {
@@ -27,6 +29,12 @@ class CreateEvaluation extends CreateRecord
 
     protected function afterCreate(): void
     {
-        app(EvaluationScoreCalculator::class)->refreshTotal($this->record);
+        $evaluation = $this->getRecord();
+
+        if (! $evaluation instanceof Evaluation) {
+            throw new LogicException('CreateEvaluation can only save Evaluation records.');
+        }
+
+        app(EvaluationScoreCalculator::class)->refreshTotal($evaluation);
     }
 }

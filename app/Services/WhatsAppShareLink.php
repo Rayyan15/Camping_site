@@ -68,7 +68,7 @@ class WhatsAppShareLink
         $booking->loadMissing('bookingUnits.unit.unitType');
 
         $units = $booking->bookingUnits
-            ->groupBy(fn ($row) => $row->unit?->unitType?->name ?? 'Unit')
+            ->groupBy(fn ($row) => $row->unit?->unitType->name ?? 'Unit')
             ->map(fn ($rows, $name) => $rows->count().' x '.$name)
             ->implode(', ');
 

@@ -22,6 +22,7 @@ class Shift extends Model
         });
     }
 
+    /** @return HasMany<Employee, $this> */
     public function employees(): HasMany
     {
         return $this->hasMany(Employee::class);

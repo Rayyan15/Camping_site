@@ -89,13 +89,13 @@ class PaymentLabels
 
     public static function payableCode(Payment $payment): string
     {
-        return $payment->payable?->code ?? '-';
+        return $payment->payable->code ?? '-';
     }
 
     public static function payerName(Payment $payment): string
     {
         return match (true) {
-            $payment->payable instanceof Booking => $payment->payable->customer?->name ?? 'Tanpa nama',
+            $payment->payable instanceof Booking => $payment->payable->customer->name ?? 'Tanpa nama',
             $payment->payable instanceof Order => $payment->payable->displayName(),
             default => '-',
         };

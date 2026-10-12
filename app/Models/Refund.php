@@ -6,6 +6,9 @@ use App\Enums\RefundStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property RefundStatus $status
+ */
 class Refund extends Model
 {
     protected $fillable = ['booking_id', 'amount', 'reason', 'status', 'requested_by', 'approved_by'];
@@ -18,16 +21,19 @@ class Refund extends Model
         ];
     }
 
+    /** @return BelongsTo<Booking, $this> */
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function requester(): BelongsTo
     {
         return $this->belongsTo(User::class, 'requested_by');
     }
 
+    /** @return BelongsTo<User, $this> */
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');

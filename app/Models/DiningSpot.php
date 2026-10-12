@@ -14,11 +14,13 @@ class DiningSpot extends Model
 
     protected $fillable = ['name', 'type', 'unit_id', 'qr_token'];
 
+    /** @return BelongsTo<Unit, $this> */
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class);
     }
 
+    /** @return HasMany<Order, $this> */
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);

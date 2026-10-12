@@ -23,6 +23,7 @@ class MenuItem extends Model
         ];
     }
 
+    /** @return BelongsTo<MenuCategory, $this> */
     public function category(): BelongsTo
     {
         return $this->belongsTo(MenuCategory::class, 'category_id');

@@ -24,6 +24,7 @@ use App\Services\BookingBilling;
 use App\Services\UnitNightLedger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use LogicException;
 
 class PaymentService
 {
@@ -356,6 +357,10 @@ class PaymentService
     private function settle(Payment $payment): void
     {
         $booking = $payment->payable()->lockForUpdate()->firstOrFail();
+
+        if (! $booking instanceof Booking) {
+            throw new LogicException('Gateway payments are only opened for bookings.');
+        }
 
         // A cancellation is final: an old link paid afterwards must not bring the booking back.
         if (in_array($booking->status, [BookingStatus::Cancelled, BookingStatus::Refunded], true)) {

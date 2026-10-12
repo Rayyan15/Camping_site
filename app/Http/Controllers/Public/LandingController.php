@@ -9,6 +9,7 @@ use App\Models\UnitType;
 use App\Services\BookingService;
 use App\Services\RefundPolicySummary;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 
 class LandingController extends Controller
@@ -44,7 +45,7 @@ class LandingController extends Controller
     /**
      * Only items guests can order right now, so the page never advertises a sold-out dish.
      *
-     * @return Collection<string, Collection<int, MenuItem>> items keyed by category name
+     * @return Collection<array-key, EloquentCollection<int, MenuItem>> items keyed by category name
      */
     private function menuByCategory(): Collection
     {
@@ -57,7 +58,7 @@ class LandingController extends Controller
 
     /**
      * @param  Collection<int, UnitType>  $unitTypes
-     * @return Collection<int, int> free unit count keyed by unit type id
+     * @return Collection<int, int<0, max>> free unit count keyed by unit type id
      */
     private function availableUnitsByType(Collection $unitTypes, string $checkIn, string $checkOut): Collection
     {

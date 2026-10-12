@@ -4,11 +4,13 @@ namespace App\Filament\Resources\Users\Pages;
 
 use App\Exceptions\LastOwnerException;
 use App\Filament\Resources\Users\UserResource;
+use App\Models\User;
 use App\Services\UserAccountService;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
+use LogicException;
 
 class EditUser extends EditRecord
 {
@@ -21,7 +23,7 @@ class EditUser extends EditRecord
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        $data['role'] = $this->record->roles->first()?->name;
+        $data['role'] = self::asUser($this->getRecord())->roles->first()?->name;
 
         return $data;
     }
@@ -32,12 +34,21 @@ class EditUser extends EditRecord
         unset($data['role']);
 
         try {
-            return app(UserAccountService::class)->update($record, $data, $role);
+            return app(UserAccountService::class)->update(self::asUser($record), $data, $role);
         } catch (LastOwnerException $e) {
             Notification::make()->title($e->getMessage())->danger()->send();
             $this->halt();
 
             return $record;
         }
+    }
+
+    private static function asUser(Model $record): User
+    {
+        if (! $record instanceof User) {
+            throw new LogicException('EditUser can only edit User records.');
+        }
+
+        return $record;
     }
 }

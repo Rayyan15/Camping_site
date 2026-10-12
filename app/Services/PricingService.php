@@ -17,7 +17,8 @@ class PricingService
 {
     public function nightsBetween(CarbonInterface|string $checkIn, CarbonInterface|string $checkOut): int
     {
-        return CarbonImmutable::parse($checkIn)->startOfDay()
+        // Carbon 3 returns the day difference as a float; both ends sit at midnight, so it is whole.
+        return (int) CarbonImmutable::parse($checkIn)->startOfDay()
             ->diffInDays(CarbonImmutable::parse($checkOut)->startOfDay());
     }
 

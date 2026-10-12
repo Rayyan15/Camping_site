@@ -6,7 +6,13 @@ use App\Enums\WhatsAppMessageStatus;
 use App\Enums\WhatsAppMessageType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property WhatsAppMessageType $type
+ * @property WhatsAppMessageStatus $status
+ * @property ?Carbon $sent_at
+ */
 class WhatsAppMessage extends Model
 {
     protected $table = 'whatsapp_messages';
@@ -24,6 +30,7 @@ class WhatsAppMessage extends Model
         ];
     }
 
+    /** @return BelongsTo<Booking, $this> */
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);

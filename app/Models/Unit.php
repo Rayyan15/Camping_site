@@ -13,16 +13,19 @@ class Unit extends Model
 
     protected $fillable = ['unit_type_id', 'code', 'status'];
 
+    /** @return BelongsTo<UnitType, $this> */
     public function unitType(): BelongsTo
     {
         return $this->belongsTo(UnitType::class);
     }
 
+    /** @return HasMany<UnitBlock, $this> */
     public function blocks(): HasMany
     {
         return $this->hasMany(UnitBlock::class);
     }
 
+    /** @return HasMany<BookingUnit, $this> */
     public function bookingUnits(): HasMany
     {
         return $this->hasMany(BookingUnit::class);

@@ -17,11 +17,13 @@ class UnitTypePhoto extends Model
 
     protected $fillable = ['unit_type_id', 'path', 'sort_order'];
 
+    /** @return BelongsTo<UnitType, $this> */
     public function unitType(): BelongsTo
     {
         return $this->belongsTo(UnitType::class);
     }
 
+    /** @return Attribute<string, never> */
     protected function url(): Attribute
     {
         return Attribute::get(fn () => Storage::disk(self::DISK)->url($this->path));

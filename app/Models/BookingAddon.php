@@ -18,11 +18,13 @@ class BookingAddon extends Model
         ];
     }
 
+    /** @return BelongsTo<Booking, $this> */
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);
     }
 
+    /** @return BelongsTo<Addon, $this> */
     public function addon(): BelongsTo
     {
         return $this->belongsTo(Addon::class);

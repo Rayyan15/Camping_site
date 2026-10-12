@@ -7,6 +7,10 @@ use App\Enums\AttendanceStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property AttendanceStatus $status
+ * @property AttendanceSource $source
+ */
 class Attendance extends Model
 {
     protected $fillable = ['employee_id', 'date', 'clock_in', 'clock_out', 'status', 'source', 'note'];
@@ -20,6 +24,7 @@ class Attendance extends Model
         ];
     }
 
+    /** @return BelongsTo<Employee, $this> */
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);

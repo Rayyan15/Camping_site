@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property float $score
+ */
 class EvaluationScore extends Model
 {
     public const MIN_SCORE = 0;
@@ -18,11 +21,13 @@ class EvaluationScore extends Model
         return ['score' => 'float'];
     }
 
+    /** @return BelongsTo<Evaluation, $this> */
     public function evaluation(): BelongsTo
     {
         return $this->belongsTo(Evaluation::class);
     }
 
+    /** @return BelongsTo<EvaluationCriteria, $this> */
     public function criteria(): BelongsTo
     {
         return $this->belongsTo(EvaluationCriteria::class, 'criteria_id');

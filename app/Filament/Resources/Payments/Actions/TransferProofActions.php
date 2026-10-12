@@ -80,7 +80,7 @@ class TransferProofActions
 
     private static function confirmationText(?Payment $payment): string
     {
-        $amount = number_format($payment?->amount ?? 0, 0, ',', '.');
+        $amount = number_format($payment->amount ?? 0, 0, ',', '.');
 
         return "Pastikan Rp {$amount} sudah masuk di mutasi rekening sebelum mengonfirmasi.";
     }

@@ -10,6 +10,7 @@ class Customer extends Model
 {
     protected $fillable = ['name', 'phone', 'email', 'user_id'];
 
+    /** @return HasMany<Booking, $this> */
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);
@@ -41,7 +42,11 @@ class Customer extends Model
         return $this->update(['user_id' => $user->id]);
     }
 
-    /** Food orders always hang off a booking of the customer; walk-in orders without a booking have no customer. */
+    /**
+     * Food orders always hang off a booking of the customer; walk-in orders without a booking have no customer.
+     *
+     * @return HasManyThrough<Order, Booking, $this>
+     */
     public function orders(): HasManyThrough
     {
         return $this->hasManyThrough(Order::class, Booking::class);
