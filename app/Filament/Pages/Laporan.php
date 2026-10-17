@@ -11,7 +11,6 @@ use App\Services\Reports\ReportTable;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
@@ -53,35 +52,45 @@ class Laporan extends Page implements HasSchemas
         ]);
     }
 
+    /**
+     * Only the custom range needs inputs; report type and preset are pills in the view.
+     */
     public function form(Schema $schema): Schema
     {
         return $schema
             ->statePath('data')
-            ->columns(['default' => 1, 'md' => 4])
+            ->columns(['default' => 1, 'sm' => 2])
             ->components([
-                Select::make('type')
-                    ->label('Jenis laporan')
-                    ->options(ReportType::options())
-                    ->native(false)
-                    ->selectablePlaceholder(false)
-                    ->live(),
-                Select::make('preset')
-                    ->label('Periode')
-                    ->options(ReportPreset::options())
-                    ->native(false)
-                    ->selectablePlaceholder(false)
-                    ->live(),
                 DatePicker::make('from')
                     ->label('Dari')
                     ->native(false)
+                    ->displayFormat('d/m/Y')
                     ->visible(fn (): bool => $this->preset() === ReportPreset::Custom)
                     ->live(),
                 DatePicker::make('to')
                     ->label('Sampai')
                     ->native(false)
+                    ->displayFormat('d/m/Y')
                     ->visible(fn (): bool => $this->preset() === ReportPreset::Custom)
                     ->live(),
             ]);
+    }
+
+    public function selectType(string $type): void
+    {
+        $this->data['type'] = (ReportType::tryFrom($type) ?? ReportType::Booking)->value;
+    }
+
+    public function selectPreset(string $preset): void
+    {
+        $this->data['preset'] = (ReportPreset::tryFrom($preset) ?? ReportPreset::ThisMonth)->value;
+
+        // Start the custom range on this month so switching never lands on an empty, error-looking report.
+        if ($this->preset() === ReportPreset::Custom && blank($this->data['from'] ?? null) && blank($this->data['to'] ?? null)) {
+            $month = ReportPeriod::thisMonth();
+            $this->data['from'] = $month->from->toDateString();
+            $this->data['to'] = $month->to->toDateString();
+        }
     }
 
     /**
@@ -110,17 +119,24 @@ class Laporan extends Page implements HasSchemas
     }
 
     /**
-     * @return array{report: ReportTable|null, error: string|null}
+     * @return array{report: ReportTable|null, error: string|null, types: array<string, string>, presets: array<string, string>, activeType: ReportType, activePreset: ReportPreset}
      */
     protected function getViewData(): array
     {
+        $pills = [
+            'types' => ReportType::options(),
+            'presets' => ReportPreset::options(),
+            'activeType' => $this->type(),
+            'activePreset' => $this->preset(),
+        ];
+
         try {
             $period = ReportPeriod::fromPreset($this->preset(), $this->data['from'] ?? null, $this->data['to'] ?? null);
         } catch (InvalidReportPeriodException $exception) {
-            return ['report' => null, 'error' => $exception->getMessage()];
+            return ['report' => null, 'error' => $exception->getMessage()] + $pills;
         }
 
-        return ['report' => app(ReportService::class)->build($this->type(), $period), 'error' => null];
+        return ['report' => app(ReportService::class)->build($this->type(), $period), 'error' => null] + $pills;
     }
 
     private function type(): ReportType
