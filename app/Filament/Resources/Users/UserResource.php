@@ -11,6 +11,7 @@ use App\Models\User;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\View\ComponentAttributeBag;
 
 class UserResource extends Resource
@@ -44,6 +45,15 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return UsersTable::configure($table);
+    }
+
+    /**
+     * Guest accounts have no role and are managed from Pelanggan; listing them here would push the
+     * owner into giving a guest a staff role just to edit it.
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->whereHas('roles');
     }
 
     public static function getPages(): array

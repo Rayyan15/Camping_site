@@ -5,6 +5,8 @@ namespace App\Filament\Resources\DiningSpots\Schemas;
 use App\Models\DiningSpot;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 
 class DiningSpotForm
@@ -20,8 +22,17 @@ class DiningSpotForm
                     DiningSpot::TYPE_TENT => 'Tenda',
                 ])
                 ->required()
+                ->live()
+                ->afterStateUpdated(function (Set $set, ?string $state): void {
+                    if ($state !== DiningSpot::TYPE_TENT) {
+                        $set('unit_id', null);
+                    }
+                })
                 ->native(false),
             Select::make('unit_id')
+                ->visible(fn (Get $get): bool => $get('type') === DiningSpot::TYPE_TENT)
+                ->required(fn (Get $get): bool => $get('type') === DiningSpot::TYPE_TENT)
+                ->unique(ignoreRecord: true)
                 ->label('Unit tenda terkait')
                 ->helperText('Isi untuk QR tenda agar tamu bisa menagihkan pesanan ke booking-nya.')
                 ->relationship('unit', 'code')

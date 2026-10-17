@@ -68,6 +68,11 @@ class BookingStatusTransition
                 throw InvalidBookingTransitionException::beforeCheckInDate($locked->check_in);
             }
 
+            // A staff reschedule may raise the price; the difference is settled before the guest moves in.
+            if ($target === BookingStatus::CheckedIn && $locked->paid_amount < $locked->total) {
+                throw InvalidBookingTransitionException::unpaidBalance($locked->total - $locked->paid_amount);
+            }
+
             // Money already received must leave through a refund, never vanish with a plain cancel.
             if ($target === BookingStatus::Cancelled && $locked->paid_amount > 0) {
                 throw InvalidBookingTransitionException::holdsPayment();

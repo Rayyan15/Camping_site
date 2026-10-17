@@ -54,7 +54,7 @@ class KitchenQueue extends Page
     {
         return [
             'board' => app(KitchenQueueService::class)->board(),
-            'columns' => array_filter(OrderStatus::cases(), fn (OrderStatus $status) => $status !== OrderStatus::Selesai),
+            'columns' => array_filter(OrderStatus::steps(), fn (OrderStatus $status) => $status !== OrderStatus::Selesai),
             'lateAfterMinutes' => self::LATE_AFTER_MINUTES,
             'canProcess' => auth()->user()->can('process_orders'),
         ];
@@ -68,7 +68,8 @@ class KitchenQueue extends Page
     {
         abort_unless(auth()->user()->can('process_orders'), 403);
 
-        $order = Order::findOrFail($orderId);
+        // Only orders the board shows, so a hidden unpaid pre-order cannot be pushed by id.
+        $order = Order::query()->kitchenRelevant()->findOrFail($orderId);
         $target = $to === null ? $order->statusEnum()->next() : OrderStatus::tryFrom($to);
 
         if ($target === null) {

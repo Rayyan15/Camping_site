@@ -209,7 +209,7 @@ class RefundService
 
     public function approve(Refund $refund, int $userId): Refund
     {
-        return $this->approveLocked($refund, $userId, [BookingStatus::Paid, BookingStatus::PendingPayment]);
+        return $this->approveLocked($refund, $userId, [BookingStatus::Paid, BookingStatus::PendingPayment, BookingStatus::NeedsReview]);
     }
 
     /**

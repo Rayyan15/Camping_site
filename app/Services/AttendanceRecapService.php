@@ -54,8 +54,10 @@ class AttendanceRecapService
     private function buildRow(Employee $employee, Collection $records, CarbonImmutable $start, CarbonImmutable $end): AttendanceRecapRow
     {
         $workdays = $this->workdays($employee, $start, $end);
-        $recordedWorkdays = $records->whereIn('date', $workdays)->count();
-        $count = fn (AttendanceStatus $status) => $records->where('status', $status)->count();
+        // Rows on off days or before the employee joined would push the percentage past the working days it divides by.
+        $onWorkdays = $records->whereIn('date', $workdays);
+        $recordedWorkdays = $onWorkdays->count();
+        $count = fn (AttendanceStatus $status) => $onWorkdays->where('status', $status)->count();
 
         $present = $count(AttendanceStatus::Present);
         $late = $count(AttendanceStatus::Late);

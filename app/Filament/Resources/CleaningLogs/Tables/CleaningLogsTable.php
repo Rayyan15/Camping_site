@@ -25,6 +25,8 @@ class CleaningLogsTable
             ->columns([
                 ImageColumn::make('photo_path')
                     ->label('Foto')
+                    ->disk('local')
+                    ->visibility('private')
                     ->square(),
                 TextColumn::make('unit.code')
                     ->label('Tenda')

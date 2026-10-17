@@ -31,17 +31,24 @@ class BookingConcurrencyMysqlTest extends TestCase
 
     protected function setUp(): void
     {
-        parent::setUp();
-
-        if (DB::connection()->getDriverName() !== 'mysql') {
+        // Skip before the app boots: DatabaseTruncation would otherwise mark the shared in-memory schema as
+        // migrated, and the next RefreshDatabase test in the same parallel worker finds no tables.
+        if ((getenv('DB_CONNECTION') ?: 'sqlite') !== 'mysql') {
             $this->markTestSkipped('Needs MySQL: SQLite does not enforce row locks across connections.');
         }
+
+        parent::setUp();
     }
 
     protected function tearDown(): void
     {
         if ($this->childScript !== '' && is_file($this->childScript)) {
             unlink($this->childScript);
+        }
+
+        // Skipped tests never booted the app, so there is nothing to wipe or tear down.
+        if (! isset($this->app)) {
+            return;
         }
 
         if (DB::connection()->getDriverName() === 'mysql') {

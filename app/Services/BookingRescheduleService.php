@@ -8,6 +8,7 @@ use App\Exceptions\BookingRescheduleException;
 use App\Exceptions\UnitUnavailableException;
 use App\Models\Booking;
 use App\Models\BookingUnit;
+use App\Models\Order;
 use App\Models\Unit;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
@@ -73,6 +74,7 @@ class BookingRescheduleService
             }
 
             $this->claimNights($locked->bookingUnits()->get());
+            $this->shiftPreorders($locked, $checkIn, $checkOut);
 
             $old = [
                 'check_in' => $locked->check_in->toDateString(),
@@ -176,7 +178,7 @@ class BookingRescheduleService
 
     /**
      * Rewrites unit and add-on lines for the new stay and returns the new subtotal. Food ordered in advance
-     * is carried over unchanged: it is whatever the old subtotal held beyond units and add-ons.
+     * keeps its price (its serve times move in shiftPreorders): it is whatever the old subtotal held beyond units and add-ons.
      *
      * @param  Collection<int, BookingUnit>  $lines
      * @param  array<int, int>  $unitIds  line id => unit id
@@ -213,6 +215,30 @@ class BookingRescheduleService
         }
 
         return $unitTotal + $addonTotal + $foodTotal;
+    }
+
+    /**
+     * Pre-ordered meals move with the stay by the same number of days, so the kitchen serves them on the
+     * new dates. A meal that would land outside a shortened stay blocks the move instead of being billed
+     * for a day the guest is not there.
+     *
+     * @throws BookingRescheduleException
+     */
+    private function shiftPreorders(Booking $booking, string $checkIn, string $checkOut): void
+    {
+        $offsetDays = (int) $booking->check_in->copy()->startOfDay()->diffInDays(CarbonImmutable::parse($checkIn), false);
+
+        $preorders = $booking->orders()->where('source', Order::SOURCE_PREORDER)->whereNotNull('scheduled_at')->get();
+
+        foreach ($preorders as $order) {
+            $moved = $order->scheduled_at->copy()->addDays($offsetDays);
+
+            if ($moved->toDateString() < $checkIn || $moved->toDateString() > $checkOut) {
+                throw BookingRescheduleException::preordersOutsideStay();
+            }
+
+            $order->update(['scheduled_at' => $moved]);
+        }
     }
 
     /**

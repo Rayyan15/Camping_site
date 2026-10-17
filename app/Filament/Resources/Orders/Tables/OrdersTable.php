@@ -54,6 +54,7 @@ class OrdersTable
                         OrderStatus::Diproses => 'warning',
                         OrderStatus::Siap, OrderStatus::Diantar => 'info',
                         OrderStatus::Selesai => 'success',
+                        OrderStatus::Dibatalkan => 'gray',
                     }),
                 TextColumn::make('total')->label('Total')->money('IDR', locale: 'id', decimalPlaces: 0)->sortable(),
                 TextColumn::make('payment_status')

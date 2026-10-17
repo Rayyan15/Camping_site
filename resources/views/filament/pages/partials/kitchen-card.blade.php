@@ -49,6 +49,9 @@
                     Tandai {{ strtolower($next->label()) }}
                 </x-filament::button>
             @endif
+            @if($status->canMoveTo(OrderStatus::Dibatalkan) && ! $order->isPaid())
+                <x-filament::button size="sm" color="danger" outlined wire:click="advance({{ $order->id }}, '{{ OrderStatus::Dibatalkan->value }}')" wire:confirm="Batalkan pesanan {{ $order->code }}? Pesanan tidak akan dimasak atau ditagih.">Batalkan</x-filament::button>
+            @endif
             @if($canSettle)
                 <x-filament::button size="sm" color="gray" wire:click="markPaid({{ $order->id }}, 'cash')" wire:confirm="Catat pembayaran tunai {{ $rupiah($order->total) }}?">Tunai</x-filament::button>
                 <x-filament::button size="sm" color="gray" wire:click="markPaid({{ $order->id }}, 'manual')" wire:confirm="Catat pembayaran QRIS {{ $rupiah($order->total) }}?">QRIS</x-filament::button>

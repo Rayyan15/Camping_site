@@ -185,4 +185,58 @@ class KitchenQueueTest extends TestCase
         $this->assertTrue(KitchenQueue::canAccess());
         $this->assertTrue(WalkInOrder::canAccess());
     }
+
+    public function test_order_placed_before_midnight_stays_on_the_board_until_closed(): void
+    {
+        $service = app(OrderService::class);
+        $items = [['menu_item_id' => $this->coffee->id, 'qty' => 1]];
+        $lateNight = $service->createOrder(Order::SOURCE_QR, $items);
+        $lateNight->forceFill(['created_at' => now()->startOfDay()->subMinutes(10)])->save();
+        $finished = $service->createOrder(Order::SOURCE_QR, $items);
+        $finished->forceFill(['created_at' => now()->startOfDay()->subMinutes(10), 'status' => OrderStatus::Selesai->value])->save();
+
+        $this->assertContains($lateNight->id, $this->boardIds());
+        $this->assertNotContains($finished->id, $this->boardIds());
+    }
+
+    public function test_new_unpaid_order_can_be_cancelled_and_leaves_the_queue(): void
+    {
+        $service = app(OrderService::class);
+        $order = $service->createOrder(Order::SOURCE_QR, [['menu_item_id' => $this->coffee->id, 'qty' => 1]]);
+        $before = app(KitchenQueueService::class)->activeCount();
+
+        $service->updateStatus($order, OrderStatus::Dibatalkan);
+
+        $this->assertSame('dibatalkan', $order->fresh()->status);
+        $this->assertSame($before - 1, app(KitchenQueueService::class)->activeCount());
+    }
+
+    public function test_order_in_progress_or_paid_cannot_be_cancelled(): void
+    {
+        $service = app(OrderService::class);
+        $items = [['menu_item_id' => $this->coffee->id, 'qty' => 1]];
+        $cooking = $service->createOrder(Order::SOURCE_QR, $items);
+        $service->updateStatus($cooking, OrderStatus::Diproses);
+        $paid = $service->createOrder(Order::SOURCE_QR, $items);
+        $paid->forceFill(['payment_status' => Order::PAYMENT_PAID])->save();
+
+        foreach ([$cooking, $paid] as $order) {
+            try {
+                $service->updateStatus($order, OrderStatus::Dibatalkan);
+                $this->fail('Order should not be cancellable.');
+            } catch (InvalidOrderTransitionException) {
+                $this->assertNotSame('dibatalkan', $order->fresh()->status);
+            }
+        }
+    }
+
+    public function test_hidden_unpaid_preorder_cannot_be_advanced_by_id(): void
+    {
+        $hidden = $this->preorder($this->booking(BookingStatus::PendingPayment), now()->setTime(12, 0));
+        $this->actingAs($this->staff('view_kitchen_queue', 'process_orders'));
+
+        Livewire::test(KitchenQueue::class)->call('advance', $hidden->id)->assertNotFound();
+
+        $this->assertSame('baru', $hidden->fresh()->status);
+    }
 }

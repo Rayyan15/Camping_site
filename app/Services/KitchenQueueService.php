@@ -26,14 +26,14 @@ class KitchenQueueService
             ->get()
             ->groupBy('status');
 
-        return collect(OrderStatus::cases())
+        return collect(OrderStatus::steps())
             ->mapWithKeys(fn (OrderStatus $status) => [$status->value => $orders->get($status->value, collect())])
             ->all();
     }
 
     public function activeCount(): int
     {
-        return $this->visibleOrders()->where('status', '!=', OrderStatus::Selesai->value)->count();
+        return $this->visibleOrders()->whereNotIn('status', [OrderStatus::Selesai->value, OrderStatus::Dibatalkan->value])->count();
     }
 
     /**
@@ -51,6 +51,14 @@ class KitchenQueueService
             })->orWhere(function (Builder $preorder) use ($startOfToday, $endOfTomorrow) {
                 $preorder->where('source', Order::SOURCE_PREORDER)
                     ->whereBetween('scheduled_at', [$startOfToday, $endOfTomorrow]);
+            })->orWhere(function (Builder $carriedOver) use ($startOfToday) {
+                // Still open from yesterday (ordered before midnight, or a pre-order served late) stays visible.
+                // Anything older is treated as abandoned and left to the order list.
+                $startOfYesterday = $startOfToday->copy()->subDay();
+
+                $carriedOver->whereNotIn('status', [OrderStatus::Selesai->value, OrderStatus::Dibatalkan->value])
+                    ->whereRaw('COALESCE(scheduled_at, created_at) >= ?', [$startOfYesterday])
+                    ->whereRaw('COALESCE(scheduled_at, created_at) < ?', [$startOfToday]);
             });
         });
     }

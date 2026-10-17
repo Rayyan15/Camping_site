@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\OrderStatus;
 use App\Models\Booking;
 use App\Models\Order;
 use Illuminate\Database\Eloquent\Builder;
@@ -79,7 +80,8 @@ class BookingBilling
         return Order::query()
             ->where('booking_id', $booking->id)
             ->where('bill_to_booking', true)
-            ->where('source', '!=', Order::SOURCE_PREORDER);
+            ->where('source', '!=', Order::SOURCE_PREORDER)
+            ->where('status', '!=', OrderStatus::Dibatalkan->value);
     }
 
     private function extraFoodSubtotal(Booking $booking): int
@@ -89,6 +91,7 @@ class BookingBilling
             ->where('orders.booking_id', $booking->id)
             ->where('orders.bill_to_booking', true)
             ->where('orders.source', '!=', Order::SOURCE_PREORDER)
+            ->where('orders.status', '!=', OrderStatus::Dibatalkan->value)
             ->sum(DB::raw('order_items.price * order_items.qty'));
     }
 }

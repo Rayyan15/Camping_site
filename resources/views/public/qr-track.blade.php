@@ -9,6 +9,7 @@
         'siap' => 'Pesanan sudah siap dan menunggu diantar.',
         'diantar' => 'Pesanan sedang menuju lokasi Anda.',
         'selesai' => 'Pesanan sudah sampai. Selamat menikmati.',
+        'dibatalkan' => 'Pesanan ini dibatalkan kafe. Silakan tanyakan ke staf bila ada pertanyaan.',
     ];
 @endphp
 

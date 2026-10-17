@@ -38,6 +38,11 @@ class CleaningLogForm
                             FileUpload::make('photo_path')
                                 ->label('Bukti Foto Tenda Rapih')
                                 ->image()
+                                // Internal evidence: private disk, shown to staff through signed URLs only.
+                                ->disk('local')
+                                ->visibility('private')
+                                ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                                ->maxSize(5120)
                                 ->directory('cleaning_logs')
                                 ->required()
                                 ->columnSpanFull(),

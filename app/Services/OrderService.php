@@ -170,6 +170,11 @@ class OrderService
                 throw InvalidOrderTransitionException::between($current, $newStatus);
             }
 
+            // Money taken at the cashier leaves through a refund, never through a silent cancel.
+            if ($newStatus === OrderStatus::Dibatalkan && $locked->isPaid()) {
+                throw InvalidOrderTransitionException::paidCannotBeCancelled();
+            }
+
             $locked->update(['status' => $newStatus->value]);
             $order->refresh();
 

@@ -72,7 +72,7 @@ class QrOrderController extends Controller
         return view('public.qr-track', [
             'spot' => $spot,
             'order' => $order,
-            'steps' => OrderStatus::cases(),
+            'steps' => OrderStatus::steps(),
             'progress' => $this->progress($order),
         ]);
     }
@@ -100,7 +100,7 @@ class QrOrderController extends Controller
         return [
             'status' => $status->value,
             'label' => $status->label(),
-            'step' => array_search($status, OrderStatus::cases(), true),
+            'step' => $status === OrderStatus::Dibatalkan ? -1 : (int) array_search($status, OrderStatus::steps(), true),
             'paid' => $order->isPaid(),
             'billed_to_booking' => $order->bill_to_booking,
         ];

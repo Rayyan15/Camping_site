@@ -22,4 +22,9 @@ class InvalidBookingTransitionException extends RuntimeException
     {
         return new self('Booking ini sudah menerima pembayaran. Batalkan lewat pengajuan refund supaya dananya tercatat.');
     }
+
+    public static function unpaidBalance(int $outstanding): self
+    {
+        return new self('Masih ada sisa tagihan Rp '.number_format($outstanding, 0, ',', '.').'. Catat pelunasannya sebelum check-in.');
+    }
 }

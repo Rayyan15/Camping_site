@@ -57,7 +57,8 @@ class DiningSpotService
      */
     public function activeBooking(DiningSpot $spot): ?Booking
     {
-        if ($spot->unit_id === null) {
+        // Only a tent QR bills a stay; a cafe table linked to a unit by mistake must never charge that guest.
+        if ($spot->type !== DiningSpot::TYPE_TENT || $spot->unit_id === null) {
             return null;
         }
 

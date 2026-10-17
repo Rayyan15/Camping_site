@@ -42,4 +42,9 @@ class BookingRescheduleException extends RuntimeException
 
         return new self("Harga di tanggal baru lebih tinggi Rp {$formatted}. Hubungi admin untuk memindah jadwal dan membayar selisihnya.");
     }
+
+    public static function preordersOutsideStay(): self
+    {
+        return new self('Ada pesanan makanan yang jatuh di luar tanggal baru. Hubungi admin untuk mengatur ulang pesanan sebelum memindah jadwal.');
+    }
 }

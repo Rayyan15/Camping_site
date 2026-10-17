@@ -264,7 +264,8 @@ class PaymentService
 
         $label = $booking->status->getLabel();
 
-        if ($booking->status === BookingStatus::Refunded) {
+        // Same rule as settle(): money for a closed booking is never applied to it.
+        if (in_array($booking->status, [BookingStatus::Cancelled, BookingStatus::Refunded], true)) {
             throw ManualPaymentException::bookingNotPayable($label);
         }
 

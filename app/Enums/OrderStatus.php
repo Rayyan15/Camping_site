@@ -3,7 +3,7 @@
 namespace App\Enums;
 
 /**
- * Kitchen queue stages. An order only ever moves one step forward.
+ * Kitchen queue stages. An order only ever moves one step forward, or is cancelled while still new.
  */
 enum OrderStatus: string
 {
@@ -12,6 +12,17 @@ enum OrderStatus: string
     case Siap = 'siap';
     case Diantar = 'diantar';
     case Selesai = 'selesai';
+    case Dibatalkan = 'dibatalkan';
+
+    /**
+     * The forward path a guest sees on the tracking page.
+     *
+     * @return array<int, self>
+     */
+    public static function steps(): array
+    {
+        return [self::Baru, self::Diproses, self::Siap, self::Diantar, self::Selesai];
+    }
 
     public function label(): string
     {
@@ -21,6 +32,7 @@ enum OrderStatus: string
             self::Siap => 'Siap',
             self::Diantar => 'Diantar',
             self::Selesai => 'Selesai',
+            self::Dibatalkan => 'Dibatalkan',
         };
     }
 
@@ -31,12 +43,22 @@ enum OrderStatus: string
             self::Diproses => self::Siap,
             self::Siap => self::Diantar,
             self::Diantar => self::Selesai,
-            self::Selesai => null,
+            self::Selesai, self::Dibatalkan => null,
         };
+    }
+
+    public function isClosed(): bool
+    {
+        return $this === self::Selesai || $this === self::Dibatalkan;
     }
 
     public function canMoveTo(self $target): bool
     {
+        // Cancelling is only safe before the kitchen starts cooking.
+        if ($target === self::Dibatalkan) {
+            return $this === self::Baru;
+        }
+
         return $this->next() === $target;
     }
 }

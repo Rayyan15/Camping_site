@@ -30,7 +30,9 @@ class ReleaseExpiredHolds implements ShouldQueue
 
             // Per model so the activity log observer records each change.
             $expired->each(fn (Booking $booking) => $this->release($booking));
-            $ledger->release($expired->modelKeys());
+
+            // Bookings sent to review still hold money, so they keep their nights until staff decide.
+            $ledger->release($expired->where('status', BookingStatus::Expired)->modelKeys());
         });
     }
 

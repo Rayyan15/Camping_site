@@ -13,6 +13,7 @@ use App\Http\Controllers\Public\UnitTypeController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\Webhook\PaymentWebhookController;
 use App\Http\Middleware\AuthenticateActiveUser;
+use App\Http\Middleware\EnsureOwnerHasTwoFactor;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
@@ -46,10 +47,11 @@ if (app()->environment('local') && config('payment.gateway') === 'fake') {
 }
 
 Route::get('/admin/pembayaran/{payment}/bukti', PaymentProofController::class)
-    ->middleware(AuthenticateActiveUser::class)
+    ->middleware([AuthenticateActiveUser::class, EnsureOwnerHasTwoFactor::class])
     ->name('admin.payments.proof');
 
-Route::middleware(AuthenticateActiveUser::class)->prefix('/admin/laporan/{type}')->group(function () {
+// Outside the panel, so the owner two factor rule is applied here too.
+Route::middleware([AuthenticateActiveUser::class, EnsureOwnerHasTwoFactor::class])->prefix('/admin/laporan/{type}')->group(function () {
     Route::get('/excel', [ReportExportController::class, 'excel'])->name('admin.reports.excel');
     Route::get('/pdf', [ReportExportController::class, 'pdf'])->name('admin.reports.pdf');
 });
