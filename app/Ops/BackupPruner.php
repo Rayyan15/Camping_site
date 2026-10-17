@@ -14,7 +14,7 @@ class BackupPruner
 {
     public const FILE_NAME_FORMAT = 'Ymd-His';
 
-    private const FILE_NAME_PATTERN = '/-(\d{8}-\d{6})\.sql\.gz$/';
+    private const FILE_NAME_PATTERN = '/-(\d{8}-\d{6})\.(sql|sqlite)\.gz$/';
 
     /**
      * @param  array<int, string>  $paths

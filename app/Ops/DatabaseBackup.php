@@ -2,12 +2,14 @@
 
 namespace App\Ops;
 
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
 
 class DatabaseBackup
 {
-    private const SUPPORTED_DRIVERS = ['mysql', 'mariadb'];
+    private const DUMP_DRIVERS = ['mysql', 'mariadb'];
 
     private const COPY_CHUNK_BYTES = 1048576;
 
@@ -25,6 +27,10 @@ class DatabaseBackup
         $connection = $this->connectionConfig();
         $directory = config('backup.directory');
         $this->ensureDirectory($directory);
+
+        if ($connection['driver'] === 'sqlite') {
+            return $this->snapshotSqlite($connection, $directory);
+        }
 
         $target = $directory.DIRECTORY_SEPARATOR.$connection['database'].'-'.now()->format(BackupPruner::FILE_NAME_FORMAT).'.sql.gz';
         $optionsFile = $this->writeSecureTempFile($this->clientOptions($connection));
@@ -71,7 +77,7 @@ class DatabaseBackup
     {
         $connection = config('database.connections.'.config('database.default'));
 
-        if (! in_array($connection['driver'] ?? null, self::SUPPORTED_DRIVERS, true)) {
+        if (! in_array($connection['driver'] ?? null, [...self::DUMP_DRIVERS, 'sqlite'], true)) {
             throw BackupFailedException::unsupportedDriver((string) ($connection['driver'] ?? 'unknown'));
         }
 
@@ -98,6 +104,38 @@ class DatabaseBackup
         }
 
         return implode("\n", $lines)."\n";
+    }
+
+    /**
+     * VACUUM INTO writes a consistent copy while the app keeps serving, unlike copying the live file.
+     *
+     * @param  array<string, mixed>  $connection
+     *
+     * @throws BackupFailedException
+     */
+    private function snapshotSqlite(array $connection, string $directory): string
+    {
+        // Only safe characters in the file name; an in-memory database is called ":memory:".
+        $name = preg_replace('/[^A-Za-z0-9_-]/', '', pathinfo((string) $connection['database'], PATHINFO_FILENAME)) ?: 'database';
+        $target = $directory.DIRECTORY_SEPARATOR.$name.'-'.now()->format(BackupPruner::FILE_NAME_FORMAT).'.sqlite.gz';
+        $snapshot = $this->writeSecureTempFile('');
+        @unlink($snapshot);
+
+        try {
+            DB::statement('VACUUM INTO ?', [$snapshot]);
+
+            if (! is_file($snapshot) || filesize($snapshot) === 0) {
+                throw BackupFailedException::unreadableDump();
+            }
+
+            $this->compress($snapshot, $target);
+        } catch (QueryException $e) {
+            throw BackupFailedException::dumpFailed($e->getMessage());
+        } finally {
+            @unlink($snapshot);
+        }
+
+        return $target;
     }
 
     private function dump(string $optionsFile, string $dumpFile, string $database): void
