@@ -58,21 +58,26 @@ class ReportAccessTest extends TestCase
         ];
     }
 
-    public function test_pills_switch_the_report_and_custom_starts_on_this_month(): void
+    public function test_pills_switch_the_report_and_dates_always_show_the_range(): void
     {
         $this->seedOctober();
         $this->actingAs($this->makeUser(User::ROLE_OWNER));
 
         Livewire::test(Laporan::class)
-            ->assertSeeHtml('aria-pressed="true">Booking</button>')
+            ->assertSet('data.type', ReportType::Booking->value)
+            ->assertSee('Tamu yang check-in di periode ini')
             ->call('selectType', ReportType::Occupancy->value)
             ->assertSet('data.type', ReportType::Occupancy->value)
             ->assertSee('Okupansi (%)')
             ->call('selectType', 'tidak-ada')
             ->assertSet('data.type', ReportType::Booking->value)
-            ->call('selectPreset', 'kustom')
-            ->assertSet('data.from', now()->startOfMonth()->toDateString())
-            ->assertSet('data.to', now()->endOfMonth()->toDateString())
+            ->assertSet('data.from', fn (?string $value): bool => str_starts_with((string) $value, now()->startOfMonth()->toDateString()))
+            ->assertSet('data.to', fn (?string $value): bool => str_starts_with((string) $value, now()->endOfMonth()->toDateString()))
+            ->call('selectPreset', 'bulan_lalu')
+            ->assertSet('data.from', fn (?string $value): bool => str_starts_with((string) $value, now()->subMonthNoOverflow()->startOfMonth()->toDateString()))
+            ->assertSet('data.to', fn (?string $value): bool => str_starts_with((string) $value, now()->subMonthNoOverflow()->endOfMonth()->toDateString()))
+            ->set('data.from', now()->subMonthNoOverflow()->startOfMonth()->addDays(9)->toDateString())
+            ->assertSet('data.preset', 'kustom')
             ->assertDontSee('Laporan belum bisa ditampilkan');
     }
 

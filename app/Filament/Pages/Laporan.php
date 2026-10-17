@@ -2,6 +2,8 @@
 
 namespace App\Filament\Pages;
 
+use App\Enums\BookingStatus;
+use App\Enums\RefundStatus;
 use App\Enums\ReportPreset;
 use App\Enums\ReportType;
 use App\Services\Reports\InvalidReportPeriodException;
@@ -46,14 +48,19 @@ class Laporan extends Page implements HasSchemas
 
     public function mount(): void
     {
+        $month = ReportPeriod::thisMonth();
+
         $this->form->fill([
             'type' => ReportType::Booking->value,
             'preset' => ReportPreset::ThisMonth->value,
+            'from' => $month->from->toDateString(),
+            'to' => $month->to->toDateString(),
         ]);
     }
 
     /**
-     * Only the custom range needs inputs; report type and preset are pills in the view.
+     * The two dates are always on screen and always show the active range. Editing either one makes
+     * the period custom; the month shortcuts fill them in again.
      */
     public function form(Schema $schema): Schema
     {
@@ -64,15 +71,17 @@ class Laporan extends Page implements HasSchemas
                 DatePicker::make('from')
                     ->label('Dari')
                     ->native(false)
+                    ->format('Y-m-d')
                     ->displayFormat('d/m/Y')
-                    ->visible(fn (): bool => $this->preset() === ReportPreset::Custom)
-                    ->live(),
+                    ->live()
+                    ->afterStateUpdated(fn () => $this->data['preset'] = ReportPreset::Custom->value),
                 DatePicker::make('to')
                     ->label('Sampai')
                     ->native(false)
+                    ->format('Y-m-d')
                     ->displayFormat('d/m/Y')
-                    ->visible(fn (): bool => $this->preset() === ReportPreset::Custom)
-                    ->live(),
+                    ->live()
+                    ->afterStateUpdated(fn () => $this->data['preset'] = ReportPreset::Custom->value),
             ]);
     }
 
@@ -85,12 +94,14 @@ class Laporan extends Page implements HasSchemas
     {
         $this->data['preset'] = (ReportPreset::tryFrom($preset) ?? ReportPreset::ThisMonth)->value;
 
-        // Start the custom range on this month so switching never lands on an empty, error-looking report.
-        if ($this->preset() === ReportPreset::Custom && blank($this->data['from'] ?? null) && blank($this->data['to'] ?? null)) {
-            $month = ReportPeriod::thisMonth();
-            $this->data['from'] = $month->from->toDateString();
-            $this->data['to'] = $month->to->toDateString();
+        if ($this->preset() === ReportPreset::Custom) {
+            return;
         }
+
+        // A month shortcut writes its dates into the inputs, so the inputs always show what the table covers.
+        $period = ReportPeriod::fromPreset($this->preset());
+        $this->data['from'] = $period->from->toDateString();
+        $this->data['to'] = $period->to->toDateString();
     }
 
     /**
@@ -98,10 +109,11 @@ class Laporan extends Page implements HasSchemas
      */
     protected function getHeaderActions(): array
     {
+        $isCustom = $this->preset() === ReportPreset::Custom;
         $query = array_filter([
             'periode' => $this->preset()->value,
-            'dari' => $this->data['from'] ?? null,
-            'sampai' => $this->data['to'] ?? null,
+            'dari' => $isCustom ? ($this->data['from'] ?? null) : null,
+            'sampai' => $isCustom ? ($this->data['to'] ?? null) : null,
         ]);
         $type = $this->type()->value;
 
@@ -119,16 +131,17 @@ class Laporan extends Page implements HasSchemas
     }
 
     /**
-     * @return array{report: ReportTable|null, error: string|null, types: array<string, string>, presets: array<string, string>, activeType: ReportType, activePreset: ReportPreset, isCustom: bool}
+     * @return array{report: ReportTable|null, error: string|null, types: array<int, ReportType>, presets: array<string, string>, activeType: ReportType, activePreset: ReportPreset, isCustom: bool, statusTones: array<string, string>}
      */
     protected function getViewData(): array
     {
         $pills = [
-            'types' => ReportType::options(),
-            'presets' => ReportPreset::options(),
+            'types' => ReportType::cases(),
+            'presets' => array_diff_key(ReportPreset::options(), [ReportPreset::Custom->value => true]),
             'activeType' => $this->type(),
             'activePreset' => $this->preset(),
             'isCustom' => $this->preset() === ReportPreset::Custom,
+            'statusTones' => self::statusTones(),
         ];
 
         try {
@@ -138,6 +151,23 @@ class Laporan extends Page implements HasSchemas
         }
 
         return ['report' => app(ReportService::class)->build($this->type(), $period), 'error' => null] + $pills;
+    }
+
+    /**
+     * Status labels in report rows mapped to the same meaning the panel badges use, so "Lunas" reads
+     * green and "Dibatalkan" reads ember here too.
+     *
+     * @return array<string, string> label => success|warning|danger|info|gray
+     */
+    private static function statusTones(): array
+    {
+        $tones = [];
+
+        foreach ([...BookingStatus::cases(), ...RefundStatus::cases()] as $status) {
+            $tones[$status->getLabel()] = $status->getColor();
+        }
+
+        return $tones;
     }
 
     private function type(): ReportType
