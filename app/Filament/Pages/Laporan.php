@@ -119,7 +119,7 @@ class Laporan extends Page implements HasSchemas
     }
 
     /**
-     * @return array{report: ReportTable|null, error: string|null, types: array<string, string>, presets: array<string, string>, activeType: ReportType, activePreset: ReportPreset}
+     * @return array{report: ReportTable|null, error: string|null, types: array<string, string>, presets: array<string, string>, activeType: ReportType, activePreset: ReportPreset, isCustom: bool}
      */
     protected function getViewData(): array
     {
@@ -128,6 +128,7 @@ class Laporan extends Page implements HasSchemas
             'presets' => ReportPreset::options(),
             'activeType' => $this->type(),
             'activePreset' => $this->preset(),
+            'isCustom' => $this->preset() === ReportPreset::Custom,
         ];
 
         try {

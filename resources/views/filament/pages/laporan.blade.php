@@ -30,7 +30,31 @@
 
         .lap-range { font-size: 0.875rem; color: var(--gray-600); margin-left: 0.25rem; }
         .dark .lap-range { color: var(--gray-300); }
-        .lap-custom { max-width: 32rem; }
+        /* Phones: the anchor dissolves so the panel takes a full row under the pills. */
+        .lap-custom-anchor { display: contents; }
+        .lap-custom-panel {
+            flex-basis: 100%; margin-top: 0.5rem; padding: 1rem;
+            border: 1px solid var(--gray-200); border-radius: 1rem; background: #fff;
+        }
+        .dark .lap-custom-panel { background: var(--gray-900); border-color: var(--gray-700); }
+        .lap-custom-actions { display: flex; justify-content: flex-end; margin-top: 0.75rem; }
+        .lap-pill.lap-pill-solid { background: var(--primary-700); border-color: var(--primary-700); color: #fff; }
+        .dark .lap-pill.lap-pill-solid { background: var(--primary-600); border-color: var(--primary-600); }
+        /* Wide screens: a panel under the pill, the only raised surface on the page, so it carries the one shadow. */
+        @media (min-width: 768px) {
+            .lap-custom-anchor { display: block; position: relative; }
+            .lap-custom-panel {
+                position: absolute; top: 100%; left: 0; z-index: 20; width: 26rem;
+                box-shadow: 0 12px 24px -12px rgb(0 0 0 / 0.25);
+            }
+        }
+        .lap-reset {
+            margin-left: 0.5rem; min-height: 44px; padding: 0 0.25rem;
+            background: none; border: 0; cursor: pointer;
+            font-weight: 600; color: var(--primary-700); text-decoration: underline; text-underline-offset: 3px;
+        }
+        .lap-reset:focus-visible { outline: 2px solid var(--primary-600); outline-offset: 2px; border-radius: 0.25rem; }
+        .dark .lap-reset { color: var(--primary-300); }
 
         .lap-table-card { padding: 0; overflow: hidden; }
         .lap-table-wrap { overflow-x: auto; }
@@ -71,16 +95,34 @@
             <div class="lap-group" role="group" aria-labelledby="lap-period-label">
                 <span id="lap-period-label" class="lap-group-label">Periode</span>
                 @foreach ($presets as $value => $label)
-                    <button type="button" class="lap-pill lap-pill-sm" wire:click="selectPreset('{{ $value }}')" aria-pressed="{{ $activePreset->value === $value ? 'true' : 'false' }}">{{ $label }}</button>
+                    @if ($value === \App\Enums\ReportPreset::Custom->value)
+                        {{-- The date inputs hang under the Kustom pill on wide screens (borrowed from the reference's
+                             advanced filter panel) so the table does not jump; on phones they sit in the flow. --}}
+                        <div class="lap-custom-anchor" x-data="{ open: false }" x-on:keydown.escape.window="open = false">
+                            <button type="button" class="lap-pill lap-pill-sm" wire:click="selectPreset('{{ $value }}')" x-on:click="open = true"
+                                aria-pressed="{{ $isCustom ? 'true' : 'false' }}" aria-controls="lap-custom-panel" x-bind:aria-expanded="open.toString()">{{ $label }}</button>
+                            @if ($isCustom)
+                                <div id="lap-custom-panel" class="lap-custom-panel" x-show="open" x-on:click.outside="open = false" role="group" aria-label="Rentang tanggal kustom">
+                                    {{ $this->form }}
+                                    <div class="lap-custom-actions">
+                                        <button type="button" class="lap-pill lap-pill-sm lap-pill-solid" x-on:click="open = false">Selesai</button>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    @else
+                        <button type="button" class="lap-pill lap-pill-sm" wire:click="selectPreset('{{ $value }}')" aria-pressed="{{ $activePreset->value === $value ? 'true' : 'false' }}">{{ $label }}</button>
+                    @endif
                 @endforeach
                 @if ($report)
-                    <span class="lap-range">{{ $report->period->from->locale('id')->translatedFormat('j F Y') }} sampai {{ $report->period->to->locale('id')->translatedFormat('j F Y') }}</span>
+                    <span class="lap-range">
+                        {{ $report->period->from->locale('id')->translatedFormat('j F Y') }} sampai {{ $report->period->to->locale('id')->translatedFormat('j F Y') }}
+                        @if ($isCustom)
+                            <button type="button" class="lap-reset" wire:click="selectPreset('{{ \App\Enums\ReportPreset::ThisMonth->value }}')">Reset ke bulan ini</button>
+                        @endif
+                    </span>
                 @endif
             </div>
-
-            @if ($activePreset === \App\Enums\ReportPreset::Custom)
-                <div class="lap-custom">{{ $this->form }}</div>
-            @endif
 
             <p wire:loading.delay class="hh-muted lap-loading" role="status">Memuat laporan...</p>
         </section>
