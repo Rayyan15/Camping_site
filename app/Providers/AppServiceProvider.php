@@ -42,7 +42,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Str;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -81,7 +80,6 @@ class AppServiceProvider extends ServiceProvider
         $this->configureProxies();
         $this->forceHttpsInProduction();
         $this->configureRateLimiters();
-        $this->configureAccountRateLimiters();
         $this->configureFilamentTables();
 
         Relation::enforceMorphMap(config('morph_map'));
@@ -112,21 +110,6 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('availability-check', fn (Request $request) => Limit::perMinute(
             config('booking.throttle.availability_per_ip')
         )->by($request->ip()));
-    }
-
-    private function configureAccountRateLimiters(): void
-    {
-        $perIpAndEmail = fn (string $configKey) => fn (Request $request) => Limit::perMinute(
-            config("auth.customer_throttle.{$configKey}")
-        )->by($request->ip().'|'.Str::lower((string) $request->input('email')));
-
-        RateLimiter::for('account-login', $perIpAndEmail('login_per_minute'));
-        RateLimiter::for('account-register', $perIpAndEmail('register_per_minute'));
-        RateLimiter::for('account-reset', $perIpAndEmail('reset_per_minute'));
-
-        RateLimiter::for('account-verification', fn (Request $request) => Limit::perMinute(
-            config('auth.customer_throttle.verification_per_minute')
-        )->by((string) ($request->user()->id ?? $request->ip())));
     }
 
     private function configureProxies(): void

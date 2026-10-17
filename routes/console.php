@@ -13,7 +13,8 @@ Artisan::command('inspire', function () {
 Schedule::job(new ReleaseExpiredHolds)->everyMinute()->withoutOverlapping()->onOneServer();
 
 // Always scheduled: the job logs a skip until ATTENDANCE_LOG_PATH is set, so the gap shows up in the logs.
-Schedule::job(new SyncFingerprintLogs)->dailyAt(config('attendance.sync_at'))->withoutOverlapping()->onOneServer();
+Schedule::job(new SyncFingerprintLogs)->dailyAt(config('attendance.sync_at'))->withoutOverlapping()->onOneServer()
+    ->when(fn (): bool => (bool) config('attendance.fingerprint_enabled'));
 
 Schedule::command('app:schedule-heartbeat')->everyMinute();
 

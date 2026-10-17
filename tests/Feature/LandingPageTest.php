@@ -88,4 +88,16 @@ class LandingPageTest extends TestCase
             ->assertSee('kanvas.')
             ->assertSee('id="cari"', false);
     }
+
+    public function test_guests_find_their_booking_by_code_and_never_sign_in(): void
+    {
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('Cek booking')
+            ->assertSee(route('booking.find'), false)
+            ->assertDontSee('/akun/masuk', false);
+
+        $this->get('/akun/masuk')->assertNotFound();
+        $this->get('/akun/daftar')->assertNotFound();
+    }
 }

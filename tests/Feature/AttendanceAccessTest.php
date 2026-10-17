@@ -123,8 +123,17 @@ class AttendanceAccessTest extends TestCase
         $this->assertSame(AttendanceSource::Manual, $row->source);
     }
 
+    public function test_import_action_is_hidden_while_fingerprint_is_off(): void
+    {
+        config(['attendance.fingerprint_enabled' => false]);
+        $this->actingAs($this->userWithRole(User::ROLE_OWNER));
+
+        Livewire::test(ListAttendances::class)->assertActionHidden('importLog');
+    }
+
     public function test_owner_import_action_creates_rows_from_an_uploaded_file(): void
     {
+        config(['attendance.fingerprint_enabled' => true]);
         Storage::fake('local');
         $this->actingAs($this->userWithRole(User::ROLE_OWNER));
         Employee::create(['name' => 'Rina', 'fingerprint_id' => '1']);

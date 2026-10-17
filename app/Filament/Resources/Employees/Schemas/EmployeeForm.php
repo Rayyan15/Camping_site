@@ -34,11 +34,14 @@ class EmployeeForm
                             ->placeholder('Belum ditentukan'),
                     ]),
                 Section::make('Absensi dan Akun')
-                    ->description('ID fingerprint dipakai untuk mencocokkan data mesin absensi. Akun login hanya diisi untuk karyawan yang punya akses ke panel.')
+                    ->description(fn (): string => config('attendance.fingerprint_enabled')
+                        ? 'ID fingerprint dipakai untuk mencocokkan data mesin absensi. Akun login hanya diisi untuk karyawan yang punya akses ke panel.'
+                        : 'Akun login hanya diisi untuk karyawan yang punya akses ke panel.')
                     ->columns(2)
                     ->schema([
                         TextInput::make('fingerprint_id')
                             ->label('ID Fingerprint')
+                            ->visible(fn (): bool => (bool) config('attendance.fingerprint_enabled'))
                             ->maxLength(64)
                             ->default(null)
                             ->dehydrateStateUsing(fn (?string $state): ?string => filled($state) ? trim($state) : null)

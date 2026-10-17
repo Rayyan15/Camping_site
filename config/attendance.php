@@ -2,6 +2,12 @@
 
 return [
     /*
+    | Off until the property installs a fingerprint machine. Hides the import button, the
+    | fingerprint ID fields and the source column, and skips the nightly sync; manual entries keep working.
+    */
+    'fingerprint_enabled' => (bool) env('ATTENDANCE_FINGERPRINT_ENABLED', false),
+
+    /*
     | Fingerprint log file read by the scheduled SyncFingerprintLogs job (CSV or ZKTeco attlog.dat).
     | Empty means the job does nothing. Absolute path, or relative to the private "local" disk root.
     */

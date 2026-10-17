@@ -36,7 +36,7 @@ class ListAttendances extends ListRecords
             ->label('Impor log fingerprint')
             ->icon('heroicon-o-arrow-up-tray')
             ->color('gray')
-            ->visible(fn () => auth()->user()?->can('create_attendance') ?? false)
+            ->visible(fn () => config('attendance.fingerprint_enabled') && (auth()->user()?->can('create_attendance') ?? false))
             ->modalHeading('Impor log fingerprint')
             ->modalDescription('Unggah file CSV (kolom fingerprint_id dan datetime) atau attlog.dat dari mesin. Catatan manual tidak ditimpa.')
             ->modalSubmitActionLabel('Impor sekarang')

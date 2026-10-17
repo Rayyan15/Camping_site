@@ -56,7 +56,5 @@ Route::middleware([AuthenticateActiveUser::class, EnsureOwnerHasTwoFactor::class
     Route::get('/pdf', [ReportExportController::class, 'pdf'])->name('admin.reports.pdf');
 });
 
-require __DIR__.'/account.php';
-
 Route::get('/sitemap.xml', [SitemapController::class, 'sitemap'])->name('sitemap');
 Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');

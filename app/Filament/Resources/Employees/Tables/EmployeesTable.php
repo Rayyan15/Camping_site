@@ -31,6 +31,7 @@ class EmployeesTable
                     ->sortable(),
                 TextColumn::make('fingerprint_id')
                     ->label('ID Fingerprint')
+                    ->visible(fn (): bool => (bool) config('attendance.fingerprint_enabled'))
                     ->placeholder('-')
                     ->searchable(),
                 TextColumn::make('user.roles.name')

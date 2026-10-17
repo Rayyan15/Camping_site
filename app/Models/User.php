@@ -2,16 +2,12 @@
 
 namespace App\Models;
 
-use App\Notifications\ResetCustomerPassword;
-use App\Notifications\VerifyCustomerEmail;
 use Database\Factories\UserFactory;
 use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
 use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthenticationRecovery;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -22,7 +18,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property ?string $app_authentication_secret
  * @property array<int, string>|null $app_authentication_recovery_codes
  */
-class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, MustVerifyEmail
+class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable;
@@ -66,26 +62,6 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     public function canAccessPanel(Panel $panel): bool
     {
         return $this->is_active && $this->hasAnyRole(self::PANEL_ROLES);
-    }
-
-    /**
-     * Guest records tied to this account once its email is verified.
-     *
-     * @return HasMany<Customer, $this>
-     */
-    public function customers(): HasMany
-    {
-        return $this->hasMany(Customer::class);
-    }
-
-    public function sendEmailVerificationNotification(): void
-    {
-        $this->notify(new VerifyCustomerEmail);
-    }
-
-    public function sendPasswordResetNotification($token): void
-    {
-        $this->notify(new ResetCustomerPassword($token));
     }
 
     public function isOwner(): bool

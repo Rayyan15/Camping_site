@@ -80,6 +80,7 @@ class EmployeeFormTest extends TestCase
 
     public function test_duplicate_fingerprint_is_rejected_but_own_value_can_be_resaved(): void
     {
+        config(['attendance.fingerprint_enabled' => true]);
         $this->actingAs($this->userWithRole(User::ROLE_OWNER));
         Employee::create(['name' => 'Ayu', 'fingerprint_id' => 'FP-001']);
         $other = Employee::create(['name' => 'Bima', 'fingerprint_id' => 'FP-002']);

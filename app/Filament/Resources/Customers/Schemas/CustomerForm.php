@@ -22,9 +22,6 @@ class CustomerForm
                     ->email()
                     ->visible(fn (): bool => (bool) auth()->user()?->can('view_customer_contact'))
                     ->default(null),
-                TextInput::make('user_id')
-                    ->numeric()
-                    ->default(null),
             ]);
     }
 }

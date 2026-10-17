@@ -42,7 +42,8 @@ class AttendancesTable
                 TextColumn::make('source')
                     ->label('Sumber')
                     ->badge()
-                    ->color(fn (AttendanceSource $state) => $state === AttendanceSource::Fingerprint ? 'primary' : 'gray'),
+                    ->color(fn (AttendanceSource $state) => $state === AttendanceSource::Fingerprint ? 'primary' : 'gray')
+                    ->visible(fn (): bool => (bool) config('attendance.fingerprint_enabled')),
                 TextColumn::make('note')
                     ->label('Alasan')
                     ->limit(40)
@@ -78,8 +79,10 @@ class AttendancesTable
             ])
             ->defaultSort('date', 'desc')
             ->emptyStateHeading('Belum ada catatan absensi')
-            ->emptyStateDescription('Impor log fingerprint dari tombol di atas tabel, atau catat izin, sakit, atau alpa secara manual.')
-            ->emptyStateIcon('heroicon-o-finger-print')
+            ->emptyStateDescription(fn (): string => config('attendance.fingerprint_enabled')
+                ? 'Impor log fingerprint dari tombol di atas tabel, atau catat izin, sakit, atau alpa secara manual.'
+                : 'Catat kehadiran, izin, sakit, atau alpa lewat tombol tambah di atas tabel.')
+            ->emptyStateIcon('heroicon-o-clipboard-document-check')
             ->striped();
     }
 }
