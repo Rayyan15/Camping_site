@@ -10,12 +10,12 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Demo data exists only for local and testing. Every other environment, production above all,
+     * Demo data exists only for local, testing and the stakeholder demo server (APP_ENV=demo). Every other environment, production above all,
      * receives the minimal ProductionSeeder and never any demo accounts, tents or menu.
      */
     public function run(): void
     {
-        if (! app()->environment(['local', 'testing'])) {
+        if (! app()->environment(['local', 'testing', 'demo'])) {
             $this->call(ProductionSeeder::class);
 
             return;
