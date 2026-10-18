@@ -57,34 +57,6 @@
         .dark .lap-badge-danger { background: var(--primary-900); color: var(--hh-ember-light); }
         .dark .lap-badge-info, .dark .lap-badge-gray { background: var(--gray-800); color: var(--gray-200); }
 
-        .lap-stats { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); }
-        .lap-stat { display: flex; align-items: center; gap: 0.75rem; padding: 1rem; border-radius: 1rem; border: 1px solid var(--gray-200); background: #fff; min-width: 0; }
-        .dark .lap-stat { background: var(--gray-900); border-color: var(--gray-800); }
-        .lap-stat-tile { display: grid; place-items: center; flex-shrink: 0; width: 2.5rem; height: 2.5rem; border-radius: 0.75rem; }
-        .lap-stat-tile svg { width: 1.25rem; height: 1.25rem; }
-        .lap-stat-value { font-family: inherit; font-size: 1.375rem; font-weight: 700; line-height: 1.2; color: var(--gray-950); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-        .dark .lap-stat-value { color: #fff; }
-        .lap-stat-label { font-size: 0.8125rem; color: var(--hh-ink-soft); }
-        .dark .lap-stat-label { color: var(--gray-300); }
-        .lap-tone-count .lap-stat-tile { background: var(--primary-50); color: var(--primary-700); }
-        .lap-tone-money .lap-stat-tile { background: var(--hh-ember-soft); color: var(--hh-ember-dark); }
-        .lap-tone-percent .lap-stat-tile { background: var(--hh-cream); color: var(--hh-sand-dark); }
-        .lap-tone-success .lap-stat-tile { background: var(--primary-100); color: var(--primary-800); }
-        .lap-tone-warning .lap-stat-tile { background: var(--hh-sand); color: var(--hh-ink); }
-        .lap-tone-danger .lap-stat-tile { background: var(--hh-ember-soft); color: var(--hh-ember-dark); }
-        .lap-tone-info .lap-stat-tile, .lap-tone-gray .lap-stat-tile { background: var(--hh-cream-deep); color: var(--hh-ink); }
-        .dark .lap-tone-warning .lap-stat-tile { color: var(--hh-sand); }
-        .dark .lap-tone-danger .lap-stat-tile { color: var(--hh-ember-light); }
-        .dark .lap-stat-tile { background: var(--primary-800); color: var(--primary-200); }
-        .dark .lap-tone-money .lap-stat-tile { color: var(--hh-ember-light); }
-        .dark .lap-tone-percent .lap-stat-tile { color: var(--hh-sand); }
-        /* The first summary line is the headline number of every report, so it is the one solid forest tile. */
-        .lap-stat.is-headline { background: var(--primary-700); border-color: var(--primary-700); }
-        .lap-stat.is-headline .lap-stat-value { color: #fff; }
-        .lap-stat.is-headline .lap-stat-label { color: var(--primary-100); }
-        .lap-stat.is-headline .lap-stat-tile { background: var(--primary-800); color: #fff; }
-        .dark .lap-stat.is-headline { background: var(--primary-600); border-color: var(--primary-600); }
-        .dark .lap-stat.is-headline .lap-stat-tile { background: var(--primary-700); }
 
         .lap-state { display: grid; justify-items: start; gap: 0.75rem; padding: 2rem 1.25rem; }
         .lap-state-title { font-weight: 600; color: var(--gray-950); }
@@ -94,6 +66,52 @@
         .lap-note { max-width: 70ch; font-size: 0.8125rem; line-height: 1.5; }
         .lap-loading { font-size: 0.8125rem; }
 
+
+        /* Summary band: the headline number big on the left, the rest as a list, and a composition bar when
+           the rest are statuses that add up to the headline (bookings, refunds). */
+        .lap-band { display: grid; gap: 1.25rem; padding: 1.25rem; border-radius: 1rem; background: #fff; border: 1px solid var(--gray-200); }
+        .dark .lap-band { background: var(--gray-900); border-color: var(--gray-800); }
+        @media (min-width: 768px) { .lap-band { grid-template-columns: minmax(12rem, 16rem) 1fr; align-items: center; padding: 1.5rem; } }
+        .lap-head { display: grid; gap: 0.25rem; padding: 1.25rem; border-radius: 0.875rem; background: var(--primary-700); color: #fff; }
+        .dark .lap-head { background: var(--primary-600); }
+        .lap-head-label { font-size: 0.8125rem; font-weight: 600; color: var(--primary-100); }
+        .lap-head-value { font-size: 2.5rem; font-weight: 700; line-height: 1.05; letter-spacing: -0.02em; overflow-wrap: anywhere; }
+        .lap-head-value.is-long { font-size: 1.75rem; }
+        .lap-lines { display: grid; gap: 0.25rem 1.5rem; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); margin: 0; }
+        .lap-line { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 0 0.625rem; padding: 0.625rem 0; border-bottom: 1px solid var(--gray-100); }
+        .dark .lap-line { border-color: var(--gray-800); }
+        .lap-line dt { grid-column: 2; font-size: 0.8125rem; color: var(--hh-ink-soft); }
+        .dark .lap-line dt { color: var(--gray-300); }
+        .lap-line dd { grid-column: 2; margin: 0; font-size: 1.125rem; font-weight: 700; color: var(--gray-950); }
+        .dark .lap-line dd { color: #fff; }
+        .lap-line-share { margin-left: 0.375rem; font-size: 0.75rem; font-weight: 600; color: var(--hh-ink-soft); }
+        .dark .lap-line-share { color: var(--gray-400); }
+        .lap-mark { grid-row: span 2; width: 0.75rem; height: 2.25rem; border-radius: 999px; }
+        .lap-mark-icon { grid-row: span 2; display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 0.625rem; }
+        .lap-mark-icon svg { width: 1.125rem; height: 1.125rem; }
+        .lap-bar { grid-column: 1 / -1; display: flex; height: 0.75rem; overflow: hidden; border-radius: 999px; background: var(--gray-100); }
+        .dark .lap-bar { background: var(--gray-800); }
+        .lap-bar span { display: block; height: 100%; }
+        .lap-bar span + span { border-left: 2px solid #fff; }
+        .dark .lap-bar span + span { border-color: var(--gray-900); }
+        /* Status and value-type tones, from the brand palette. */
+        .lap-fill-success { background: var(--primary-600); }
+        .lap-fill-warning { background: var(--hh-sand-dark); }
+        .lap-fill-danger { background: var(--hh-ember); }
+        .lap-fill-info { background: var(--primary-800); }
+        .lap-fill-gray { background: var(--gray-500); }
+        .lap-icon-count { background: var(--primary-50); color: var(--primary-700); }
+        .lap-icon-money { background: var(--hh-ember-soft); color: var(--hh-ember-dark); }
+        .lap-icon-percent { background: var(--hh-cream); color: var(--hh-sand-dark); }
+        .dark .lap-icon-count, .dark .lap-icon-money, .dark .lap-icon-percent { background: var(--primary-800); }
+        .dark .lap-icon-count { color: var(--primary-200); }
+        .dark .lap-icon-money { color: var(--hh-ember-light); }
+        .dark .lap-icon-percent { color: var(--hh-sand); }
+        .dark .lap-fill-success { background: var(--primary-400); }
+        .dark .lap-fill-warning { background: var(--hh-sand); }
+        .dark .lap-fill-danger { background: var(--hh-ember-light); }
+        .dark .lap-fill-info { background: var(--primary-200); }
+        .dark .lap-fill-gray { background: var(--gray-300); }
 
         /* Report picker cards */
         .lap-types { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(11.5rem, 1fr)); }
@@ -183,29 +201,58 @@
             </section>
         @else
             @if ($report->summary !== [] && $report->rows !== [])
-                <section class="lap-stats" aria-label="Ringkasan {{ $report->title() }}">
-                    @foreach ($report->summary as $line)
-                        @php
-                            // A summary line named after a status (Lunas, Dibatalkan) takes that status tone.
-                            $statusTone = $statusTones[$line['label']] ?? null;
-                            [$tone, $icon] = match (true) {
-                                $statusTone === 'success' => ['success', 'heroicon-o-check-circle'],
-                                $statusTone === 'warning' => ['warning', 'heroicon-o-clock'],
-                                $statusTone === 'danger' => ['danger', 'heroicon-o-x-circle'],
-                                $statusTone !== null => [$statusTone, 'heroicon-o-information-circle'],
-                                $line['type'] === \App\Enums\ReportValueType::Money => ['money', 'heroicon-o-banknotes'],
-                                $line['type'] === \App\Enums\ReportValueType::Percent => ['percent', 'heroicon-o-chart-pie'],
-                                default => ['count', 'heroicon-o-rectangle-stack'],
-                            };
-                        @endphp
-                        <div @class(['lap-stat', 'lap-tone-'.$tone, 'is-headline' => $loop->first])>
-                            <span class="lap-stat-tile" aria-hidden="true"><x-filament::icon :icon="$icon" /></span>
-                            <div style="min-width: 0;">
-                                <p class="lap-stat-value">{{ $line['type']->format($line['value']) }}</p>
-                                <p class="lap-stat-label">{{ $line['label'] }}</p>
-                            </div>
+                @php
+                    $head = $report->summary[0];
+                    $rest = array_slice($report->summary, 1);
+                    $headValue = $head['type']->format($head['value']);
+                    // Status lines that share the headline's unit add up to it, so they get a composition bar.
+                    $isBreakdown = $head['type'] === \App\Enums\ReportValueType::Count && $head['value'] > 0 && $rest !== []
+                        && collect($rest)->every(fn ($line) => isset($statusTones[$line['label']]));
+                @endphp
+                <section class="lap-band" aria-label="Ringkasan {{ $report->title() }}">
+                    <div class="lap-head">
+                        <p class="lap-head-label">{{ $head['label'] }}</p>
+                        <p @class(['lap-head-value', 'is-long' => mb_strlen($headValue) > 9])>{{ $headValue }}</p>
+                    </div>
+
+                    @if ($rest !== [])
+                        <dl class="lap-lines">
+                            @foreach ($rest as $line)
+                                @php
+                                    $statusTone = $statusTones[$line['label']] ?? null;
+                                    [$iconTone, $icon] = match ($line['type']) {
+                                        \App\Enums\ReportValueType::Money => ['money', 'heroicon-o-banknotes'],
+                                        \App\Enums\ReportValueType::Percent => ['percent', 'heroicon-o-chart-pie'],
+                                        default => ['count', 'heroicon-o-rectangle-stack'],
+                                    };
+                                @endphp
+                                <div class="lap-line">
+                                    @if ($statusTone)
+                                        <span class="lap-mark lap-fill-{{ $statusTone }}" aria-hidden="true"></span>
+                                    @else
+                                        <span class="lap-mark-icon lap-icon-{{ $iconTone }}" aria-hidden="true"><x-filament::icon :icon="$icon" /></span>
+                                    @endif
+                                    <dt>{{ $line['label'] }}</dt>
+                                    <dd>
+                                        {{ $line['type']->format($line['value']) }}
+                                        @if ($isBreakdown)
+                                            <span class="lap-line-share">{{ round($line['value'] / $head['value'] * 100) }}%</span>
+                                        @endif
+                                    </dd>
+                                </div>
+                            @endforeach
+                        </dl>
+                    @endif
+
+                    @if ($isBreakdown)
+                        <div class="lap-bar" role="img" aria-label="Komposisi status: {{ collect($rest)->map(fn ($line) => $line['label'].' '.$line['value'])->implode(', ') }}">
+                            @foreach ($rest as $line)
+                                @if ($line['value'] > 0)
+                                    <span class="lap-fill-{{ $statusTones[$line['label']] }}" style="width: {{ $line['value'] / $head['value'] * 100 }}%"></span>
+                                @endif
+                            @endforeach
                         </div>
-                    @endforeach
+                    @endif
                 </section>
             @endif
 
