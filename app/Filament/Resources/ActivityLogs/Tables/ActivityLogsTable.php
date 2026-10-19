@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ActivityLogs\Tables;
 
+use App\Filament\Resources\ActivityLogs\ActivityChangeDescriber;
 use App\Models\ActivityLog;
 use App\Services\ActivityLogger;
 use Filament\Forms\Components\DatePicker;
@@ -32,22 +33,22 @@ class ActivityLogsTable
                     ->label('Pelaku'),
                 TextColumn::make('subject_type')
                     ->label('Objek')
-                    ->formatStateUsing(fn (?string $state, ActivityLog $record): string => str($state)->replace('_', ' ')->headline().' #'.$record->subject_id),
+                    ->formatStateUsing(fn (?string $state, ActivityLog $record): string => ActivityChangeDescriber::subject($record)),
                 TextColumn::make('action')
                     ->label('Aksi')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => self::ACTION_LABELS[$state] ?? $state),
                 TextColumn::make('changes')
                     ->label('Perubahan')
-                    ->formatStateUsing(fn (ActivityLog $record): string => self::summarize($record))
-                    ->limit(200)
+                    ->formatStateUsing(fn (ActivityLog $record): string => ActivityChangeDescriber::describe($record))
+                    ->limit(300)
                     ->wrap(),
             ])
             ->filters([
                 SelectFilter::make('subject_type')
                     ->label('Objek')
                     ->options(fn (): array => collect(array_keys(config('morph_map')))
-                        ->mapWithKeys(fn (string $alias): array => [$alias => (string) str($alias)->replace('_', ' ')->headline()])
+                        ->mapWithKeys(fn (string $alias): array => [$alias => ActivityChangeDescriber::subjectLabel($alias)])
                         ->all()),
                 SelectFilter::make('user_id')
                     ->label('Pelaku')
@@ -67,27 +68,5 @@ class ActivityLogsTable
             ->emptyStateIcon('heroicon-o-clipboard-document-list')
             ->striped()
             ->defaultSort('created_at', 'desc');
-    }
-
-    private static function summarize(ActivityLog $record): string
-    {
-        $old = $record->changes['old'] ?? [];
-        $new = $record->changes['new'] ?? [];
-
-        return collect($new ?: $old)
-            ->map(function (mixed $value, string $field) use ($old, $new): string {
-                $before = $old[$field] ?? null;
-                $after = $new[$field] ?? null;
-
-                return $before !== null && $after !== null
-                    ? $field.': '.self::scalar($before).' -> '.self::scalar($after)
-                    : $field.': '.self::scalar($after ?? $before);
-            })
-            ->implode(', ');
-    }
-
-    private static function scalar(mixed $value): string
-    {
-        return is_scalar($value) || $value === null ? (string) $value : json_encode($value);
     }
 }
