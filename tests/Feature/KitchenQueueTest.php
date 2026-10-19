@@ -186,6 +186,25 @@ class KitchenQueueTest extends TestCase
         $this->assertTrue(WalkInOrder::canAccess());
     }
 
+    public function test_cashier_builds_a_walk_in_ticket_from_menu_taps(): void
+    {
+        $this->actingAs($this->staff('create_walkin_orders'));
+
+        Livewire::test(WalkInOrder::class)
+            ->call('create')->assertHasErrors(['cart', 'customerName'])
+            ->call('add', $this->coffee->id)->call('add', $this->coffee->id)
+            ->call('decrement', $this->coffee->id)->call('increment', $this->coffee->id)
+            ->set('customerName', 'Tamu Meja')
+            ->set('payment', PaymentMethod::Cash->value)
+            ->call('create')->assertHasNoErrors()
+            ->assertSet('cart', []);
+
+        $order = Order::sole();
+        $this->assertSame(Order::SOURCE_WALKIN, $order->source);
+        $this->assertSame(2, $order->items()->sole()->qty);
+        $this->assertTrue($order->isPaid());
+    }
+
     public function test_order_placed_before_midnight_stays_on_the_board_until_closed(): void
     {
         $service = app(OrderService::class);
