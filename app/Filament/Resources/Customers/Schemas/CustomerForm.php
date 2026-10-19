@@ -12,14 +12,20 @@ class CustomerForm
         return $schema
             ->components([
                 TextInput::make('name')
+                    ->label('Nama')
+                    ->maxLength(80)
                     ->required(),
                 TextInput::make('phone')
+                    ->label('Nomor WhatsApp')
                     ->tel()
+                    ->placeholder('08xxxxxxxxxx')
+                    ->maxLength(20)
                     ->visible(fn (): bool => (bool) auth()->user()?->can('view_customer_contact'))
                     ->required(),
                 TextInput::make('email')
-                    ->label('Email address')
+                    ->label('Email (opsional)')
                     ->email()
+                    ->maxLength(120)
                     ->visible(fn (): bool => (bool) auth()->user()?->can('view_customer_contact'))
                     ->default(null),
             ]);

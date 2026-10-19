@@ -15,18 +15,39 @@
         .oc { --oc-line: var(--gray-300); --oc-head: var(--gray-50); --oc-muted: var(--gray-600); --oc-today: color-mix(in srgb, var(--hh-forest-700) 10%, transparent); --oc-weekend: rgb(120 113 108 / 0.10); --oc-focus: var(--primary-700); }
         .dark .oc { --oc-line: var(--gray-700); --oc-head: var(--gray-900); --oc-muted: var(--gray-400); --oc-today: color-mix(in srgb, var(--hh-forest-300) 14%, transparent); --oc-weekend: rgb(161 161 170 / 0.12); --oc-focus: var(--primary-400); }
 
-        .oc-summary { display: grid; gap: 1rem 2rem; grid-template-columns: 1fr; align-items: end; margin-bottom: 1rem; }
+        /* Header: tonight's figure leads, the range controls sit under a hairline so the calendar keeps the stage. */
+        .oc-header { display: grid; gap: 1rem; margin-bottom: 0.75rem; padding: 1rem 1.25rem; border: 1px solid var(--oc-line); border-radius: 0.75rem; background: #fff; }
+        .dark .oc-header { background: var(--gray-900); }
+        .oc-summary { display: grid; gap: 1rem 2rem; grid-template-columns: 1fr; align-items: end; }
+        .oc-headline { display: grid; gap: 0.375rem; }
+        .oc-meter { height: 0.375rem; border-radius: 999px; background: var(--gray-200); overflow: hidden; max-width: 16rem; }
+        .oc-meter span { display: block; height: 100%; background: var(--primary-700); border-radius: inherit; }
+        .dark .oc-meter { background: var(--gray-700); }
+        .dark .oc-meter span { background: var(--primary-400); }
         .oc-figure { font-size: 3rem; line-height: 1; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
         .oc-figure small { font-size: 1.25rem; font-weight: 600; }
-        .oc-caption { margin-top: 0.25rem; font-size: 0.875rem; color: var(--oc-muted); }
-        .oc-facts { display: grid; gap: 0.5rem 2rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; }
+        .oc-caption { font-size: 0.8125rem; font-weight: 600; color: var(--oc-muted); }
+        .oc-facts { display: grid; gap: 0.5rem; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); margin: 0; }
+        .oc-facts > div { padding: 0.625rem 0.875rem; border-radius: 0.5rem; background: var(--oc-head); }
+        .oc-facts > .oc-fact-alert { background: var(--warning-50); }
+        .oc-fact-alert dt, .oc-fact-alert dd { color: var(--warning-800); }
+        .dark .oc-facts > .oc-fact-alert { background: var(--gray-800); }
+        .dark .oc-fact-alert dt, .dark .oc-fact-alert dd { color: var(--warning-300); }
         .oc-facts dt { font-size: 0.8125rem; color: var(--oc-muted); }
         .oc-facts dd { margin: 0; font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
         @media (min-width: 48rem) { .oc-summary { grid-template-columns: minmax(12rem, 1fr) 2fr; } }
 
-        .oc-bar { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+        .oc-bar { display: flex; flex-wrap: wrap; gap: 0.75rem 1rem; align-items: center; justify-content: space-between; padding-top: 1rem; border-top: 1px solid var(--oc-line); }
+        .oc-nav { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; }
+        .oc-seg-group { display: inline-flex; padding: 0.25rem; gap: 0.25rem; border-radius: 0.625rem; background: var(--oc-head); border: 1px solid var(--oc-line); }
+        .oc-seg-btn { min-height: 2.75rem; padding: 0 0.875rem; border-radius: 0.4375rem; font-size: 0.875rem; font-weight: 600; color: var(--gray-700); }
+        .oc-seg-btn[aria-pressed="true"] { background: var(--primary-700); color: #fff; }
+        .oc-seg-btn:focus-visible { outline: 2px solid var(--oc-focus); outline-offset: 2px; }
+        .dark .oc-seg-btn { color: var(--gray-300); }
+        .dark .oc-seg-btn[aria-pressed="true"] { background: var(--primary-400); color: var(--gray-950); }
         .oc-group { display: inline-flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
-        .oc-range { font-weight: 600; font-variant-numeric: tabular-nums; }
+        .oc-range { font-size: 1.125rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--gray-950); }
+        .dark .oc-range { color: #fff; }
         .oc-btn { min-height: 2.75rem; min-width: 2.75rem; }
 
         .oc-scroll { position: relative; overflow: auto; max-height: 72vh; border: 1px solid var(--oc-line); border-radius: 0.5rem; background: #fff; }
@@ -98,42 +119,47 @@
     </style>
 
     <div class="oc">
-        <section class="oc-summary" aria-label="Ringkasan malam ini">
-            <div>
-                <div class="oc-figure">{{ $summary['percent'] }}<small>%</small></div>
-                <p class="oc-caption">Okupansi malam ini, {{ $summary['date']->translatedFormat('l, j F Y') }}</p>
-            </div>
-            <dl class="oc-facts">
-                <div>
-                    <dt>Unit bebas malam ini</dt>
-                    <dd>{{ $summary['free'] }} <span class="oc-count">dari {{ $summary['active'] }} unit aktif</span></dd>
+        <header class="oc-header">
+            <section class="oc-summary" aria-label="Ringkasan malam ini">
+                <div class="oc-headline">
+                    <p class="oc-caption">Okupansi malam ini, {{ $summary['date']->translatedFormat('l, j F Y') }}</p>
+                    <div class="oc-figure">{{ $summary['percent'] }}<small>%</small></div>
+                    <div class="oc-meter" aria-hidden="true"><span style="width: {{ min(100, max(0, $summary['percent'])) }}%"></span></div>
                 </div>
-                <div>
-                    <dt>Terisi atau menginap</dt>
-                    <dd>{{ $summary['occupied'] }}</dd>
-                </div>
-                @if($summary['review'] > 0)
+                <dl class="oc-facts">
                     <div>
-                        <dt>Booking perlu ditinjau</dt>
-                        <dd>{{ $summary['review'] }}</dd>
+                        <dt>Unit bebas</dt>
+                        <dd>{{ $summary['free'] }} <span class="oc-count">dari {{ $summary['active'] }}</span></dd>
                     </div>
-                @endif
-            </dl>
-        </section>
+                    <div>
+                        <dt>Terisi atau menginap</dt>
+                        <dd>{{ $summary['occupied'] }}</dd>
+                    </div>
+                    @if($summary['review'] > 0)
+                        <div class="oc-fact-alert">
+                            <dt>Perlu ditinjau</dt>
+                            <dd>{{ $summary['review'] }}</dd>
+                        </div>
+                    @endif
+                </dl>
+            </section>
 
-        <div class="oc-bar">
-            <div class="oc-group" role="group" aria-label="Geser rentang tanggal">
-                <x-filament::button class="oc-btn" color="gray" size="sm" icon="heroicon-m-chevron-left" wire:click="previous">Sebelumnya</x-filament::button>
-                <x-filament::button class="oc-btn" color="gray" size="sm" wire:click="goToToday">Hari ini</x-filament::button>
-                <x-filament::button class="oc-btn" color="gray" size="sm" icon="heroicon-m-chevron-right" icon-position="after" wire:click="next">Berikutnya</x-filament::button>
+            <div class="oc-bar">
+                <div class="oc-nav">
+                    <div class="oc-group" role="group" aria-label="Geser rentang tanggal">
+                        <x-filament::icon-button class="oc-btn" color="gray" icon="heroicon-m-chevron-left" label="Rentang sebelumnya" wire:click="previous" />
+                        <x-filament::button class="oc-btn" color="gray" outlined size="sm" wire:click="goToToday">Hari ini</x-filament::button>
+                        <x-filament::icon-button class="oc-btn" color="gray" icon="heroicon-m-chevron-right" label="Rentang berikutnya" wire:click="next" />
+                    </div>
+                    <h2 class="oc-range" aria-live="polite">{{ $rangeLabel }}</h2>
+                </div>
+                <div class="oc-seg-group" role="group" aria-label="Lebar rentang">
+                    @foreach($dayOptions as $option)
+                        <button type="button" class="oc-seg-btn" wire:click="setDays({{ $option }})" aria-pressed="{{ $days === $option ? 'true' : 'false' }}">{{ $option }} hari</button>
+                    @endforeach
+                </div>
             </div>
-            <p class="oc-range" aria-live="polite">{{ $rangeLabel }}</p>
-            <div class="oc-group" role="group" aria-label="Lebar rentang">
-                @foreach($dayOptions as $option)
-                    <x-filament::button class="oc-btn" size="sm" :color="$days === $option ? 'primary' : 'gray'" :outlined="$days !== $option" wire:click="setDays({{ $option }})" :aria-pressed="$days === $option ? 'true' : 'false'">{{ $option }} hari</x-filament::button>
-                @endforeach
-            </div>
-        </div>
+        </header>
 
         <p class="oc-loading" wire:loading wire:target="previous, next, goToToday, setDays" role="status">Memuat kalender...</p>
 

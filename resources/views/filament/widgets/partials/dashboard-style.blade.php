@@ -59,7 +59,6 @@
 
         .hh-strip { display: grid; gap: 0.75rem; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 1rem; }
         @media (min-width: 768px) { .hh-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-        @media (min-width: 1280px) { .hh-strip { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
         .hh-mini {
             display: flex; align-items: center; gap: 0.625rem; min-width: 0;
             padding: 0.75rem; border-radius: 0.75rem; background: var(--gray-50);

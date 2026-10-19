@@ -11,10 +11,10 @@ use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class OrdersTable
 {
@@ -32,8 +32,15 @@ class OrdersTable
     {
         return $table
             ->columns([
-                TextColumn::make('code')->label('Kode pesanan')->searchable()->weight('bold'),
-                TextColumn::make('customer_name')->label('Pemesan')->searchable()->placeholder('-'),
+                // Related fields share a cell as a second line so all columns fit without sideways scrolling.
+                TextColumn::make('code')
+                    ->label('Pesanan')
+                    ->weight('bold')
+                    ->description(fn (Order $record) => $record->customer_name ?: '-')
+                    ->searchable(query: fn (Builder $query, string $search) => $query->where(fn (Builder $inner) => $inner
+                        ->where('code', 'like', "%{$search}%")
+                        ->orWhere('customer_name', 'like', "%{$search}%")
+                        ->orWhereHas('booking', fn (Builder $booking) => $booking->where('code', 'like', "%{$search}%")))),
                 TextColumn::make('source')
                     ->label('Sumber')
                     ->badge()
@@ -41,10 +48,9 @@ class OrdersTable
                         Order::SOURCE_PREORDER => 'Pre-order',
                         Order::SOURCE_QR => 'QR',
                         default => 'Walk-in',
-                    }),
-                TextColumn::make('diningSpot.name')->label('Lokasi')->placeholder('-'),
-                TextColumn::make('booking.code')->label('Booking')->searchable()->placeholder('-'),
-                TextColumn::make('scheduled_at')->label('Waktu saji')->dateTime('d M Y, H:i')->placeholder('-')->sortable(),
+                    })
+                    ->description(fn (Order $record) => $record->diningSpot?->name ?? ($record->booking ? 'Booking '.$record->booking->code : null)),
+                TextColumn::make('scheduled_at')->label('Waktu saji')->dateTime('d/m/y H:i')->placeholder('-')->sortable(),
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
@@ -60,10 +66,17 @@ class OrdersTable
                 TextColumn::make('payment_status')
                     ->label('Pembayaran')
                     ->badge()
-                    ->formatStateUsing(fn (string $state) => $state === Order::PAYMENT_PAID ? 'Lunas' : 'Belum lunas')
-                    ->color(fn (string $state) => $state === Order::PAYMENT_PAID ? 'success' : 'danger'),
-                IconColumn::make('bill_to_booking')->label('Gabung bill')->boolean(),
-                TextColumn::make('created_at')->label('Dibuat')->dateTime('d M Y, H:i')->sortable()->toggleable(isToggledHiddenByDefault: true),
+                    ->formatStateUsing(fn (string $state, Order $record) => match (true) {
+                        $state === Order::PAYMENT_PAID => 'Lunas',
+                        $record->bill_to_booking => 'Tagih ke booking',
+                        default => 'Belum lunas',
+                    })
+                    ->color(fn (string $state, Order $record) => match (true) {
+                        $state === Order::PAYMENT_PAID => 'success',
+                        $record->bill_to_booking => 'gray',
+                        default => 'danger',
+                    }),
+                TextColumn::make('created_at')->label('Dibuat')->dateTime('d/m/y H:i')->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('source')->label('Sumber')->options([
@@ -104,6 +117,7 @@ class OrdersTable
                     }),
                 EditAction::make(),
             ])
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['diningSpot', 'booking']))
             ->emptyStateHeading('Belum ada pesanan')
             ->striped()
             ->defaultSort('created_at', 'desc');

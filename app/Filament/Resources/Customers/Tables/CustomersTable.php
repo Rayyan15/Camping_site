@@ -50,9 +50,6 @@ class CustomersTable
                     ->placeholder('Belum pernah menginap')
                     ->visible($canViewSpend)
                     ->sortable(query: fn (Builder $query, string $direction): Builder => $query->orderBy('last_visit_at', $direction)),
-                TextColumn::make('user_id')
-                    ->numeric()
-                    ->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

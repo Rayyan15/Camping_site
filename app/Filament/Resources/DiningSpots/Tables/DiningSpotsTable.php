@@ -50,14 +50,14 @@ class DiningSpotsTable
                     }),
                 EditAction::make(),
             ])
-            ->headerActions([
+            ->toolbarActions([
                 Action::make('print_all')
                     ->label('Cetak semua QR')
                     ->icon('heroicon-o-printer')
                     ->url(DiningSpotResource::getUrl('print'))
                     ->openUrlInNewTab(),
+                DeleteBulkAction::make(),
             ])
-            ->toolbarActions([DeleteBulkAction::make()])
             ->defaultSort('name')
             ->emptyStateHeading('Belum ada titik QR');
     }

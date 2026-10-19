@@ -8,6 +8,7 @@ use App\Http\Middleware\AuthenticateActiveUser;
 use App\Http\Middleware\EnsureOwnerHasTwoFactor;
 use App\Http\Middleware\SecurityHeaders;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
+use Filament\Enums\ThemeMode;
 use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -42,6 +43,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandName(config('site.name'))
             ->brandLogo(asset(config('site.logo')))
             // Navy line art disappears on the dark panel, so dark mode gets the badge on a cream disc.
+            ->defaultThemeMode(ThemeMode::Light)
             ->darkModeBrandLogo(asset('images/brand/halimun-highland-160-on-dark.png'))
             ->brandLogoHeight('2.75rem')
             ->defaultAvatarProvider(BrandAvatarProvider::class)
