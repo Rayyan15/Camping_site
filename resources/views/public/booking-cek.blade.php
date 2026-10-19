@@ -46,18 +46,22 @@
                 <div class="space-y-6">
                     <section class="rounded-3xl border border-sand bg-[#fffdf8] p-6 sm:p-8" aria-labelledby="sec-unit">
                         <h2 id="sec-unit" class="font-display text-xl font-semibold text-forest-900">Unit dan tamu</h2>
-                        <p class="mt-1 text-sm text-ink-soft">Tersedia {{ $availableUnits->count() }} unit {{ $unitType->name }}, muat {{ $unitType->capacity }} orang per unit.</p>
-
-                        <div class="mt-5 flex flex-wrap items-end gap-x-10 gap-y-5">
-                            <div>
-                                <span class="field-label" id="lbl-qty">Jumlah unit</span>
+                        <ul class="mt-4 divide-y divide-sand">
+                            <li class="flex flex-wrap items-center justify-between gap-4 py-4 first:pt-0">
+                                <div>
+                                    <p class="font-bold text-forest-900">Jumlah unit</p>
+                                    <p class="text-sm text-ink-soft">Tersisa {{ $availableUnits->count() }} unit {{ $unitType->name }}</p>
+                                </div>
                                 <x-stepper name="quantity" label="unit" :value="old('quantity', 1)" :min="1" :max="$maxUnits" role="units" />
-                            </div>
-                            <div class="w-40">
-                                <label for="guests" class="field-label">Jumlah tamu</label>
-                                <input id="guests" type="number" name="guests" min="1" max="50" value="{{ old('guests', $stay['guests']) }}" required class="field-input">
-                            </div>
-                        </div>
+                            </li>
+                            <li class="flex flex-wrap items-center justify-between gap-4 py-4 last:pb-0">
+                                <div>
+                                    <p class="font-bold text-forest-900">Jumlah tamu</p>
+                                    <p class="text-sm text-ink-soft">Maksimal {{ $unitType->capacity }} orang per unit</p>
+                                </div>
+                                <x-stepper name="guests" label="tamu" :value="old('guests', $stay['guests'])" :min="1" :max="min(50, $maxUnits * $unitType->capacity)" />
+                            </li>
+                        </ul>
                     </section>
 
                     <section class="rounded-3xl border border-sand bg-[#fffdf8] p-6 sm:p-8" aria-labelledby="sec-data">
@@ -121,15 +125,24 @@
                                             @foreach($category->items as $item)
                                                 @php $chosen = (int) old('preorder.'.$item->id.'.qty', 0); @endphp
                                                 <li class="py-4" data-menu-row>
-                                                    <div class="flex flex-wrap items-center justify-between gap-4">
-                                                        <div class="min-w-0 max-w-md">
-                                                            <p class="font-bold text-forest-900">{{ $item->name }}</p>
-                                                            @if($item->description)<p class="text-sm text-ink-soft">{{ $item->description }}</p>@endif
-                                                            <p class="mt-1 text-sm font-bold text-ember-dark">{{ $rupiah($item->price) }}</p>
+                                                    <div class="flex items-start gap-4">
+                                                        @if($item->photoUrl())
+                                                            <img src="{{ $item->photoUrl() }}" alt="{{ $item->name }}" loading="lazy" width="80" height="80" class="size-20 shrink-0 rounded-2xl object-cover">
+                                                        @else
+                                                            <span class="grid size-20 shrink-0 place-items-center rounded-2xl bg-sand/40 text-sand-dark" aria-hidden="true">
+                                                                <svg class="size-7" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25v-1.5m0 1.5c-1.36 0-2.7.06-4.04.17C6.84 8.51 6 9.46 6 10.6v2.54m6-4.89c1.36 0 2.7.06 4.04.17 1.12.09 1.96 1.04 1.96 2.18v2.54M3 16.5h18M5.25 16.5l.75 3h12l.75-3"/></svg>
+                                                            </span>
+                                                        @endif
+                                                        <div class="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-4 gap-y-3">
+                                                            <div class="min-w-0 max-w-md">
+                                                                <p class="font-bold text-forest-900">{{ $item->name }}</p>
+                                                                @if($item->description)<p class="text-sm text-ink-soft">{{ $item->description }}</p>@endif
+                                                                <p class="mt-1 text-sm font-bold text-ember-dark">{{ $rupiah($item->price) }}</p>
+                                                            </div>
+                                                            <x-stepper :name="'preorder['.$item->id.'][qty]'" :label="$item->name" :value="$chosen" :min="0" :max="$maxFood" :price="$item->price" role="food" />
                                                         </div>
-                                                        <x-stepper :name="'preorder['.$item->id.'][qty]'" :label="$item->name" :value="$chosen" :min="0" :max="$maxFood" :price="$item->price" role="food" />
                                                     </div>
-                                                    <div class="mt-3 grid max-w-md grid-cols-2 gap-3" data-serve @if($chosen < 1) hidden @endif>
+                                                    <div class="mt-3 grid max-w-md grid-cols-2 gap-3 rounded-2xl bg-forest-50 p-3 sm:ml-24" data-serve @if($chosen < 1) hidden @endif>
                                                         <div>
                                                             <label for="sd-{{ $item->id }}" class="field-label">Tanggal saji</label>
                                                             <select id="sd-{{ $item->id }}" name="preorder[{{ $item->id }}][serve_date]" class="field-input">

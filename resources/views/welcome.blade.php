@@ -97,15 +97,7 @@
                     <h2 id="judul-tenda" class="font-display mt-2 text-5xl font-semibold leading-[1.02] sm:text-6xl lg:text-7xl">Pilih tenda untuk rombongan Anda.</h2>
                 </div>
                 <div class="flex flex-col gap-5">
-                    <p class="max-w-md text-ink-soft">{{ $unitTypes->count() }} tipe, kapasitas dan harga berbeda. Harga per malam, weekday dan weekend. Geser ke samping untuk melihat semuanya.</p>
-                    <div class="rail-controls hidden gap-2 sm:flex">
-                        <button type="button" data-rail-step="tenda" data-dir="-1" class="ss-nav" aria-label="Tenda sebelumnya">
-                            <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m15 18-6-6 6-6"/></svg>
-                        </button>
-                        <button type="button" data-rail-step="tenda" data-dir="1" class="ss-nav" aria-label="Tenda berikutnya">
-                            <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m9 18 6-6-6-6"/></svg>
-                        </button>
-                    </div>
+                    <p class="max-w-md text-ink-soft">{{ $unitTypes->count() }} tipe, kapasitas dan harga berbeda. Harga per malam, weekday dan weekend. Geser ke samping, atau buka katalog untuk membandingkan semuanya.</p>
                 </div>
             </div>
 
@@ -174,8 +166,17 @@
             </div>
 
             {{-- Autoplay needs a way to stop it (WCAG 2.2.2). It stays out of sight for mouse users, who stop it by hovering, and appears for keyboard and screen reader users. --}}
-            <div class="rail-controls mx-auto max-w-6xl px-4 sm:px-6">
-                <button type="button" data-rail-toggle="tenda" aria-pressed="false" class="btn btn-outline sr-only focus:not-sr-only focus:mt-3" aria-label="Jeda geser otomatis">
+            <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 sm:px-6">
+                <a href="{{ route('tenda.index', array_filter(['tamu' => $guestsWanted ?: null])) }}" class="btn btn-primary">Lihat katalog tenda</a>
+                <div class="rail-controls hidden gap-2 sm:flex">
+                    <button type="button" data-rail-step="tenda" data-dir="-1" class="ss-nav" aria-label="Tenda sebelumnya">
+                        <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m15 18-6-6 6-6"/></svg>
+                    </button>
+                    <button type="button" data-rail-step="tenda" data-dir="1" class="ss-nav" aria-label="Tenda berikutnya">
+                        <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m9 18 6-6-6-6"/></svg>
+                    </button>
+                </div>
+                <button type="button" data-rail-toggle="tenda" aria-pressed="false" class="rail-controls btn btn-outline sr-only focus:not-sr-only focus:mt-3" aria-label="Jeda geser otomatis">
                     <span data-label="pause">Jeda geser otomatis</span>
                     <span data-label="play" class="hidden">Putar geser otomatis</span>
                 </button>

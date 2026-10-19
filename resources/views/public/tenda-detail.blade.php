@@ -8,7 +8,7 @@
         '@type' => 'BreadcrumbList',
         'itemListElement' => [
             ['@type' => 'ListItem', 'position' => 1, 'name' => config('site.name'), 'item' => route('home')],
-            ['@type' => 'ListItem', 'position' => 2, 'name' => 'Tenda', 'item' => route('home').'#tenda'],
+            ['@type' => 'ListItem', 'position' => 2, 'name' => 'Tenda', 'item' => route('tenda.index')],
             ['@type' => 'ListItem', 'position' => 3, 'name' => $unitType->name, 'item' => route('tenda.show', ['slug' => $unitType->slug])],
         ],
     ];
@@ -31,7 +31,7 @@
                 <ol class="flex flex-wrap items-center gap-x-2 text-sm font-semibold text-ink-soft">
                     <li><a href="{{ route('home') }}" class="inline-flex min-h-11 items-center underline-offset-4 hover:text-forest-900 hover:underline">Beranda</a></li>
                     <li aria-hidden="true">/</li>
-                    <li><a href="{{ route('home') }}#tenda" class="inline-flex min-h-11 items-center underline-offset-4 hover:text-forest-900 hover:underline">Semua tenda</a></li>
+                    <li><a href="{{ route('tenda.index') }}" class="inline-flex min-h-11 items-center underline-offset-4 hover:text-forest-900 hover:underline">Semua tenda</a></li>
                     <li aria-hidden="true">/</li>
                     <li aria-current="page" class="text-forest-900">{{ $unitType->name }}</li>
                 </ol>
