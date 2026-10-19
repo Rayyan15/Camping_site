@@ -6,12 +6,15 @@ use App\Services\Reports\ReportTable;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class ReportSummarySheet implements FromArray, ShouldAutoSize, WithColumnFormatting, WithHeadings, WithTitle
+class ReportSummarySheet implements FromArray, ShouldAutoSize, WithColumnFormatting, WithEvents, WithHeadings, WithStyles, WithTitle
 {
+    use StylesReportSheet;
+
     public function __construct(private readonly ReportTable $table) {}
 
     public function array(): array
@@ -31,6 +34,6 @@ class ReportSummarySheet implements FromArray, ShouldAutoSize, WithColumnFormatt
 
     public function columnFormats(): array
     {
-        return ['B' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1];
+        return ['B' => '#,##0'];
     }
 }

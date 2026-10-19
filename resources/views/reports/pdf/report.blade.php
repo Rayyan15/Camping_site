@@ -1,26 +1,64 @@
+@php
+    $forest = config('brand.forest.700');
+    $display = fn ($type, $value) => ($type === \App\Enums\ReportValueType::Money ? 'Rp ' : '').$type->format($value).($type === \App\Enums\ReportValueType::Percent ? '%' : '');
+@endphp
 <!doctype html>
 <html lang="id">
 <head>
     <meta charset="utf-8">
     <title>{{ $table->title() }}</title>
     <style>
-        @page { margin: 32px 36px; }
-        body { font-family: 'DejaVu Sans', sans-serif; font-size: 9px; color: #1a1a1a; }
-        h1 { font-size: 15px; margin: 0 0 4px; }
-        p { margin: 0 0 4px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; border-bottom: 1px solid #1a1a1a; padding: 4px; }
-        td { border-bottom: 1px solid #cfcfcf; padding: 4px; vertical-align: top; }
-        .num { text-align: right; }
-        .note { margin-top: 8px; color: #444444; }
+        /* Print layout: a forest rule under the letterhead, summary figures before the rows, and a footer on every page. */
+        @page { margin: 30px 32px 44px; }
+        body { font-family: 'DejaVu Sans', sans-serif; font-size: 8.5px; color: #1a1a1a; }
+        .letterhead { width: 100%; border-collapse: collapse; border-bottom: 2px solid {{ $forest }}; margin-bottom: 12px; }
+        .letterhead td { border: 0; padding: 0 0 8px; vertical-align: bottom; }
+        .business { font-size: 10px; font-weight: bold; color: {{ $forest }}; }
+        h1 { font-size: 16px; margin: 2px 0 0; }
+        .period { text-align: right; font-size: 9px; color: #333333; }
+        .period strong { display: block; font-size: 10px; color: #1a1a1a; }
+        .summary { width: 100%; border-collapse: separate; border-spacing: 6px 0; margin: 0 -6px 12px; }
+        .summary td { background: #f1f6f2; border: 1px solid #c4d7c9; padding: 6px 8px; vertical-align: top; }
+        .summary .label { font-size: 7.5px; color: #333333; }
+        .summary .value { font-size: 12px; font-weight: bold; margin-top: 2px; }
+        .data { width: 100%; border-collapse: collapse; }
+        .data th { background: {{ $forest }}; color: #ffffff; text-align: center; padding: 5px 6px; font-size: 8px; }
+        .data td { border-bottom: 1px solid #dddddd; padding: 5px 6px; vertical-align: top; text-align: center; }
+        .data tbody tr:nth-child(even) td { background: #f6f7f6; }
+        .data td:first-child { font-weight: bold; }
+        .num { white-space: nowrap; }
+        .count { margin-top: 6px; color: #333333; }
+        .note { margin-top: 10px; padding-top: 6px; border-top: 1px solid #dddddd; color: #333333; }
+        .footer { position: fixed; bottom: -28px; left: 0; right: 0; font-size: 7.5px; color: #555555; border-top: 1px solid #dddddd; padding-top: 4px; }
     </style>
 </head>
 <body>
-    <h1>{{ $table->title() }}</h1>
-    <p>{{ $business['name'] ?? config('app.name') }}</p>
-    <p>Periode {{ $table->period->label() }}</p>
+    <div class="footer">{{ $business['name'] ?? config('app.name') }} &middot; {{ $table->title() }} &middot; Dicetak {{ $printedAt }}</div>
 
-    <table>
+    <table class="letterhead">
+        <tr>
+            <td>
+                <div class="business">{{ $business['name'] ?? config('app.name') }}</div>
+                <h1>{{ $table->title() }}</h1>
+            </td>
+            <td class="period">Periode<strong>{{ $table->period->label() }}</strong></td>
+        </tr>
+    </table>
+
+    @if ($table->summary !== [])
+        <table class="summary">
+            <tr>
+                @foreach ($table->summary as $line)
+                    <td>
+                        <div class="label">{{ $line['label'] }}</div>
+                        <div class="value">{{ $display($line['type'], $line['value']) }}</div>
+                    </td>
+                @endforeach
+            </tr>
+        </table>
+    @endif
+
+    <table class="data">
         <thead>
             <tr>
                 @foreach ($table->columns as $column)
@@ -32,7 +70,7 @@
             @forelse ($table->rows as $row)
                 <tr>
                     @foreach ($row as $index => $value)
-                        <td @class(['num' => $table->columns[$index]['type']->isNumeric()])>{{ $table->columns[$index]['type']->format($value) }}</td>
+                        <td @class(['num' => $table->columns[$index]['type']->isNumeric()])>{{ $display($table->columns[$index]['type'], $value) }}</td>
                     @endforeach
                 </tr>
             @empty
@@ -40,21 +78,12 @@
             @endforelse
         </tbody>
     </table>
-
-    @if ($table->summary !== [])
-        <table style="width: 50%;">
-            <tbody>
-                @foreach ($table->summary as $line)
-                    <tr>
-                        <td>{{ $line['label'] }}</td>
-                        <td class="num">{{ $line['type']->format($line['value']) }}</td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+    @if ($table->rows !== [])
+        <p class="count">{{ count($table->rows) }} baris</p>
     @endif
 
-    <p class="note">{{ $table->definition }}</p>
-    <p class="note">Dicetak {{ $printedAt }}</p>
+    @if ($table->definition !== '')
+        <p class="note">{{ $table->definition }}</p>
+    @endif
 </body>
 </html>

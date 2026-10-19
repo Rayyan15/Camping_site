@@ -87,7 +87,7 @@ class ReportExportTest extends TestCase
         ])->render();
 
         $this->assertStringContainsString('Laporan Menu terlaris', $html);
-        $this->assertStringContainsString('Periode 01/10/2026 sampai 31/10/2026', $html);
+        $this->assertStringContainsString('Periode<strong>01/10/2026 sampai 31/10/2026</strong>', $html);
         $this->assertStringContainsString('Nasi Goreng', $html);
         $this->assertStringContainsString('100.000', $html);
         $this->assertStringContainsString('Dicetak 15/10/2026 10:00 WIB', $html);

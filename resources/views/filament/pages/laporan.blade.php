@@ -32,19 +32,26 @@
 
         .lap-table-card { padding: 0; overflow: hidden; }
         .lap-table-wrap { overflow-x: auto; }
-        .lap-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        /* The first column names the row (code or name), so it stays pinned and bold while wide reports scroll sideways. */
+        .lap-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.875rem; }
         .lap-table th {
-            text-align: left; padding: 0.75rem 1rem; white-space: nowrap;
-            font-size: 0.8125rem; font-weight: 600; color: var(--primary-800);
-            background: var(--primary-100); border-bottom: 1px solid var(--primary-200);
+            text-align: center; padding: 0.625rem 1rem; white-space: nowrap; vertical-align: bottom;
+            font-size: 0.75rem; font-weight: 700; color: var(--gray-700);
+            background: var(--gray-50); border-bottom: 1px solid var(--gray-300);
         }
-        .lap-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--gray-100); color: var(--gray-950); }
+        .lap-table td { text-align: center; padding: 0.75rem 1rem; border-bottom: 1px solid var(--gray-100); color: var(--gray-950); vertical-align: middle; white-space: nowrap; }
         .lap-table tbody tr:last-child td { border-bottom: 0; }
         .lap-table tbody tr:hover td { background: var(--gray-50); }
-        .dark .lap-table th { background: var(--primary-800); color: var(--primary-100); border-color: var(--primary-700); }
+        .lap-table tr > :first-child { position: sticky; left: 0; z-index: 1; font-weight: 600; background: #fff; }
+        .lap-table thead tr > :first-child { background: var(--gray-50); z-index: 2; }
+        .lap-table td.lap-num { font-weight: 600; }
+        .lap-rowcount { padding: 0.625rem 1rem; border-top: 1px solid var(--gray-200); font-size: 0.8125rem; color: var(--gray-700); }
+        .dark .lap-table th, .dark .lap-table thead tr > :first-child { background: var(--gray-800); color: var(--gray-300); border-color: var(--gray-700); }
         .dark .lap-table td { color: #fff; border-color: var(--gray-800); }
+        .dark .lap-table tr > :first-child { background: var(--gray-900); }
         .dark .lap-table tbody tr:hover td { background: var(--gray-800); }
-        .lap-num { text-align: right !important; font-variant-numeric: tabular-nums; }
+        .dark .lap-rowcount { color: var(--gray-300); border-color: var(--gray-700); }
+        .lap-num { text-align: center !important; font-variant-numeric: tabular-nums; }
 
         .lap-badge { display: inline-flex; align-items: center; padding: 0.125rem 0.625rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
         .lap-badge-success { background: var(--primary-100); color: var(--primary-800); }
@@ -293,6 +300,7 @@
                             </tbody>
                         </table>
                     </div>
+                    <p class="lap-rowcount">{{ count($report->rows) }} baris</p>
                 @endif
             </section>
 

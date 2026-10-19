@@ -6,13 +6,16 @@ use App\Services\Reports\ReportTable;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class ReportDataSheet implements FromArray, ShouldAutoSize, WithColumnFormatting, WithHeadings, WithTitle
+class ReportDataSheet implements FromArray, ShouldAutoSize, WithColumnFormatting, WithEvents, WithHeadings, WithStyles, WithTitle
 {
+    use StylesReportSheet;
+
     public function __construct(private readonly ReportTable $table) {}
 
     public function array(): array
@@ -37,7 +40,7 @@ class ReportDataSheet implements FromArray, ShouldAutoSize, WithColumnFormatting
 
         foreach ($this->table->columns as $index => $column) {
             if ($column['type']->isNumeric()) {
-                $formats[Coordinate::stringFromColumnIndex($index + 1)] = NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1;
+                $formats[Coordinate::stringFromColumnIndex($index + 1)] = $column['type']->excelFormat();
             }
         }
 

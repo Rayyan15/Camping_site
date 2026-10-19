@@ -18,6 +18,17 @@ enum ReportValueType: string
         };
     }
 
+    /** Spreadsheet number format, so exported cells stay real numbers the owner can sum. */
+    public function excelFormat(): string
+    {
+        return match ($this) {
+            self::Text => '@',
+            self::Count => '#,##0',
+            self::Money => '"Rp" #,##0',
+            self::Percent => '0"%"',
+        };
+    }
+
     public function isNumeric(): bool
     {
         return $this !== self::Text;
