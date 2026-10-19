@@ -45,14 +45,14 @@ class RefundsTable
                     ->options(RefundStatus::class),
             ])
             ->recordActions([
-                self::decision('approve', 'Setujui', 'success', RefundStatus::Requested)
+                self::decision('approve', 'Setujui', 'success', 'heroicon-o-check-circle', RefundStatus::Requested)
                     ->requiresConfirmation()
                     ->modalDescription('Booking akan ditandai dikembalikan dan tenda dilepas.')
                     ->action(fn (Refund $record) => self::run(fn () => app(RefundService::class)->approve($record, auth()->id()), 'Refund disetujui')),
-                self::decision('reject', 'Tolak', 'danger', RefundStatus::Requested)
+                self::decision('reject', 'Tolak', 'danger', 'heroicon-o-x-circle', RefundStatus::Requested)
                     ->schema([Textarea::make('note')->label('Alasan penolakan')->required()])
                     ->action(fn (Refund $record, array $data) => self::run(fn () => app(RefundService::class)->reject($record, auth()->id(), $data['note']), 'Refund ditolak')),
-                self::decision('markPaid', 'Tandai sudah ditransfer', 'info', RefundStatus::Approved)
+                self::decision('markPaid', 'Tandai sudah ditransfer', 'info', 'heroicon-o-banknotes', RefundStatus::Approved)
                     ->requiresConfirmation()
                     ->action(fn (Refund $record) => self::run(fn () => app(RefundService::class)->markPaid($record, auth()->id()), 'Refund ditandai sudah ditransfer')),
             ])
@@ -63,11 +63,12 @@ class RefundsTable
             ->defaultSort('created_at', 'desc');
     }
 
-    private static function decision(string $name, string $label, string $color, RefundStatus $visibleFrom): Action
+    private static function decision(string $name, string $label, string $color, string $icon, RefundStatus $visibleFrom): Action
     {
         return Action::make($name)
             ->label($label)
             ->color($color)
+            ->icon($icon)
             ->visible(fn (Refund $record): bool => (bool) auth()->user()?->can('approve_refund') && $record->status === $visibleFrom);
     }
 

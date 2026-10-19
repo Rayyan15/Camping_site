@@ -39,7 +39,10 @@ class ReportService
 
     public function bookings(ReportPeriod $period): ReportTable
     {
-        $query = Booking::query()->whereBetween('check_in', [$period->from->toDateString(), $period->to->toDateString()]);
+        // A refund filed this period puts its booking here too, so the refund report and this one always agree.
+        $query = Booking::query()
+            ->whereBetween('check_in', [$period->from->toDateString(), $period->to->toDateString()])
+            ->orWhereHas('refunds', fn ($refunds) => $refunds->where('created_at', '>=', $period->from->toDateTimeString())->where('created_at', '<', $period->untilExclusive()->toDateTimeString()));
 
         $bookings = (clone $query)->with('customer:id,name')->orderBy('check_in')->orderBy('id')->limit(self::MAX_ROWS + 1)->get();
         $truncated = $bookings->count() > self::MAX_ROWS;
@@ -76,7 +79,7 @@ class ReportService
             ],
             $rows,
             $summary,
-            'Booking dengan tanggal check-in pada periode. Nomor telepon dan email pelanggan tidak dimuat.'.$this->truncationNote($truncated),
+            'Booking dengan tanggal check-in pada periode, ditambah booking yang refund-nya diajukan pada periode. Nomor telepon dan email pelanggan tidak dimuat.'.$this->truncationNote($truncated),
             $truncated,
         );
     }
@@ -299,6 +302,7 @@ class ReportService
             PaymentMethod::Transfer => 'Transfer',
             PaymentMethod::Cash => 'Tunai',
             PaymentMethod::Manual => 'Manual',
+            PaymentMethod::Qris => 'QRIS',
         };
     }
 

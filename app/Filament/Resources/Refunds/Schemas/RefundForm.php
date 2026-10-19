@@ -20,7 +20,15 @@ class RefundForm
                     ->schema([
                         Select::make('booking_id')
                             ->label('Booking lunas')
-                            ->options(fn () => Booking::where('status', BookingStatus::Paid)->orderBy('code')->pluck('code', 'id'))
+                            // Codes alone look alike, so each option carries the guest, stay, and amount the operator recognises.
+                            ->options(fn () => Booking::with('customer')->where('status', BookingStatus::Paid)->orderBy('check_in')->get()
+                                ->mapWithKeys(fn (Booking $booking) => [$booking->id => sprintf(
+                                    '%s, %s, %s, Rp %s',
+                                    $booking->code,
+                                    $booking->customer->name,
+                                    $booking->check_in->locale('id')->translatedFormat('j M Y'),
+                                    number_format($booking->total, 0, ',', '.'),
+                                )]))
                             ->searchable()
                             ->required(),
                         Textarea::make('reason')

@@ -50,6 +50,16 @@ class ReportServiceTest extends TestCase
         ReportPeriod::custom('2025-01-01', '2026-10-01');
     }
 
+    public function test_booking_report_includes_a_later_stay_whose_refund_was_filed_this_period(): void
+    {
+        $later = $this->booking($this->customer('Siti Rahmawati'), 'B-9', 'refunded', '2026-11-20', '2026-11-22', 500000, 500000);
+        $this->refund($later, 500000, 'paid', '2026-10-12 09:00:00');
+
+        $table = $this->reports->build(ReportType::Booking, ReportPeriod::thisMonth());
+
+        $this->assertContains(['B-9', 'Siti Rahmawati', '20/11/2026', '22/11/2026', 'Dikembalikan', 500000, 500000], $table->rows);
+    }
+
     public function test_booking_report_lists_bookings_by_check_in_with_status_counts(): void
     {
         $table = $this->reports->build(ReportType::Booking, ReportPeriod::thisMonth());
