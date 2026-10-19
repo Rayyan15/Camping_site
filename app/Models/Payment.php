@@ -60,14 +60,23 @@ class Payment extends Model
             && $this->failure_reason === PaymentFailureReason::GatewayUnreachable;
     }
 
-    /** Transfer proofs uploaded by guests that staff have not looked at yet. */
+    /** Transfer and QRIS proofs uploaded by guests that staff have not looked at yet. */
     public function scopeAwaitingProofReview(Builder $query): Builder
     {
         return $query
             ->where('direction', PaymentDirection::In->value)
-            ->where('method', PaymentMethod::Transfer->value)
+            ->whereIn('method', [PaymentMethod::Transfer->value, PaymentMethod::Qris->value])
             ->where('status', PaymentStatus::Pending->value)
             ->whereNotNull('proof_path');
+    }
+
+    /** The guest chose to pay cash on arrival and staff have not recorded the money yet. */
+    public function scopeCashOnArrival(Builder $query): Builder
+    {
+        return $query
+            ->where('direction', PaymentDirection::In->value)
+            ->where('method', PaymentMethod::Cash->value)
+            ->where('status', PaymentStatus::Pending->value);
     }
 
     public function scopeSettled(Builder $query): Builder

@@ -14,6 +14,7 @@ use App\Models\Booking;
 use App\Models\Payment;
 use App\Services\BookingBilling;
 use App\Services\GuestMailer;
+use App\Services\SettingRepository;
 use App\Support\BankAccount;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +23,7 @@ use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 /**
- * Manual bank transfer flow: the guest uploads a proof, staff confirm or reject it.
+ * Manual bank transfer and static QRIS flow: the guest uploads a proof, staff confirm or reject it.
  * The amount always comes from the server; the guest only picks the file (and, if enabled, the plan).
  */
 class TransferProofService
@@ -35,6 +36,7 @@ class TransferProofService
         private readonly BookingBilling $billing,
         private readonly PaymentService $payments,
         private readonly GuestMailer $mailer,
+        private readonly SettingRepository $settings,
     ) {}
 
     /**
@@ -44,16 +46,20 @@ class TransferProofService
      *
      * @throws PaymentException
      */
-    public function submit(Booking $booking, UploadedFile $file, bool $downPayment = false): Payment
+    public function submit(Booking $booking, UploadedFile $file, bool $downPayment = false, PaymentMethod $method = PaymentMethod::Transfer): Payment
     {
-        if (! BankAccount::current()->isComplete()) {
+        if (! in_array($method, $this->settings->guestPaymentMethods(), true)) {
+            throw TransferProofException::methodUnavailable();
+        }
+
+        if ($method === PaymentMethod::Transfer && ! BankAccount::current()->isComplete()) {
             throw TransferProofException::bankAccountNotSet();
         }
 
         $path = (string) $file->store(self::DIRECTORY, self::DISK);
 
         try {
-            $payment = DB::transaction(fn () => $this->recordProof($booking, $path, $downPayment));
+            $payment = DB::transaction(fn () => $this->recordProof($booking, $path, $downPayment, $method));
         } catch (Throwable $e) {
             Storage::disk(self::DISK)->delete($path);
 
@@ -63,6 +69,47 @@ class TransferProofService
         $this->mailer->proofReceived($booking->loadMissing('customer'));
 
         return $payment;
+    }
+
+    /**
+     * The guest will pay cash on arrival. A pending cash payment records the choice for staff, and the
+     * hold runs to the end of the check-in day, so a no-show releases the tent the same night.
+     *
+     * @throws PaymentException
+     */
+    public function chooseCash(Booking $booking): Payment
+    {
+        if (! in_array(PaymentMethod::Cash, $this->settings->guestPaymentMethods(), true)) {
+            throw TransferProofException::methodUnavailable();
+        }
+
+        return DB::transaction(function () use ($booking) {
+            $locked = Booking::whereKey($booking->getKey())->lockForUpdate()->firstOrFail();
+
+            if (! $locked->isHoldActive()) {
+                throw TransferProofException::holdLapsed();
+            }
+
+            if ($locked->payments()->cashOnArrival()->exists()) {
+                throw TransferProofException::cashAlreadyChosen();
+            }
+
+            $outstanding = $this->billing->outstanding($locked);
+
+            if ($outstanding <= 0) {
+                throw PaymentException::nothingToPay();
+            }
+
+            $locked->payments()->awaitingProofReview()->update(['status' => PaymentStatus::Expired]);
+            $locked->update(['hold_expires_at' => $locked->check_in->copy()->endOfDay()]);
+
+            return $locked->payments()->create([
+                'direction' => PaymentDirection::In,
+                'method' => PaymentMethod::Cash,
+                'amount' => $outstanding,
+                'status' => PaymentStatus::Pending,
+            ]);
+        });
     }
 
     /**
@@ -159,7 +206,7 @@ class TransferProofService
     /**
      * @throws PaymentException
      */
-    private function recordProof(Booking $booking, string $path, bool $downPayment): Payment
+    private function recordProof(Booking $booking, string $path, bool $downPayment, PaymentMethod $method): Payment
     {
         $locked = Booking::whereKey($booking->getKey())->lockForUpdate()->firstOrFail();
 
@@ -181,7 +228,7 @@ class TransferProofService
 
         $payment = $locked->payments()->create([
             'direction' => PaymentDirection::In,
-            'method' => PaymentMethod::Transfer,
+            'method' => $method,
             'amount' => $amount,
             'status' => PaymentStatus::Pending,
             'proof_path' => $path,
@@ -223,7 +270,7 @@ class TransferProofService
         $locked = Payment::whereKey($payment->getKey())->lockForUpdate()->firstOrFail();
 
         $awaitingReview = $locked->payable_type === (new Booking)->getMorphClass()
-            && $locked->method === PaymentMethod::Transfer
+            && in_array($locked->method, [PaymentMethod::Transfer, PaymentMethod::Qris], true)
             && $locked->status === PaymentStatus::Pending
             && filled($locked->proof_path);
 

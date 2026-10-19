@@ -309,7 +309,7 @@ class TransferProofFlowTest extends TestCase
         $this->get(route('checkout.show', $this->booking->access_token))
             ->assertOk()
             ->assertSee('Bukti diterima, menunggu konfirmasi admin')
-            ->assertSee('Kirim ulang bukti transfer');
+            ->assertSee('Kirim ulang bukti bayar');
     }
 
     public function test_release_job_sends_a_booking_with_a_pending_proof_to_review(): void

@@ -8,4 +8,5 @@ enum PaymentMethod: string
     case Transfer = 'transfer';
     case Cash = 'cash';
     case Manual = 'manual';
+    case Qris = 'qris';
 }

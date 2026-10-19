@@ -176,7 +176,7 @@ class BookingFlowTest extends TestCase
             ->assertSee($booking->code)
             ->assertSee('Extra Bed')
             ->assertSee('Kopi')
-            ->assertSee('Kirim bukti transfer')
+            ->assertSee('Kirim bukti bayar')
             ->assertSee('data-remaining="7200"', false);
     }
 

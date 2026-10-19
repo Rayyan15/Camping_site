@@ -17,6 +17,7 @@ use App\Http\Middleware\EnsureOwnerHasTwoFactor;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
+Route::get('/tenda', [UnitTypeController::class, 'index'])->name('tenda.index');
 Route::get('/tenda/{slug}', [UnitTypeController::class, 'show'])->name('tenda.show');
 Route::get('/tenda/{slug}/ketersediaan', [UnitTypeController::class, 'availability'])->middleware('throttle:availability-check')->name('tenda.ketersediaan');
 
@@ -24,6 +25,7 @@ Route::get('/booking/cek', [BookingController::class, 'checkAvailability'])->mid
 Route::post('/booking', [BookingController::class, 'store'])->middleware('throttle:10,1')->name('booking.store');
 
 Route::get('/checkout/{token}', [CheckoutController::class, 'show'])->middleware('throttle:booking-lookup')->name('checkout.show');
+Route::post('/checkout/{token}/tunai', [CheckoutController::class, 'payCash'])->middleware('throttle:10,1')->name('checkout.cash');
 Route::post('/checkout/{token}/bukti', [CheckoutController::class, 'uploadProof'])->middleware('throttle:10,1')->name('checkout.proof');
 
 Route::get('/cek-booking', [BookingLookupController::class, 'form'])->name('booking.find');

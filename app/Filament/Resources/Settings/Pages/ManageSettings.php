@@ -5,15 +5,19 @@ namespace App\Filament\Resources\Settings\Pages;
 use App\Filament\Resources\Settings\SettingResource;
 use App\Models\Setting;
 use App\Services\SettingRepository;
+use Closure;
 use Filament\Actions\Action;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\EmbeddedSchema;
 use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Gate;
 
@@ -73,6 +77,37 @@ class ManageSettings extends Page
                         ->maxValue(100)
                         ->suffix('%')
                         ->required(),
+                ]),
+            Section::make('Metode pembayaran tamu')
+                ->description('Pilih cara bayar yang muncul di halaman pembayaran. Minimal satu harus aktif. Transfer dan QRIS memakai bukti bayar yang dikonfirmasi admin; tunai dicatat FO saat tamu tiba.')
+                ->columns(3)
+                ->schema([
+                    Toggle::make('payment_transfer_enabled')
+                        ->label('Transfer bank')
+                        ->helperText('Memakai rekening di bagian Rekening transfer.')
+                        ->live(),
+                    Toggle::make('payment_qris_enabled')
+                        ->label('QRIS')
+                        ->helperText('Tamu memindai gambar QRIS lalu mengunggah bukti bayar.')
+                        ->live(),
+                    Toggle::make('payment_cash_enabled')
+                        ->label('Tunai di lokasi')
+                        ->helperText('Booking ditahan sampai akhir hari check-in. Jika tamu tidak datang, tenda dilepas otomatis.')
+                        ->live()
+                        ->rule(fn (Get $get) => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
+                            if (! $value && ! $get('payment_transfer_enabled') && ! $get('payment_qris_enabled')) {
+                                $fail('Aktifkan minimal satu metode pembayaran.');
+                            }
+                        }),
+                    FileUpload::make('qris_image')
+                        ->label('Gambar QRIS')
+                        ->image()
+                        ->disk('public')
+                        ->directory('qris')
+                        ->maxSize(2048)
+                        ->columnSpanFull()
+                        ->visible(fn (Get $get): bool => (bool) $get('payment_qris_enabled'))
+                        ->required(fn (Get $get): bool => (bool) $get('payment_qris_enabled')),
                 ]),
             Section::make('Rekening transfer')
                 ->description('Rekening tujuan transfer yang tampil di halaman pembayaran dan email tamu. Selama salah satu kosong, tamu tidak bisa mengunggah bukti transfer.')

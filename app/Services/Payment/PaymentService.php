@@ -228,6 +228,7 @@ class PaymentService
             $locked = Booking::whereKey($booking->getKey())->lockForUpdate()->firstOrFail();
 
             $this->assertManualPaymentAllowed($locked, $amount);
+            $locked->payments()->cashOnArrival()->update(['status' => PaymentStatus::Expired]);
 
             $payment = $locked->payments()->create([
                 'direction' => PaymentDirection::In,

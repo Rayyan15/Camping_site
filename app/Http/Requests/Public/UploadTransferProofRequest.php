@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Public;
 
+use App\Enums\PaymentMethod;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -30,6 +31,7 @@ class UploadTransferProofRequest extends FormRequest
         return [
             'proof' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:'.self::MAX_KILOBYTES],
             'plan' => ['nullable', Rule::in([self::PLAN_FULL, self::PLAN_DOWN_PAYMENT])],
+            'method' => ['nullable', Rule::in([PaymentMethod::Transfer->value, PaymentMethod::Qris->value])],
         ];
     }
 
@@ -45,6 +47,11 @@ class UploadTransferProofRequest extends FormRequest
             'proof.max' => 'Ukuran bukti transfer maksimal 4 MB.',
             'proof.uploaded' => 'File gagal diunggah. Periksa ukurannya (maksimal 4 MB) lalu coba lagi.',
         ];
+    }
+
+    public function paymentMethod(): PaymentMethod
+    {
+        return PaymentMethod::tryFrom((string) $this->validated('method')) ?? PaymentMethod::Transfer;
     }
 
     public function wantsDownPayment(): bool

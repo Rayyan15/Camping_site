@@ -15,6 +15,10 @@ enum SettingKey: string
     case BankName = 'bank_name';
     case BankAccountNumber = 'bank_account_number';
     case BankAccountHolder = 'bank_account_holder';
+    case PaymentCashEnabled = 'payment_cash_enabled';
+    case PaymentTransferEnabled = 'payment_transfer_enabled';
+    case PaymentQrisEnabled = 'payment_qris_enabled';
+    case QrisImage = 'qris_image';
 
     public const DEFAULT_CHECK_IN_TIME = '14:00';
 
@@ -33,6 +37,10 @@ enum SettingKey: string
             self::BankName => 'Nama bank',
             self::BankAccountNumber => 'Nomor rekening',
             self::BankAccountHolder => 'Atas nama rekening',
+            self::PaymentCashEnabled => 'Bayar tunai di lokasi',
+            self::PaymentTransferEnabled => 'Transfer bank',
+            self::PaymentQrisEnabled => 'QRIS',
+            self::QrisImage => 'Gambar QRIS',
         };
     }
 }

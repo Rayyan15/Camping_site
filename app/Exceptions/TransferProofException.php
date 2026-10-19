@@ -12,6 +12,16 @@ class TransferProofException extends PaymentException
         return new self('Rekening belum diatur, hubungi admin.');
     }
 
+    public static function methodUnavailable(): self
+    {
+        return new self('Metode pembayaran ini sedang tidak tersedia. Pilih metode lain.');
+    }
+
+    public static function cashAlreadyChosen(): self
+    {
+        return new self('Anda sudah memilih bayar tunai di lokasi.');
+    }
+
     public static function holdLapsed(): self
     {
         return new self('Waktu pembayaran sudah habis, tenda sudah dilepas.');

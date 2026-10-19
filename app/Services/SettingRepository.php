@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\PaymentMethod;
 use App\Enums\SettingKey;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
@@ -47,7 +48,27 @@ class SettingRepository
     }
 
     /**
-     * @return array{tax_rate_percent: float, check_in_time: string, check_out_time: string, down_payment_percent: int, bank_name: ?string, bank_account_number: ?string, bank_account_holder: ?string}
+     * Methods the guest may pick at checkout, in display order. Transfer is on until the owner turns it off,
+     * so an install that never opened this setting keeps its current checkout. QRIS needs its image.
+     *
+     * @return list<PaymentMethod>
+     */
+    public function guestPaymentMethods(): array
+    {
+        return array_values(array_filter([
+            $this->get(SettingKey::PaymentTransferEnabled) !== '0' ? PaymentMethod::Transfer : null,
+            $this->get(SettingKey::PaymentQrisEnabled) === '1' && $this->qrisImagePath() !== null ? PaymentMethod::Qris : null,
+            $this->get(SettingKey::PaymentCashEnabled) === '1' ? PaymentMethod::Cash : null,
+        ]));
+    }
+
+    public function qrisImagePath(): ?string
+    {
+        return $this->get(SettingKey::QrisImage) ?: null;
+    }
+
+    /**
+     * @return array{tax_rate_percent: float, check_in_time: string, check_out_time: string, down_payment_percent: int, bank_name: ?string, bank_account_number: ?string, bank_account_holder: ?string, payment_transfer_enabled: bool, payment_qris_enabled: bool, payment_cash_enabled: bool, qris_image: ?string}
      */
     public function formValues(): array
     {
@@ -59,11 +80,15 @@ class SettingRepository
             'bank_name' => $this->get(SettingKey::BankName),
             'bank_account_number' => $this->get(SettingKey::BankAccountNumber),
             'bank_account_holder' => $this->get(SettingKey::BankAccountHolder),
+            'payment_transfer_enabled' => $this->get(SettingKey::PaymentTransferEnabled) !== '0',
+            'payment_qris_enabled' => $this->get(SettingKey::PaymentQrisEnabled) === '1',
+            'payment_cash_enabled' => $this->get(SettingKey::PaymentCashEnabled) === '1',
+            'qris_image' => $this->qrisImagePath(),
         ];
     }
 
     /**
-     * @param  array{tax_rate_percent: int|float|string, check_in_time: string, check_out_time: string, down_payment_percent: int|string, bank_name?: ?string, bank_account_number?: ?string, bank_account_holder?: ?string}  $values
+     * @param  array{tax_rate_percent: int|float|string, check_in_time: string, check_out_time: string, down_payment_percent: int|string, bank_name?: ?string, bank_account_number?: ?string, bank_account_holder?: ?string, payment_transfer_enabled?: bool, payment_qris_enabled?: bool, payment_cash_enabled?: bool, qris_image?: ?string}  $values
      */
     public function saveFormValues(array $values): void
     {
@@ -75,6 +100,10 @@ class SettingRepository
             $this->put(SettingKey::BankName, trim((string) ($values['bank_name'] ?? '')));
             $this->put(SettingKey::BankAccountNumber, trim((string) ($values['bank_account_number'] ?? '')));
             $this->put(SettingKey::BankAccountHolder, trim((string) ($values['bank_account_holder'] ?? '')));
+            foreach ([SettingKey::PaymentTransferEnabled, SettingKey::PaymentQrisEnabled, SettingKey::PaymentCashEnabled] as $toggle) {
+                $this->put($toggle, empty($values[$toggle->value]) ? '0' : '1');
+            }
+            $this->put(SettingKey::QrisImage, (string) ($values['qris_image'] ?? ''));
 
             // The owner has now reviewed every placeholder the production seeder listed.
             Setting::where('key', SettingKey::PendingOwnerConfirmation->value)->get()->each->delete();

@@ -9,14 +9,16 @@ use App\Http\Requests\Public\UploadTransferProofRequest;
 use App\Models\Booking;
 use App\Services\BookingBilling;
 use App\Services\Payment\TransferProofService;
+use App\Services\SettingRepository;
 use App\Support\BankAccount;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class CheckoutController extends Controller
 {
-    public function show(string $token, BookingBilling $billing, TransferProofService $proofs): View|RedirectResponse
+    public function show(string $token, BookingBilling $billing, TransferProofService $proofs, SettingRepository $settings): View|RedirectResponse
     {
         $booking = $this->findBooking($token);
 
@@ -30,7 +32,28 @@ class CheckoutController extends Controller
             'outstanding' => $billing->outstanding($booking),
             'bank' => BankAccount::current(),
             'proof' => $proofs->latestProof($booking),
+            'methods' => $settings->guestPaymentMethods(),
+            'qrisUrl' => ($path = $settings->qrisImagePath()) ? Storage::disk('public')->url($path) : null,
+            'cashChosen' => $booking->payments()->cashOnArrival()->exists(),
         ]);
+    }
+
+    public function payCash(string $token, TransferProofService $proofs): RedirectResponse
+    {
+        $booking = $this->findBooking($token);
+
+        if (! $this->belongsOnCheckout($booking)) {
+            return redirect()->route('booking.status', $booking->access_token);
+        }
+
+        try {
+            $proofs->chooseCash($booking);
+        } catch (PaymentException $exception) {
+            return $this->proofFailedResponse($booking, $exception);
+        }
+
+        return redirect()->route('checkout.show', $booking->access_token)
+            ->with('success', 'Siap, bayar tunai saat tiba. Tenda Anda dipegang sampai akhir hari check-in.');
     }
 
     public function uploadProof(UploadTransferProofRequest $request, string $token, TransferProofService $proofs): RedirectResponse
@@ -42,7 +65,7 @@ class CheckoutController extends Controller
         }
 
         try {
-            $proofs->submit($booking, $request->file('proof'), $request->wantsDownPayment());
+            $proofs->submit($booking, $request->file('proof'), $request->wantsDownPayment(), $request->paymentMethod());
         } catch (PaymentException $exception) {
             return $this->proofFailedResponse($booking, $exception);
         }

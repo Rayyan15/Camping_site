@@ -39,6 +39,7 @@ class PaymentLabels
             PaymentMethod::Transfer => 'Transfer bank',
             PaymentMethod::Cash => 'Tunai',
             PaymentMethod::Manual => 'Lainnya',
+            PaymentMethod::Qris => 'QRIS',
         };
     }
 

@@ -18,6 +18,9 @@
         <h1 class="font-display mt-2 text-3xl font-semibold text-forest-900 sm:text-4xl">Pembayaran</h1>
         <p class="mt-2 text-ink-soft">Kode booking <strong class="font-mono tracking-wider text-forest-900">{{ $booking->code }}</strong>. Alamat halaman ini juga berlaku sebagai tautan status pesanan, jadi simpan atau bagikan hanya kepada orang yang Anda percaya.</p>
 
+        @if(session('success'))
+            <p class="mt-6 rounded-2xl bg-forest-100 px-5 py-4 font-semibold text-forest-900" role="status">{{ session('success') }}</p>
+        @endif
         @if(session('error'))
             <p class="mt-6 rounded-2xl bg-ember-soft px-5 py-4 font-semibold text-ember-dark" role="alert">{{ session('error') }}</p>
         @endif
@@ -93,39 +96,82 @@
                     @if($proof?->status === \App\Enums\PaymentStatus::Pending)
                         <p class="font-display text-2xl font-semibold" role="status">Bukti diterima, menunggu konfirmasi admin</p>
                         <p class="mt-2 text-sm text-forest-300">Tenda Anda dipegang sampai {{ $booking->hold_expires_at->locale('id')->translatedFormat('j F Y, H:i') }} WIB. Kami mengirim email setelah pembayaran dikonfirmasi, jadi cek email Anda.</p>
+                    @elseif($cashChosen)
+                        <p class="font-display text-2xl font-semibold" role="status">Bayar tunai saat tiba</p>
+                        <p class="mt-2 text-sm text-forest-300">Tenda Anda dipegang sampai {{ $booking->hold_expires_at->locale('id')->translatedFormat('j F Y, H:i') }} WIB. Siapkan uang pas dan tunjukkan kode booking di meja depan.</p>
                     @elseif($downPaid)
                         <p class="text-sm text-forest-300">DP diterima</p>
                         <p class="text-2xl font-bold">{{ $rupiah($booking->paid_amount) }}</p>
                         <p class="mt-2 text-sm text-forest-300">Tenda Anda dipegang sampai {{ $booking->hold_expires_at->locale('id')->translatedFormat('j F Y, H:i') }} WIB. Lunasi sisanya sebelum itu, atau saat check-in.</p>
                     @else
-                        <p class="text-sm text-forest-300">Transfer dan kirim bukti dalam</p>
+                        <p class="text-sm text-forest-300">Selesaikan pembayaran dalam</p>
                         <p id="countdown" class="font-display mt-1 text-5xl font-semibold tabular-nums" data-remaining="{{ $remaining }}" role="timer">--:--:--</p>
                         <p class="mt-2 text-sm text-forest-300">Setelah waktu habis, tenda dilepas otomatis.</p>
                     @endif
 
-                    <p class="mt-6 text-sm text-forest-300">{{ $downPaid ? 'Sisa tagihan' : 'Nominal transfer' }}</p>
+                    <p class="mt-6 text-sm text-forest-300">{{ $downPaid ? 'Sisa tagihan' : 'Total dibayar' }}</p>
                     <p class="text-2xl font-bold">{{ $rupiah($outstanding) }}</p>
 
-                    @if($bank->isComplete())
-                        <dl class="mt-6 rounded-xl border-[1.5px] border-forest-300 p-4" aria-label="Rekening tujuan">
-                            <dt class="text-sm text-forest-300">Rekening tujuan</dt>
-                            <dd class="mt-1 font-semibold">{{ $bank->bankName }}</dd>
-                            <dd class="font-mono text-xl font-bold tracking-wider">{{ $bank->accountNumber }}</dd>
-                            <dd class="text-sm text-forest-300">a.n. {{ $bank->accountHolder }}</dd>
-                        </dl>
+                    @if(! $cashChosen)
+                        @if($methods === [])
+                            <p class="mt-6 rounded-xl border-[1.5px] border-forest-300 p-4 font-semibold" role="status">Pembayaran belum bisa dilakukan di sini, hubungi admin.</p>
+                        @else
+                            <h2 class="mt-6 text-sm font-semibold text-forest-300">Pilih cara bayar</h2>
+                            <div class="mt-2 space-y-2">
+                                @foreach($methods as $method)
+                                    @php $isFirst = $loop->first; @endphp
+                                    {{-- One shared name makes the panels an exclusive accordion without any script. --}}
+                                    <details name="metode-bayar" class="group rounded-2xl bg-forest-800 open:bg-cream open:text-ink" @if($isFirst || old('method') === $method->value) open @endif>
+                                        <summary class="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-2xl px-4 py-3 font-semibold [&::-webkit-details-marker]:hidden">
+                                            {{ match ($method) { \App\Enums\PaymentMethod::Transfer => 'Transfer bank', \App\Enums\PaymentMethod::Qris => 'QRIS', default => 'Tunai saat tiba' } }}
+                                            <svg class="size-4 shrink-0 transition group-open:rotate-180 motion-reduce:transition-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
+                                        </summary>
+                                        <div class="px-4 pb-4">
+                                            @if($method === \App\Enums\PaymentMethod::Cash)
+                                                <p class="text-sm text-ink-soft">Bayar di meja depan saat check-in. Tenda dipegang sampai akhir hari check-in; jika Anda tidak datang, tenda dilepas otomatis.</p>
+                                                <form action="{{ route('checkout.cash', $booking->access_token) }}" method="POST" class="mt-4">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-primary w-full">Bayar tunai saat tiba</button>
+                                                </form>
+                                            @else
+                                                @if($method === \App\Enums\PaymentMethod::Transfer)
+                                                    @if($bank->isComplete())
+                                                        <dl class="rounded-xl border-[1.5px] border-sand p-4" aria-label="Rekening tujuan">
+                                                            <dt class="text-sm text-ink-soft">Rekening tujuan</dt>
+                                                            <dd class="mt-1 font-semibold">{{ $bank->bankName }}</dd>
+                                                            <dd class="font-mono text-xl font-bold tracking-wider text-forest-900">{{ $bank->accountNumber }}</dd>
+                                                            <dd class="text-sm text-ink-soft">a.n. {{ $bank->accountHolder }}</dd>
+                                                        </dl>
+                                                    @else
+                                                        <p class="font-semibold" role="status">Rekening belum diatur, hubungi admin.</p>
+                                                    @endif
+                                                @else
+                                                    <img src="{{ $qrisUrl }}" alt="Kode QRIS {{ config('site.name') }}" width="320" height="320" class="mx-auto w-full max-w-64 rounded-xl bg-white p-2">
+                                                    <p class="mt-2 text-center text-sm text-ink-soft">Pindai dengan aplikasi bank atau e-wallet, lalu isi nominal {{ $rupiah($outstanding) }}.</p>
+                                                @endif
 
-                        <form action="{{ route('checkout.proof', $booking->access_token) }}" method="POST" enctype="multipart/form-data" class="mt-6 rounded-2xl bg-cream p-4 text-ink">
-                            @csrf
-                            <label for="proof" class="field-label">{{ $proof?->status === \App\Enums\PaymentStatus::Pending ? 'Kirim ulang bukti transfer' : 'Bukti transfer' }}</label>
-                            <input id="proof" name="proof" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf" required aria-describedby="proof-hint @error('proof') proof-error @enderror" class="field-input">
-                            <p id="proof-hint" class="mt-2 text-sm text-ink-soft">JPG, PNG, WebP, atau PDF, maksimal 4 MB. Pastikan nominal dan tanggal transfer terbaca.</p>
-                            @error('proof')
-                                <p id="proof-error" class="mt-2 text-sm font-semibold text-ember-dark" role="alert">{{ $message }}</p>
-                            @enderror
-                            <button type="submit" class="btn btn-primary mt-4 w-full">Kirim bukti transfer</button>
-                        </form>
-                    @else
-                        <p class="mt-6 rounded-xl border-[1.5px] border-forest-300 p-4 font-semibold" role="status">Rekening belum diatur, hubungi admin.</p>
+                                                @if($method === \App\Enums\PaymentMethod::Qris || $bank->isComplete())
+                                                    @php $fieldId = 'proof-'.$method->value; @endphp
+                                                    <form action="{{ route('checkout.proof', $booking->access_token) }}" method="POST" enctype="multipart/form-data" class="mt-4">
+                                                        @csrf
+                                                        <input type="hidden" name="method" value="{{ $method->value }}">
+                                                        <label for="{{ $fieldId }}" class="field-label">{{ $proof?->status === \App\Enums\PaymentStatus::Pending ? 'Kirim ulang bukti bayar' : 'Bukti bayar' }}</label>
+                                                        <input id="{{ $fieldId }}" name="proof" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf" required aria-describedby="{{ $fieldId }}-hint @error('proof') proof-error @enderror" class="field-input">
+                                                        <p id="{{ $fieldId }}-hint" class="mt-2 text-sm text-ink-soft">JPG, PNG, WebP, atau PDF, maksimal 4 MB. Pastikan nominal dan tanggal terbaca.</p>
+                                                        @if(old('method', 'transfer') === $method->value)
+                                                            @error('proof')
+                                                                <p id="proof-error" class="mt-2 text-sm font-semibold text-ember-dark" role="alert">{{ $message }}</p>
+                                                            @enderror
+                                                        @endif
+                                                        <button type="submit" class="btn btn-primary mt-4 w-full">Kirim bukti bayar</button>
+                                                    </form>
+                                                @endif
+                                            @endif
+                                        </div>
+                                    </details>
+                                @endforeach
+                            </div>
+                        @endif
                     @endif
 
                     <div class="mt-6">
