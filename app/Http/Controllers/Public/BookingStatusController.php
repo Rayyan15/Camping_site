@@ -71,11 +71,9 @@ class BookingStatusController extends Controller
             return redirect()->route('booking.status', $booking->access_token)->with('error', $e->getMessage());
         }
 
-        $message = 'Jadwal booking sudah diubah.';
-
-        if ($result->priceDifference < 0) {
-            $message .= ' Harga di tanggal baru lebih rendah, kelebihan bayar akan dikembalikan oleh admin.';
-        }
+        $message = $result->priceDifference < 0
+            ? 'Jadwal booking sudah diubah. Harga di tanggal baru lebih rendah, kelebihan bayar akan dikembalikan oleh admin.'
+            : 'Jadwal booking sudah diubah.';
 
         return redirect()->route('booking.status', $booking->access_token)->with('success', $message);
     }

@@ -18,7 +18,7 @@ class BookingRescheduleException extends RuntimeException
 
     public static function tooLate(int $minDays): self
     {
-        return new self("Jadwal ulang hanya bisa dilakukan paling lambat {$minDays} hari sebelum check-in.");
+        return new self(__('Jadwal ulang hanya bisa dilakukan paling lambat :days hari sebelum check-in.', ['days' => $minDays]));
     }
 
     public static function refundPending(): self
@@ -40,7 +40,7 @@ class BookingRescheduleException extends RuntimeException
     {
         $formatted = number_format($difference, 0, ',', '.');
 
-        return new self("Harga di tanggal baru lebih tinggi Rp {$formatted}. Hubungi admin untuk memindah jadwal dan membayar selisihnya.");
+        return new self(__('Harga di tanggal baru lebih tinggi :amount. Hubungi admin untuk memindah jadwal dan membayar selisihnya.', ['amount' => 'Rp '.$formatted]));
     }
 
     public static function preordersOutsideStay(): self

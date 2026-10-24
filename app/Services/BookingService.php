@@ -207,6 +207,7 @@ class BookingService
                 'subtotal' => $subtotal,
                 'total' => $subtotal,
                 'notes' => $notes,
+                'locale' => app()->getLocale(),
             ]);
 
             $lines = $booking->bookingUnits()->createMany($unitLines->all());

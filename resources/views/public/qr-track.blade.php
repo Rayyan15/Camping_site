@@ -31,7 +31,7 @@
 
     <div class="flex-1 px-4 pb-10 pt-6">
         @if(session('error'))
-            <p class="mb-5 rounded-2xl bg-ember-soft px-5 py-4 font-semibold text-ember-dark" role="alert">{{ session('error') }}</p>
+            <p class="mb-5 rounded-2xl bg-ember-soft px-5 py-4 font-semibold text-ember-dark" role="alert">{{ __(session('error')) }}</p>
         @endif
 
         <p id="status-hint" role="status" aria-live="polite" class="text-lg font-semibold text-forest-900">{{ $stepHints[$progress['status']] }}</p>

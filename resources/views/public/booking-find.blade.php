@@ -11,7 +11,7 @@
         <p class="mt-3 max-w-prose text-ink-soft">{{ __('Kode booking ada di pesan konfirmasi dan invoice. Untuk menjaga data tamu, kami minta satu data lagi yang Anda isi saat memesan.') }}</p>
 
         @if(session('error'))
-            <p role="alert" class="mt-6 rounded-2xl bg-ember-soft px-5 py-4 text-sm font-semibold text-ember-dark">{{ session('error') }}</p>
+            <p role="alert" class="mt-6 rounded-2xl bg-ember-soft px-5 py-4 text-sm font-semibold text-ember-dark">{{ __(session('error')) }}</p>
         @endif
 
         <form method="POST" action="{{ route('booking.find.submit') }}" class="mt-8 space-y-5 rounded-3xl border border-sand bg-[#fffdf8] p-6 sm:p-8">
@@ -20,14 +20,14 @@
                 <label for="code" class="field-label">{{ __('Kode booking') }}</label>
                 <input id="code" name="code" type="text" value="{{ old('code') }}" required maxlength="32"
                        autocomplete="off" autocapitalize="characters" placeholder="RCM-261201-ABC123" class="field-input font-mono tracking-wider">
-                @error('code')<p class="mt-1 text-sm font-semibold text-ember-dark">{{ $message }}</p>@enderror
+                @error('code')<p class="mt-1 text-sm font-semibold text-ember-dark">{{ __($message) }}</p>@enderror
             </div>
             <div>
                 <label for="proof" class="field-label">{{ __('4 digit terakhir telepon atau email') }}</label>
                 <input id="proof" name="proof" type="text" required maxlength="255" autocomplete="off"
                        aria-describedby="proof-hint" class="field-input">
                 <p id="proof-hint" class="mt-1 text-sm text-ink-soft">{{ __('Pakai nomor telepon atau email yang Anda isi saat memesan.') }}</p>
-                @error('proof')<p class="mt-1 text-sm font-semibold text-ember-dark">{{ $message }}</p>@enderror
+                @error('proof')<p class="mt-1 text-sm font-semibold text-ember-dark">{{ __($message) }}</p>@enderror
             </div>
             <button type="submit" class="btn btn-primary">{{ __('Lihat status booking') }}</button>
         </form>

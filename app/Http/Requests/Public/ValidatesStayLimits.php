@@ -19,11 +19,11 @@ trait ValidatesStayLimits
         $maxAdvanceDays = (int) config('booking.max_advance_days');
 
         if ($checkIn->gt(CarbonImmutable::today()->addDays($maxAdvanceDays))) {
-            $validator->errors()->add('check_in', "Check-in maksimal {$maxAdvanceDays} hari dari sekarang.");
+            $validator->errors()->add('check_in', __('Check-in maksimal :days hari dari sekarang.', ['days' => $maxAdvanceDays]));
         }
 
         if ($checkIn->diffInDays($checkOut) > $maxNights) {
-            $validator->errors()->add('check_out', "Lama menginap maksimal {$maxNights} malam.");
+            $validator->errors()->add('check_out', __('Lama menginap maksimal :count malam.', ['count' => $maxNights]));
         }
     }
 }

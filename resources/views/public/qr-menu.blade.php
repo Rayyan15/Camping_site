@@ -32,7 +32,7 @@
             <p>{{ __('Pesanan belum terkirim. Periksa kembali:') }}</p>
             <ul class="mt-1 list-inside list-disc font-medium">
                 @foreach($errors->all() as $message)
-                    <li>{{ $message }}</li>
+                    <li>{{ __($message) }}</li>
                 @endforeach
             </ul>
         </div>

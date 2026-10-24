@@ -22,10 +22,10 @@ class RefundPolicySummary
 
         return $tiers->map(function (RefundPolicy $tier) use (&$previousMin): string {
             $rule = $tier->min_days_before > 0
-                ? "{$tier->min_days_before} hari atau lebih sebelum check-in"
-                : "Kurang dari {$previousMin} hari sebelum check-in";
+                ? __(':days hari atau lebih sebelum check-in', ['days' => $tier->min_days_before])
+                : __('Kurang dari :days hari sebelum check-in', ['days' => $previousMin]);
             $previousMin = $tier->min_days_before;
-            $outcome = $tier->percent > 0 ? "dikembalikan {$tier->percent}%" : 'tidak ada pengembalian';
+            $outcome = $tier->percent > 0 ? __('dikembalikan :percent%', ['percent' => $tier->percent]) : __('tidak ada pengembalian');
 
             return "{$rule}: {$outcome}.";
         })->implode(' ');

@@ -22,14 +22,14 @@
         </p>
 
         @if(session('error'))
-            <p class="mt-6 rounded-2xl bg-ember-soft px-5 py-4 font-semibold text-ember-dark" role="alert">{{ session('error') }}</p>
+            <p class="mt-6 rounded-2xl bg-ember-soft px-5 py-4 font-semibold text-ember-dark" role="alert">{{ __(session('error')) }}</p>
         @endif
 
         @if($errors->any())
             <div class="mt-6 rounded-2xl bg-ember-soft px-5 py-4 text-sm text-ember-dark" role="alert">
                 <p class="font-bold">{{ __('Mohon periksa kembali:') }}</p>
                 <ul class="mt-1 list-disc space-y-0.5 pl-5">
-                    @foreach($errors->unique() as $message)<li>{{ $message }}</li>@endforeach
+                    @foreach($errors->unique() as $message)<li>{{ __($message) }}</li>@endforeach
                 </ul>
             </div>
         @endif
@@ -50,7 +50,7 @@
                             <li class="flex flex-wrap items-center justify-between gap-4 py-4 first:pt-0">
                                 <div>
                                     <p class="font-bold text-forest-900">{{ __('Jumlah unit') }}</p>
-                                    <p class="text-sm text-ink-soft">{{ __('Tersisa :count unit :name', ['count' => $availableUnits->count(), 'name' => $unitType->name]) }}</p>
+                                    <p class="text-sm text-ink-soft">{{ trans_choice('Tersisa :count unit :name', $availableUnits->count(), ['name' => $unitType->name]) }}</p>
                                 </div>
                                 <x-stepper name="quantity" :label="__('unit')" :value="old('quantity', 1)" :min="1" :max="$maxUnits" role="units" />
                             </li>
@@ -97,7 +97,7 @@
                                         <div>
                                             <p class="font-bold text-forest-900" id="addon-{{ $addon->id }}">{{ $addon->name }}</p>
                                             <p class="text-sm text-ink-soft">
-                                                {{ $rupiah($addon->price) }} {{ $addon->unit->value }}@if($addon->isPerNight()), {{ __('dihitung :nights malam', ['nights' => $nights]) }} @endif
+                                                {{ $rupiah($addon->price) }} {{ __($addon->unit->value) }}@if($addon->isPerNight()), {{ trans_choice('dihitung :nights malam', $nights, ['nights' => $nights]) }} @endif
                                             </p>
                                         </div>
                                         <x-stepper :name="'addons['.$addon->id.']'" :label="$addon->name" :value="old('addons.'.$addon->id, 0)" :min="0" :max="$maxAddon" :price="$addon->price" :per-night="$addon->isPerNight()" role="addon" />

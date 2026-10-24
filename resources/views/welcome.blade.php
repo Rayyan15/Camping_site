@@ -47,7 +47,7 @@
     ];
 @endphp
 
-@section('title', config('site.name').' - Pesan tenda online, '.$unitTypes->count().' tipe, '.$totalUnits.' unit')
+@section('title', config('site.name').' - '.__('Pesan tenda online, :types tipe, :units unit', ['types' => $unitTypes->count(), 'units' => $totalUnits]))
 
 @push('head')
     <script type="application/ld+json">{!! json_encode($structuredData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) !!}</script>
@@ -55,7 +55,7 @@
 
 @section('content')
     {{-- Phase marker: real in-page links, current phase follows the scroll. --}}
-    <nav aria-label="Fase menginap" class="fixed left-4 top-1/2 z-30 hidden -translate-y-1/2 min-[1360px]:block">
+    <nav aria-label="{{ __('Fase menginap') }}" class="fixed left-4 top-1/2 z-30 hidden -translate-y-1/2 min-[1360px]:block">
         <ol class="space-y-2">
             @foreach($phases as $id => $label)
                 <li><a href="#{{ $id }}" data-phase-link="{{ $id }}" aria-current="{{ $loop->first ? 'true' : 'false' }}" class="phase-link">{{ $label }}</a></li>
@@ -66,7 +66,7 @@
     {{-- SORE: arrive and check dates. --}}
     <section id="sore" data-phase="sore" class="relative z-20 flex min-h-[100svh] items-end text-cream" aria-labelledby="judul-hero">
         <div class="hero-lqip absolute inset-0 overflow-hidden">
-            <img data-parallax="-0.25" src="{{ asset('images/hero-canvas-tent-1200.webp') }}" srcset="{{ asset('images/hero-canvas-tent-480.webp') }} 480w, {{ asset('images/hero-canvas-tent-800.webp') }} 800w, {{ asset('images/hero-canvas-tent-1200.webp') }} 1200w, {{ asset('images/hero-canvas-tent-1600.webp') }} 1600w" sizes="100vw" alt="Tenda kanvas di antara pepohonan dengan teras kayu, tamu duduk di depannya" width="1600" height="898" fetchpriority="high" decoding="async" class="absolute inset-x-0 -top-[28%] h-[128%] w-full object-cover object-[60%_50%]">
+            <img data-parallax="-0.25" src="{{ asset('images/hero-canvas-tent-1200.webp') }}" srcset="{{ asset('images/hero-canvas-tent-480.webp') }} 480w, {{ asset('images/hero-canvas-tent-800.webp') }} 800w, {{ asset('images/hero-canvas-tent-1200.webp') }} 1200w, {{ asset('images/hero-canvas-tent-1600.webp') }} 1600w" sizes="100vw" alt="{{ __('Tenda kanvas di antara pepohonan dengan teras kayu, tamu duduk di depannya') }}" width="1600" height="898" fetchpriority="high" decoding="async" class="absolute inset-x-0 -top-[28%] h-[128%] w-full object-cover object-[60%_50%]">
             {{-- Scrim keeps the headline readable over the brightest part of the photo. --}}
             <div class="absolute inset-0 bg-gradient-to-t from-forest-950 via-forest-950/50 to-forest-950/20" aria-hidden="true"></div>
         </div>
@@ -104,16 +104,16 @@
             @if($searched)
                 <p class="mt-8 rounded-2xl border border-forest-300 bg-forest-100 px-5 py-4 text-sm font-semibold text-forest-900" role="status">
                     Hasil untuk {{ \Carbon\Carbon::parse($search['check_in'])->format('d M Y') }} sampai {{ \Carbon\Carbon::parse($search['check_out'])->format('d M Y') }}@if($guestsWanted), {{ $guestsWanted }} tamu @endif.
-                    <a href="{{ route('home') }}#tenda" class="ml-2 underline underline-offset-4">Hapus pencarian</a>
+                    <a href="{{ route('home') }}#tenda" class="ml-2 underline underline-offset-4">{{ __('Hapus pencarian') }}</a>
                 </p>
             @endif
         </div>
 
         @if($unitTypes->isEmpty())
-            <p class="mx-auto mt-10 max-w-6xl rounded-2xl bg-cream p-8 text-center text-ink-soft sm:mx-6 lg:mx-auto">Tipe tenda belum tersedia. Silakan kembali lagi nanti.</p>
+            <p class="mx-auto mt-10 max-w-6xl rounded-2xl bg-cream p-8 text-center text-ink-soft sm:mx-6 lg:mx-auto">{{ __('Tipe tenda belum tersedia. Silakan kembali lagi nanti.') }}</p>
         @else
             {{-- The rail shares the max-w-6xl column with every other section, so its edges line up with the headings above and below. --}}
-            <div data-rail="tenda" role="region" aria-label="Daftar tipe tenda, geser ke samping" tabindex="0" class="tent-rail mx-auto mt-10 max-w-6xl scroll-px-4 overflow-x-auto pb-6 sm:scroll-px-6">
+            <div data-rail="tenda" role="region" aria-label="{{ __('Daftar tipe tenda, geser ke samping') }}" tabindex="0" class="tent-rail mx-auto mt-10 max-w-6xl scroll-px-4 overflow-x-auto pb-6 sm:scroll-px-6">
                 <ul class="flex w-max gap-4 px-4 sm:gap-6 sm:px-6">
                     @foreach($unitTypes as $type)
                         @php
@@ -124,13 +124,13 @@
                         @endphp
                         <li class="relative isolate flex h-[30rem] shrink-0 overflow-hidden rounded-3xl bg-forest-800 text-cream sm:h-[36rem] {{ $loop->first ? 'w-[86vw] sm:w-[38rem]' : 'w-[76vw] sm:w-[24rem]' }} {{ $soldOut ? 'opacity-75' : '' }}">
                             @if($photo)
-                                <img src="{{ $photo->url }}" alt="Tenda tipe {{ $type->name }}" width="1600" height="1067" loading="lazy" decoding="async" class="absolute inset-0 -z-10 size-full object-cover">
+                                <img src="{{ $photo->url }}" alt="{{ __('Tenda tipe :name', ['name' => $type->name]) }}" width="1600" height="1067" loading="lazy" decoding="async" class="absolute inset-0 -z-10 size-full object-cover">
                             @endif
                             <div class="absolute inset-0 -z-10 bg-gradient-to-t from-forest-950 via-forest-950/55 to-transparent" aria-hidden="true"></div>
 
                             @if($searched || $loop->first)
                                 <span class="absolute left-4 top-4 rounded-full bg-forest-950/85 px-3 py-1 text-xs font-bold text-cream">
-                                    @if($searched){{ $soldOut ? 'Penuh di tanggal ini' : 'Sisa '.$free.' unit' }}@else Harga terendah @endif
+                                    @if($searched){{ $soldOut ? __('Penuh di tanggal ini') : trans_choice('Sisa :count unit', $free) }}@else {{ __('Harga terendah') }} @endif
                                 </span>
                             @endif
 
@@ -139,11 +139,11 @@
                                     <a href="{{ route('tenda.show', ['slug' => $type->slug] + $stayParams) }}" class="after:absolute after:inset-0 after:content-['']">{{ $type->name }}</a>
                                 </h3>
                                 <p class="mt-2 text-sm font-semibold text-cream/90">
-                                    Hingga {{ $type->capacity }} orang<span aria-hidden="true"> &middot; </span><span class="sr-only">, </span>{{ $type->units_count }} unit
-                                    @if($needsExtraBed)<span class="ml-1 rounded-full bg-ember px-2 py-0.5 text-xs text-white">perlu extra bed</span>@endif
+                                    {{ __('Hingga :count orang', ['count' => $type->capacity]) }}<span aria-hidden="true"> &middot; </span><span class="sr-only">, </span>{{ trans_choice(':count unit', $type->units_count) }}
+                                    @if($needsExtraBed)<span class="ml-1 rounded-full bg-ember px-2 py-0.5 text-xs text-white">{{ __('perlu extra bed') }}</span>@endif
                                 </p>
                                 @if(! empty($type->facilities))
-                                    <ul class="mt-3 flex flex-wrap gap-2" aria-label="Fasilitas {{ $type->name }}">
+                                    <ul class="mt-3 flex flex-wrap gap-2" aria-label="{{ __('Fasilitas :name', ['name' => $type->name]) }}">
                                         @foreach(array_slice($type->facilities, 0, $loop->first ? 5 : 3) as $facility)
                                             <li class="rounded-full bg-forest-950/70 px-3 py-1 text-xs font-semibold text-cream">{{ $facility }}</li>
                                         @endforeach
@@ -151,11 +151,11 @@
                                 @endif
                                 <dl class="mt-4 flex items-end gap-6 border-t border-cream/30 pt-4">
                                     <div>
-                                        <dt class="text-xs font-semibold text-cream/80">Weekday, per malam</dt>
+                                        <dt class="text-xs font-semibold text-cream/80">{{ __('Weekday, per malam') }}</dt>
                                         <dd class="font-display text-2xl font-semibold">{{ $formatRupiah($type->base_price_weekday) }}</dd>
                                     </div>
                                     <div>
-                                        <dt class="text-xs font-semibold text-cream/80">Weekend</dt>
+                                        <dt class="text-xs font-semibold text-cream/80">{{ __('Weekend') }}</dt>
                                         <dd class="text-base font-semibold">{{ $formatRupiah($type->base_price_weekend) }}</dd>
                                     </div>
                                 </dl>
@@ -193,7 +193,7 @@
                     <li class="grid gap-3 border-b border-forest-900/25 py-8 sm:grid-cols-[5rem_1fr]" data-reveal data-reveal-delay="{{ $loop->index * 90 }}">
                         <span class="font-display text-6xl font-semibold italic leading-none text-ember-dark" aria-hidden="true">{{ $loop->iteration }}</span>
                         <div>
-                            <h3 class="font-display text-2xl font-semibold"><span class="sr-only">Langkah {{ $loop->iteration }}: </span>{{ $step['title'] }}</h3>
+                            <h3 class="font-display text-2xl font-semibold"><span class="sr-only">{{ __('Langkah :n:', ['n' => $loop->iteration]) }} </span>{{ $step['title'] }}</h3>
                             <p class="mt-2 max-w-xl text-ink-soft">{{ $step['text'] }}</p>
                         </div>
                     </li>
@@ -250,8 +250,8 @@
                     @endif
 
                     <div data-reveal data-reveal-delay="100">
-                        <h3 class="font-display text-3xl font-semibold sm:text-4xl">Menu yang sama untuk semua pesanan.</h3>
-                        <p class="mt-2 max-w-lg text-forest-100">Dipesan saat booking atau lewat QR di tenda. Yang habis tidak ditampilkan.</p>
+                        <h3 class="font-display text-3xl font-semibold sm:text-4xl">{{ __('Menu yang sama untuk semua pesanan.') }}</h3>
+                        <p class="mt-2 max-w-lg text-forest-100">{{ __('Dipesan saat booking atau lewat QR di tenda. Yang habis tidak ditampilkan.') }}</p>
                         <div class="mt-8 grid gap-x-10 gap-y-8 sm:grid-cols-2">
                             @foreach($menuByCategory as $category => $items)
                                 <section aria-label="{{ $category }}">
@@ -299,11 +299,11 @@
         @if($hasContact)
             <div class="mx-auto mt-16 max-w-6xl px-4 sm:px-6" data-reveal>
                 <dl class="grid gap-6 border-t border-forest-900/20 pt-8 text-center sm:grid-cols-2 lg:grid-cols-5">
-                    @if($address)<div><dt class="font-display text-lg italic text-ember-dark">Alamat</dt><dd class="mx-auto mt-1 max-w-56 text-ink-soft">{{ $address }}</dd></div>@endif
-                    @if($mapsUrl)<div><dt class="font-display text-lg italic text-ember-dark">Peta</dt><dd class="mt-1"><a href="{{ $mapsUrl }}" target="_blank" rel="noopener" class="inline-flex min-h-11 items-center gap-2 font-bold underline underline-offset-4">Buka di peta</a></dd></div>@endif
-                    @if($whatsapp)<div><dt class="font-display text-lg italic text-ember-dark">WhatsApp</dt><dd class="mt-1"><a href="https://wa.me/{{ $whatsapp }}" target="_blank" rel="noopener" class="inline-flex min-h-11 items-center gap-2 font-bold underline underline-offset-4">Kirim pesan</a></dd></div>@endif
-                    @if($instagram)<div><dt class="font-display text-lg italic text-ember-dark">Instagram</dt><dd class="mt-1"><a href="{{ $instagram }}" target="_blank" rel="noopener" class="inline-flex min-h-11 items-center gap-2 font-bold underline underline-offset-4">Buka Instagram</a></dd></div>@endif
-                    @if($tiktok)<div><dt class="font-display text-lg italic text-ember-dark">TikTok</dt><dd class="mt-1"><a href="{{ $tiktok }}" target="_blank" rel="noopener" class="inline-flex min-h-11 items-center gap-2 font-bold underline underline-offset-4"><svg class="size-5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.6 3c.3 2.4 1.7 3.9 4 4.1v3.1a7.2 7.2 0 0 1-4-1.3v6.1a5.6 5.6 0 1 1-5.6-5.6c.3 0 .6 0 .9.1v3.2a2.5 2.5 0 1 0 1.6 2.3V3h3.1Z"/></svg>Buka TikTok</a></dd></div>@endif
+                    @if($address)<div><dt class="font-display text-lg italic text-ember-dark">{{ __('Alamat') }}</dt><dd class="mx-auto mt-1 max-w-56 text-ink-soft">{{ $address }}</dd></div>@endif
+                    @if($mapsUrl)<div><dt class="font-display text-lg italic text-ember-dark">{{ __('Peta') }}</dt><dd class="mt-1"><a href="{{ $mapsUrl }}" target="_blank" rel="noopener" class="inline-flex min-h-11 items-center gap-2 font-bold underline underline-offset-4">{{ __('Buka di peta') }}</a></dd></div>@endif
+                    @if($whatsapp)<div><dt class="font-display text-lg italic text-ember-dark">WhatsApp</dt><dd class="mt-1"><a href="https://wa.me/{{ $whatsapp }}" target="_blank" rel="noopener" class="inline-flex min-h-11 items-center gap-2 font-bold underline underline-offset-4">{{ __('Kirim pesan') }}</a></dd></div>@endif
+                    @if($instagram)<div><dt class="font-display text-lg italic text-ember-dark">Instagram</dt><dd class="mt-1"><a href="{{ $instagram }}" target="_blank" rel="noopener" class="inline-flex min-h-11 items-center gap-2 font-bold underline underline-offset-4">{{ __('Buka Instagram') }}</a></dd></div>@endif
+                    @if($tiktok)<div><dt class="font-display text-lg italic text-ember-dark">TikTok</dt><dd class="mt-1"><a href="{{ $tiktok }}" target="_blank" rel="noopener" class="inline-flex min-h-11 items-center gap-2 font-bold underline underline-offset-4"><svg class="size-5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.6 3c.3 2.4 1.7 3.9 4 4.1v3.1a7.2 7.2 0 0 1-4-1.3v6.1a5.6 5.6 0 1 1-5.6-5.6c.3 0 .6 0 .9.1v3.2a2.5 2.5 0 1 0 1.6 2.3V3h3.1Z"/></svg>{{ __('Buka TikTok') }}</a></dd></div>@endif
                 </dl>
             </div>
         @endif

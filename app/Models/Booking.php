@@ -28,7 +28,7 @@ class Booking extends Model
     protected $fillable = [
         'code', 'invoice_number', 'customer_id', 'check_in', 'check_out', 'guests',
         'status', 'hold_expires_at', 'subtotal', 'tax', 'total',
-        'paid_amount', 'notes', 'review_started_at', 'cancelled_at', 'cancellation_note',
+        'paid_amount', 'notes', 'locale', 'review_started_at', 'cancelled_at', 'cancellation_note',
         'reschedule_count', 'reschedule_credit', 'rescheduled_at',
     ];
 

@@ -1,13 +1,14 @@
 @php
     $money = fn (int $amount) => 'Rp '.number_format($amount, 0, ',', '.');
+    $date = fn ($day) => $day->locale(app()->getLocale())->translatedFormat('j F Y');
     $units = $booking->bookingUnits
         ->groupBy(fn ($line) => $line->unit?->unitType?->name ?? 'Unit')
         ->map(fn ($lines, $name) => $lines->count().' x '.$name)
         ->implode(', ');
 @endphp
-- Kode booking: **{{ $booking->code }}**
-- Tanggal: {{ $booking->check_in->locale('id')->translatedFormat('j F Y') }} sampai {{ $booking->check_out->locale('id')->translatedFormat('j F Y') }}
+- {{ __('Kode booking') }}: **{{ $booking->code }}**
+- {{ __('Tanggal') }}: {{ __(':from sampai :to', ['from' => $date($booking->check_in), 'to' => $date($booking->check_out)]) }}
 @if($units !== '')
-- Tenda: {{ $units }}
+- {{ __('Tenda') }}: {{ $units }}
 @endif
-- Total: {{ $money($booking->total) }}
+- {{ __('Total') }}: {{ $money($booking->total) }}

@@ -10,7 +10,7 @@
             <div class="flex items-center gap-4">
                 {{-- The badge is navy line art on transparent, so it sits on a cream disc to read on the dark footer. --}}
                 <span class="grid size-20 shrink-0 place-items-center rounded-full bg-cream">
-                    <img src="{{ asset(config('site.logo')) }}" alt="Logo {{ config('site.name') }}" width="72" height="72" class="size-[4.5rem]">
+                    <img src="{{ asset(config('site.logo')) }}" alt="{{ __('Logo :name', ['name' => config('site.name')]) }}" width="72" height="72" class="size-[4.5rem]">
                 </span>
                 <p class="font-display text-2xl font-semibold text-cream">{{ config('site.name') }}</p>
             </div>

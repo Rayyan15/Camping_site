@@ -1,5 +1,5 @@
-const rupiahFormat = new Intl.NumberFormat('id-ID');
-const rupiah = (n) => `Rp ${rupiahFormat.format(n)}`;
+import { t, rupiah } from './i18n';
+
 const qty = (input) => Math.max(0, parseInt(input.value, 10) || 0);
 
 export function initBookingEstimate() {
@@ -27,7 +27,7 @@ export function initBookingEstimate() {
         const subtotal = unitsTotal + addons + food;
 
         field('units').textContent = rupiah(unitsTotal);
-        form.querySelector('[data-est-label="units"]').textContent = `${units} unit x ${nights} malam`;
+        form.querySelector('[data-est-label="units"]').textContent = t(':units unit x :nights malam', { units, nights, count: nights });
         field('addons').textContent = rupiah(addons);
         field('food').textContent = rupiah(food);
         field('total').textContent = rupiah(subtotal);

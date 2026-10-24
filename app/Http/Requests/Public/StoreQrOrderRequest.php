@@ -71,8 +71,8 @@ class StoreQrOrderRequest extends FormRequest
             'items.min' => 'Pilih minimal satu menu.',
             'items.max' => 'Terlalu banyak jenis menu dalam satu pesanan.',
             'items.*.menu_item_id.exists' => 'Ada menu yang sudah tidak tersedia. Muat ulang halaman.',
-            'items.*.qty.between' => 'Jumlah per menu harus 1 sampai '.self::MAX_QTY.'.',
-            'items.*.notes.max' => 'Catatan maksimal '.self::MAX_NOTE_LENGTH.' karakter.',
+            'items.*.qty.between' => __('Jumlah per menu harus 1 sampai :max.', ['max' => self::MAX_QTY]),
+            'items.*.notes.max' => __('Catatan maksimal :max karakter.', ['max' => self::MAX_NOTE_LENGTH]),
         ];
     }
 

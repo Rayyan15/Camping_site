@@ -19,10 +19,10 @@
         <p class="mt-2 text-ink-soft">{{ __('Kode booking') }} <strong class="font-mono tracking-wider text-forest-900">{{ $booking->code }}</strong>. {{ __('Alamat halaman ini juga berlaku sebagai tautan status pesanan, jadi simpan atau bagikan hanya kepada orang yang Anda percaya.') }}</p>
 
         @if(session('success'))
-            <p class="mt-6 rounded-2xl bg-forest-100 px-5 py-4 font-semibold text-forest-900" role="status">{{ session('success') }}</p>
+            <p class="mt-6 rounded-2xl bg-forest-100 px-5 py-4 font-semibold text-forest-900" role="status">{{ __(session('success')) }}</p>
         @endif
         @if(session('error'))
-            <p class="mt-6 rounded-2xl bg-ember-soft px-5 py-4 font-semibold text-ember-dark" role="alert">{{ session('error') }}</p>
+            <p class="mt-6 rounded-2xl bg-ember-soft px-5 py-4 font-semibold text-ember-dark" role="alert">{{ __(session('error')) }}</p>
         @endif
 
         @if($proof?->status === \App\Enums\PaymentStatus::Failed)
@@ -143,7 +143,7 @@
                                                         <p class="font-semibold" role="status">{{ __('Rekening belum diatur, hubungi admin.') }}</p>
                                                     @endif
                                                 @else
-                                                    <img src="{{ $qrisUrl }}" alt="Kode QRIS {{ config('site.name') }}" width="320" height="320" class="mx-auto w-full max-w-64 rounded-xl bg-white p-2">
+                                                    <img src="{{ $qrisUrl }}" alt="{{ __('Kode QRIS :name', ['name' => config('site.name')]) }}" width="320" height="320" class="mx-auto w-full max-w-64 rounded-xl bg-white p-2">
                                                     <p class="mt-2 text-center text-sm text-ink-soft">{{ __('Pindai dengan aplikasi bank atau e-wallet, lalu isi nominal :amount.', ['amount' => $rupiah($outstanding)]) }}</p>
                                                 @endif
 
@@ -157,7 +157,7 @@
                                                         <p id="{{ $fieldId }}-hint" class="mt-2 text-sm text-ink-soft">{{ __('JPG, PNG, WebP, atau PDF, maksimal 4 MB. Pastikan nominal dan tanggal terbaca.') }}</p>
                                                         @if(old('method', 'transfer') === $method->value)
                                                              @error('proof')
-                                                                <p id="proof-error" class="mt-2 text-sm font-semibold text-ember-dark" role="alert">{{ $message }}</p>
+                                                                <p id="proof-error" class="mt-2 text-sm font-semibold text-ember-dark" role="alert">{{ __($message) }}</p>
                                                             @enderror
                                                         @endif
                                                         <button type="submit" class="btn btn-primary mt-4 w-full">{{ __('Kirim bukti bayar') }}</button>

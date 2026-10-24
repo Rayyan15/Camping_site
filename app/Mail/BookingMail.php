@@ -21,6 +21,7 @@ abstract class BookingMail extends Mailable implements ShouldQueue
     public function __construct(public Booking $booking)
     {
         $this->afterCommit();
+        $this->locale($booking->locale ?? config('app.locale'));
     }
 
     abstract protected function subjectLine(): string;
@@ -39,7 +40,7 @@ abstract class BookingMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: $this->subjectLine().': '.$this->booking->code);
+        return new Envelope(subject: __($this->subjectLine()).': '.$this->booking->code);
     }
 
     public function content(): Content

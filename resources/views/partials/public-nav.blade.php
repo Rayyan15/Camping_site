@@ -12,12 +12,12 @@
 @endphp
 <header class="sticky top-0 z-50 border-b border-sand/70 bg-cream/95 backdrop-blur">
     <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <a href="{{ $home }}" class="flex min-h-11 items-center text-forest-900" aria-label="{{ config('site.name') }}, beranda">
+        <a href="{{ $home }}" class="flex min-h-11 items-center text-forest-900" aria-label="{{ __(':name, beranda', ['name' => config('site.name')]) }}">
             <img src="{{ asset(config('site.logo')) }}" alt="" width="44" height="44" class="size-11 shrink-0">
             <span class="ml-2.5 font-display text-xl font-semibold leading-none tracking-tight">{{ config('site.name') }}</span>
         </a>
 
-        <nav aria-label="Navigasi utama" class="hidden items-center gap-8 text-sm font-semibold text-ink-soft md:flex">
+        <nav aria-label="{{ __('Navigasi utama') }}" class="hidden items-center gap-8 text-sm font-semibold text-ink-soft md:flex">
             @foreach($navLinks as $label => $href)
                 <a href="{{ $href }}" class="inline-flex min-h-11 items-center transition hover:text-forest-900">{{ $label }}</a>
             @endforeach

@@ -1,4 +1,5 @@
-const rupiahFormat = new Intl.NumberFormat('id-ID');
+
+import { rupiah } from './i18n';
 
 export function initQrCart() {
     const form = document.getElementById('order-form');
@@ -33,7 +34,7 @@ export function initQrCart() {
         });
 
         countEl.textContent = count;
-        totalEl.textContent = `Rp ${rupiahFormat.format(total)}`;
+        totalEl.textContent = rupiah(total);
         submit.disabled = count === 0;
     };
 

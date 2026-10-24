@@ -64,7 +64,7 @@
 
                 @if($facilityOptions->isNotEmpty())
                     <fieldset class="mt-6 border-t border-sand pt-5">
-                        <legend class="field-label">Harus ada fasilitas</legend>
+                        <legend class="field-label">{{ __('Harus ada fasilitas') }}</legend>
                         <div class="flex flex-wrap gap-2">
                             @foreach($facilityOptions as $facility)
                                 <label class="cursor-pointer">
@@ -77,13 +77,13 @@
                 @endif
             </form>
 
-            <p class="mt-8 text-sm font-semibold text-ink-soft" role="status">Menampilkan {{ $unitTypes->count() }} dari {{ $totalTypes }} tipe tenda</p>
+            <p class="mt-8 text-sm font-semibold text-ink-soft" role="status">{{ __('Menampilkan :shown dari :total tipe tenda', ['shown' => $unitTypes->count(), 'total' => $totalTypes]) }}</p>
 
             @if($unitTypes->isEmpty())
                 <div class="mt-4 rounded-3xl border border-dashed border-sand-dark bg-cream p-8 text-center">
-                    <p class="font-display text-2xl font-semibold">Belum ada tenda yang cocok.</p>
-                    <p class="mt-2 text-ink-soft">Kurangi pilihan fasilitas atau jumlah tamu. Rombongan besar bisa memesan beberapa unit sekaligus.</p>
-                    <a href="{{ route('tenda.index') }}" class="btn btn-outline mt-5">Tampilkan semua tenda</a>
+                    <p class="font-display text-2xl font-semibold">{{ __('Belum ada tenda yang cocok.') }}</p>
+                    <p class="mt-2 text-ink-soft">{{ __('Kurangi pilihan fasilitas atau jumlah tamu. Rombongan besar bisa memesan beberapa unit sekaligus.') }}</p>
+                    <a href="{{ route('tenda.index') }}" class="btn btn-outline mt-5">{{ __('Tampilkan semua tenda') }}</a>
                 </div>
             @else
                 <ul class="mt-4 space-y-6">
@@ -92,19 +92,19 @@
                         <li class="group relative grid overflow-hidden rounded-3xl border border-sand bg-[#fffdf8] md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
                             <div class="relative aspect-[4/3] bg-forest-800 md:aspect-auto md:min-h-72">
                                 @if($photo)
-                                    <img src="{{ $photo->url }}" alt="Tenda tipe {{ $type->name }}" width="1600" height="1067" loading="lazy" decoding="async" class="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100">
+                                    <img src="{{ $photo->url }}" alt="{{ __('Tenda tipe :name', ['name' => $type->name]) }}" width="1600" height="1067" loading="lazy" decoding="async" class="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100">
                                 @endif
                             </div>
                             <div class="flex flex-col p-6 sm:p-8">
                                 <h2 class="font-display text-3xl font-semibold">
                                     <a href="{{ route('tenda.show', ['slug' => $type->slug]) }}" class="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none group-focus-within:underline">{{ $type->name }}</a>
                                 </h2>
-                                <p class="mt-1 text-sm font-semibold text-ink-soft">Hingga {{ $type->capacity }} orang<span aria-hidden="true"> &middot; </span><span class="sr-only">, </span>{{ $type->units_count }} unit</p>
+                                <p class="mt-1 text-sm font-semibold text-ink-soft">{{ __('Hingga :count orang', ['count' => $type->capacity]) }}<span aria-hidden="true"> &middot; </span><span class="sr-only">, </span>{{ trans_choice(':count unit', $type->units_count) }}</p>
                                 @if($type->description)
                                     <p class="mt-3 max-w-prose text-ink-soft">{{ \Illuminate\Support\Str::limit($type->description, 180) }}</p>
                                 @endif
                                 @if(! empty($type->facilities))
-                                    <ul class="mt-4 flex flex-wrap gap-2" aria-label="Fasilitas {{ $type->name }}">
+                                    <ul class="mt-4 flex flex-wrap gap-2" aria-label="{{ __('Fasilitas :name', ['name' => $type->name]) }}">
                                         @foreach($type->facilities as $facility)
                                             <li class="rounded-full bg-forest-100 px-3 py-1 text-xs font-semibold text-forest-900">{{ $facility }}</li>
                                         @endforeach
@@ -113,16 +113,16 @@
                                 <div class="mt-6 flex flex-wrap items-end justify-between gap-4 border-t border-sand pt-5 md:mt-auto">
                                     <dl class="flex items-end gap-6">
                                         <div>
-                                            <dt class="text-xs font-semibold text-ink-soft">Weekday, per malam</dt>
+                                            <dt class="text-xs font-semibold text-ink-soft">{{ __('Weekday, per malam') }}</dt>
                                             <dd class="font-display text-2xl font-semibold">{{ $formatRupiah($type->base_price_weekday) }}</dd>
                                         </div>
                                         <div>
-                                            <dt class="text-xs font-semibold text-ink-soft">Weekend</dt>
+                                            <dt class="text-xs font-semibold text-ink-soft">{{ __('Weekend') }}</dt>
                                             <dd class="font-semibold">{{ $formatRupiah($type->base_price_weekend) }}</dd>
                                         </div>
                                     </dl>
                                     <span class="inline-flex items-center gap-1 text-sm font-bold text-ember-dark" aria-hidden="true">
-                                        Pilih tanggal
+                                        {{ __('Pilih tanggal') }}
                                         <svg class="size-4 transition group-hover:translate-x-0.5 motion-reduce:transition-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m9 18 6-6-6-6"/></svg>
                                     </span>
                                 </div>

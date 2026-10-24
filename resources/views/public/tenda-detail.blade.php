@@ -58,7 +58,7 @@
                         </div>
                         <div>
                             <dt class="text-xs font-semibold text-ink-soft">{{ __('Jumlah unit') }}</dt>
-                            <dd class="text-lg font-bold">{{ __(':count unit', ['count' => $unitType->units_count]) }}</dd>
+                            <dd class="text-lg font-bold">{{ trans_choice(':count unit', $unitType->units_count) }}</dd>
                         </div>
                     </dl>
                     <a href="#ketersediaan" class="btn btn-primary mt-6 w-full sm:w-auto">{{ __('Cek ketersediaan') }}</a>
@@ -73,13 +73,13 @@
                 @else
                     <div data-gallery class="grid gap-3 @if($photos->count() > 1) lg:grid-cols-[1fr_9rem] @endif">
                         <div class="aspect-[3/2] overflow-hidden rounded-3xl bg-forest-100 lg:aspect-[16/10]">
-                            <img data-gallery-main src="{{ $photos->first()->url }}" alt="{{ $unitType->name }} tenda, foto 1" width="1600" height="1067" fetchpriority="high" decoding="async" class="size-full object-cover">
+                            <img data-gallery-main src="{{ $photos->first()->url }}" alt="{{ __(':name tenda, foto :n', ['name' => $unitType->name, 'n' => 1]) }}" width="1600" height="1067" fetchpriority="high" decoding="async" class="size-full object-cover">
                         </div>
                         @if($photos->count() > 1)
-                            <ul class="grid grid-cols-4 gap-3 sm:grid-cols-5 lg:grid-cols-1 lg:content-start" aria-label="Foto tenda {{ $unitType->name }}">
+                            <ul class="grid grid-cols-4 gap-3 sm:grid-cols-5 lg:grid-cols-1 lg:content-start" aria-label="{{ __('Foto tenda :name', ['name' => $unitType->name]) }}">
                                 @foreach($photos as $photo)
                                     <li>
-                                        <a href="{{ $photo->url }}" data-gallery-thumb data-alt="{{ $unitType->name }} tenda, foto {{ $loop->iteration }}" @if($loop->first) aria-current="true" @endif aria-label="Lihat foto {{ $loop->iteration }} dari {{ $photos->count() }}" class="block aspect-[3/2] overflow-hidden rounded-2xl border-2 border-transparent opacity-70 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember aria-[current=true]:border-ember aria-[current=true]:opacity-100 hover:opacity-100">
+                                        <a href="{{ $photo->url }}" data-gallery-thumb data-alt="{{ __(':name tenda, foto :n', ['name' => $unitType->name, 'n' => $loop->iteration]) }}" @if($loop->first) aria-current="true" @endif aria-label="{{ __('Lihat foto :n dari :total', ['n' => $loop->iteration, 'total' => $photos->count()]) }}" class="block aspect-[3/2] overflow-hidden rounded-2xl border-2 border-transparent opacity-70 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember aria-[current=true]:border-ember aria-[current=true]:opacity-100 hover:opacity-100">
                                             <img src="{{ $photo->url }}" alt="" width="400" height="267" loading="lazy" decoding="async" class="size-full object-cover">
                                         </a>
                                     </li>
@@ -92,15 +92,15 @@
 
             <div class="mt-16 grid gap-10 lg:grid-cols-[1fr_1.4fr] lg:gap-16" data-reveal>
                 <div>
-                    <h2 class="font-display text-3xl font-semibold sm:text-4xl">Tentang tenda ini</h2>
+                    <h2 class="font-display text-3xl font-semibold sm:text-4xl">{{ __('Tentang tenda ini') }}</h2>
                     @if($unitType->description)
                         <p class="mt-4 max-w-prose leading-relaxed text-ink-soft">{{ $unitType->description }}</p>
                     @else
-                        <p class="mt-4 max-w-prose leading-relaxed text-ink-soft">Deskripsi tipe ini belum ditulis pengelola. Tanyakan ke pengelola bila ada yang ingin Anda pastikan.</p>
+                        <p class="mt-4 max-w-prose leading-relaxed text-ink-soft">{{ __('Deskripsi tipe ini belum ditulis pengelola. Tanyakan ke pengelola bila ada yang ingin Anda pastikan.') }}</p>
                     @endif
                 </div>
                 <div>
-                    <h2 class="font-display text-3xl font-semibold sm:text-4xl">Fasilitas</h2>
+                    <h2 class="font-display text-3xl font-semibold sm:text-4xl">{{ __('Fasilitas') }}</h2>
                     @if(! empty($unitType->facilities))
                         <ul class="mt-4 grid gap-x-8 sm:grid-cols-2">
                             @foreach($unitType->facilities as $facility)
@@ -111,7 +111,7 @@
                             @endforeach
                         </ul>
                     @else
-                        <p class="mt-4 text-ink-soft">Daftar fasilitas tipe ini belum diisi pengelola.</p>
+                        <p class="mt-4 text-ink-soft">{{ __('Daftar fasilitas tipe ini belum diisi pengelola.') }}</p>
                     @endif
                 </div>
             </div>

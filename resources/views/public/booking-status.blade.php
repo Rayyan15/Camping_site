@@ -36,10 +36,10 @@
 @section('content')
     <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
         @if(session('success'))
-            <p role="status" class="mb-6 rounded-2xl bg-forest-100 px-5 py-4 text-sm font-semibold text-forest-900">{{ session('success') }}</p>
+            <p role="status" class="mb-6 rounded-2xl bg-forest-100 px-5 py-4 text-sm font-semibold text-forest-900">{{ __(session('success')) }}</p>
         @endif
         @if(session('error'))
-            <p role="alert" class="mb-6 rounded-2xl bg-ember-soft px-5 py-4 text-sm font-semibold text-ember-dark">{{ session('error') }}</p>
+            <p role="alert" class="mb-6 rounded-2xl bg-ember-soft px-5 py-4 text-sm font-semibold text-ember-dark">{{ __(session('error')) }}</p>
         @endif
 
         <header class="flex flex-wrap items-end justify-between gap-4">
@@ -105,7 +105,7 @@
                 </div>
                 <div>
                     <dt class="field-label">{{ __('Tamu') }}</dt>
-                    <dd class="font-semibold">{{ __(':count orang', ['count' => $booking->guests]) }}</dd>
+                    <dd class="font-semibold">{{ trans_choice(':count orang', $booking->guests) }}</dd>
                 </div>
             </dl>
 
@@ -170,12 +170,12 @@
                             <div>
                                 <label for="new_check_in" class="field-label">{{ __('Check-in baru') }}</label>
                                 <input id="new_check_in" name="check_in" type="date" required min="{{ now()->toDateString() }}" value="{{ old('check_in') }}" class="field-input">
-                                @error('check_in')<p class="mt-1 text-sm font-semibold text-ember-dark">{{ $message }}</p>@enderror
+                                @error('check_in')<p class="mt-1 text-sm font-semibold text-ember-dark">{{ __($message) }}</p>@enderror
                             </div>
                             <div>
                                 <label for="new_check_out" class="field-label">{{ __('Check-out baru') }}</label>
                                 <input id="new_check_out" name="check_out" type="date" required min="{{ now()->addDay()->toDateString() }}" value="{{ old('check_out') }}" class="field-input">
-                                @error('check_out')<p class="mt-1 text-sm font-semibold text-ember-dark">{{ $message }}</p>@enderror
+                                @error('check_out')<p class="mt-1 text-sm font-semibold text-ember-dark">{{ __($message) }}</p>@enderror
                             </div>
                             <label class="flex min-h-11 cursor-pointer items-start gap-3 py-2 text-sm text-ink-soft sm:col-span-2">
                                 <input type="checkbox" required class="mt-0.5 size-5 accent-forest-800">
@@ -215,7 +215,7 @@
                         <div>
                             <label for="reason" class="field-label">{{ __('Alasan pembatalan') }}</label>
                             <textarea id="reason" name="reason" rows="3" maxlength="500" required class="field-input">{{ old('reason') }}</textarea>
-                            @error('reason')<p class="mt-1 text-sm font-semibold text-ember-dark">{{ $message }}</p>@enderror
+                            @error('reason')<p class="mt-1 text-sm font-semibold text-ember-dark">{{ __($message) }}</p>@enderror
                         </div>
                         <label class="flex min-h-11 cursor-pointer items-start gap-3 py-2 text-sm text-ink-soft">
                             <input type="checkbox" required class="mt-0.5 size-5 accent-forest-800">

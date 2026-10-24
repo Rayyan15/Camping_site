@@ -1,15 +1,15 @@
 <x-mail::message>
-# Bukti transfer ditolak
+# {{ __('Bukti transfer ditolak') }}
 
-Halo {{ $booking->customer->name }}, bukti transfer untuk booking {{ $booking->code }} belum bisa kami terima.
+{{ __('Halo :name, bukti transfer untuk booking :code belum bisa kami terima.', ['name' => $booking->customer->name, 'code' => $booking->code]) }}
 
-Alasan dari admin: {{ $reason }}
+{{ __('Alasan dari admin: :reason', ['reason' => $reason]) }}
 
 @include('mail.partials.booking-summary')
 
-Silakan unggah ulang bukti transfer yang benar di halaman pembayaran. Tenda ditahan {{ config('booking.hold_minutes') }} menit sejak bukti ditolak.
+{{ __('Silakan unggah ulang bukti transfer yang benar di halaman pembayaran. Tenda ditahan :minutes menit sejak bukti ditolak.', ['minutes' => config('booking.hold_minutes')]) }}
 
 <x-mail::button :url="$checkoutUrl">
-Unggah ulang bukti
+{{ __('Unggah ulang bukti') }}
 </x-mail::button>
 </x-mail::message>

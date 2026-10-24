@@ -1,10 +1,8 @@
-const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-const WEEKDAYS_SHORT = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-const WEEKDAYS_LONG = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+import { t, formatLong, formatMonth, weekdayHeads, rupiah } from './i18n';
+
 const COMPACT_QUERY = '(max-width: 767px)';
 const DAY_MS = 86400000;
 
-const rupiahFormat = new Intl.NumberFormat('id-ID');
 const pad = (n) => String(n).padStart(2, '0');
 const toIso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const monthKey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
@@ -19,7 +17,6 @@ function fromIso(value) {
     return match ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])) : null;
 }
 
-const formatLong = (d) => `${WEEKDAYS_LONG[mondayIndex(d)]}, ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 
 /**
  * Range calendar for one tent type. It only displays what the server says: free units per night come
@@ -103,12 +100,12 @@ class AvailabilityCalendar {
 
     describe(date, long = false) {
         const label = formatLong(date);
-        if (date < this.today) return `${label}, sudah lewat.`;
-        if (date > this.lastBookable) return `${label}, di luar jangkauan pemesanan.`;
+        if (date < this.today) return t(':date, sudah lewat.', { date: label });
+        if (date > this.lastBookable) return t(':date, di luar jangkauan pemesanan.', { date: label });
         const data = this.dayData(date);
-        if (!data) return `${label}, ketersediaan belum dimuat.`;
-        if (data.free === 0) return long ? `${label}, penuh. Masih bisa dipilih sebagai tanggal check-out.` : `${label}, penuh`;
-        return `${label}, sisa ${data.free} dari ${data.total} unit`;
+        if (!data) return t(':date, ketersediaan belum dimuat.', { date: label });
+        if (data.free === 0) return long ? t(':date, penuh. Masih bisa dipilih sebagai tanggal check-out.', { date: label }) : t(':date, penuh', { date: label });
+        return t(':date, sisa :free dari :total unit', { date: label, free: data.free, total: data.total, count: data.total });
     }
 
     /* Data loading */
@@ -180,10 +177,10 @@ class AvailabilityCalendar {
         const rows = [];
         for (let i = 0; i < cells.length; i += 7) rows.push(`<div role="row" class="cal-row">${cells.slice(i, i + 7).join('')}</div>`);
 
-        const heads = WEEKDAYS_SHORT.map((d) => `<div role="columnheader" class="cal-head">${d}</div>`).join('');
+        const heads = weekdayHeads.map((d) => `<div role="columnheader" class="cal-head">${d}</div>`).join('');
         const id = `avail-month-${year}-${month}`;
 
-        return `<div class="cal-month"><p id="${id}" class="cal-title">${MONTHS[month]} ${year}</p><div role="grid" aria-labelledby="${id}" class="cal-grid"><div role="row" class="cal-row">${heads}</div>${rows.join('')}</div></div>`;
+        return `<div class="cal-month"><p id="${id}" class="cal-title">${formatMonth(year, month)}</p><div role="grid" aria-labelledby="${id}" class="cal-grid"><div role="row" class="cal-row">${heads}</div>${rows.join('')}</div></div>`;
     }
 
     paint() {
@@ -230,7 +227,7 @@ class AvailabilityCalendar {
 
     async pick(date) {
         if (this.isOutOfRange(date)) {
-            this.say(date < this.today ? 'Tanggal itu sudah lewat.' : 'Tanggal itu di luar jangkauan pemesanan.');
+            this.say(date < this.today ? t('Tanggal itu sudah lewat.') : t('Tanggal itu di luar jangkauan pemesanan.'));
             return;
         }
         this.cursor = date;
@@ -238,7 +235,7 @@ class AvailabilityCalendar {
         if (!this.start || this.end || date <= this.start) {
             await this.ensureRange(date, date);
             if (this.dayData(date)?.free === 0) {
-                this.say(`${formatLong(date)} penuh. Pilih tanggal check-in lain.`);
+                this.say(t(':date penuh. Pilih tanggal check-in lain.', { date: formatLong(date) }));
                 this.paint();
                 return;
             }
@@ -246,26 +243,26 @@ class AvailabilityCalendar {
             this.end = null;
             this.writeInputs();
             this.paint();
-            this.say(`Check-in ${formatLong(date)}. Pilih tanggal check-out.`);
+            this.say(t('Check-in :date. Pilih tanggal check-out.', { date: formatLong(date) }));
             this.showEstimate('hint');
             return;
         }
 
         if (nightsBetween(this.start, date) > this.maxNights) {
-            this.say(`Menginap maksimal ${this.maxNights} malam. Pilih check-out yang lebih dekat.`);
+            this.say(t('Menginap maksimal :count malam. Pilih check-out yang lebih dekat.', { count: this.maxNights }));
             return;
         }
 
         const full = await this.firstFullNight(this.start, date);
         if (full) {
-            this.say(`Malam ${formatLong(full)} sudah penuh, jadi rentang ini tidak bisa dipesan. Pilih tanggal lain.`);
+            this.say(t('Malam :date sudah penuh, jadi rentang ini tidak bisa dipesan. Pilih tanggal lain.', { date: formatLong(full) }));
             return;
         }
 
         this.end = date;
         this.writeInputs();
         this.paint();
-        this.say(`${nightsBetween(this.start, this.end)} malam, ${formatLong(this.start)} sampai ${formatLong(this.end)}.`);
+        this.say(t(':count malam, :from sampai :to.', { count: nightsBetween(this.start, this.end), from: formatLong(this.start), to: formatLong(this.end) }));
         this.loadEstimate();
     }
 
@@ -303,7 +300,7 @@ class AvailabilityCalendar {
         const full = await this.firstFullNight(this.start, this.end);
         this.paint();
         if (full) {
-            this.say(`Malam ${formatLong(full)} sudah penuh di tipe ini. Ubah tanggalnya.`);
+            this.say(t('Malam :date sudah penuh di tipe ini. Ubah tanggalnya.', { date: formatLong(full) }));
             this.showEstimate('blocked');
             return;
         }
@@ -317,14 +314,14 @@ class AvailabilityCalendar {
         const main = this.estimateEl.querySelector('[data-est-main]');
         const note = this.estimateEl.querySelector('[data-est-note]');
         const texts = {
-            hint: ['Pilih check-in dan check-out untuk melihat estimasi sewa.', ''],
-            loading: ['Menghitung estimasi...', ''],
-            blocked: ['Estimasi tidak ditampilkan karena ada malam yang penuh.', ''],
-            error: ['Estimasi belum bisa dimuat.', 'Harga akhir tetap dihitung saat checkout.'],
-            invalid: [payload.message ?? 'Tanggal belum sesuai.', ''],
+            hint: [t('Pilih check-in dan check-out untuk melihat estimasi sewa.'), ''],
+            loading: [t('Menghitung estimasi...'), ''],
+            blocked: [t('Estimasi tidak ditampilkan karena ada malam yang penuh.'), ''],
+            error: [t('Estimasi belum bisa dimuat.'), t('Harga akhir tetap dihitung saat checkout.')],
+            invalid: [payload.message ?? t('Tanggal belum sesuai.'), ''],
             ok: [
-                `${payload.nights} malam, 1 unit: Rp ${rupiahFormat.format(payload.total)}`,
-                'Sebelum extra bed dan makanan. Harga akhir dihitung saat checkout.',
+                t(':count malam, 1 unit: :total', { count: payload.nights, total: rupiah(payload.total) }),
+                t('Sebelum extra bed dan makanan. Harga akhir dihitung saat checkout.'),
             ],
         };
         [main.textContent, note.textContent] = texts[state];

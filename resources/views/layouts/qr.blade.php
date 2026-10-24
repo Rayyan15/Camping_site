@@ -17,5 +17,6 @@
     <main id="konten" class="mx-auto flex min-h-screen w-full max-w-xl flex-col">
         @yield('content')
     </main>
+    @include('partials.js-i18n')
 </body>
 </html>

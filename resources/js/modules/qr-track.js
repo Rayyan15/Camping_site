@@ -1,8 +1,10 @@
+import { t } from './i18n';
+
 const POLL_INTERVAL_MS = 5000;
 const ACTIVE_DOT = 'border-forest-800 bg-forest-800 text-cream';
 const IDLE_DOT = 'border-sand bg-cream text-ink-soft';
 const DOT_BASE = 'grid size-8 shrink-0 place-items-center rounded-full border-2 text-sm font-bold';
-const STATE_LABEL = { done: '(selesai)', current: '(saat ini)', todo: '(belum)' };
+const STATE_LABEL = { done: t('(selesai)'), current: t('(saat ini)'), todo: t('(belum)') };
 
 export function initQrTrack() {
     const hint = document.getElementById('status-hint');
@@ -27,9 +29,9 @@ export function initQrTrack() {
         hint.textContent = hints[data.status];
 
         if (data.billed_to_booking) {
-            payment.textContent = 'Ditagihkan ke booking Anda.';
+            payment.textContent = t('Ditagihkan ke booking Anda.');
         } else {
-            payment.textContent = data.paid ? 'Sudah dibayar.' : 'Belum dibayar. Bayar ke kasir.';
+            payment.textContent = data.paid ? t('Sudah dibayar.') : t('Belum dibayar. Bayar ke kasir.');
         }
     };
 

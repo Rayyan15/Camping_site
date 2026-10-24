@@ -62,7 +62,7 @@ class StoreBookingRequest extends FormRequest
             'check_out.after' => 'Tanggal check-out harus setelah check-in.',
             'unit_type_id.exists' => 'Tipe tenda tidak ditemukan.',
             'quantity.min' => 'Pilih minimal 1 unit.',
-            'quantity.max' => 'Satu pemesanan maksimal '.config('booking.max_units_per_booking').' unit.',
+            'quantity.max' => __('Satu pemesanan maksimal :count unit.', ['count' => config('booking.max_units_per_booking')]),
             'addons.*.max' => 'Jumlah tambahan melebihi batas yang diizinkan.',
             'preorder.*.menu_item_id.exists' => 'Salah satu menu yang dipilih sedang tidak tersedia.',
             'preorder.*.qty.max' => 'Jumlah menu melebihi batas yang diizinkan.',

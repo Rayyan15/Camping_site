@@ -1,23 +1,23 @@
 <x-mail::message>
-# Booking diterima
+# {{ __('Booking diterima') }}
 
-Halo {{ $booking->customer->name }}, booking Anda di {{ config('site.name') }} sudah kami terima.
+{{ __('Halo :name, booking Anda di :site sudah kami terima.', ['name' => $booking->customer->name, 'site' => config('site.name')]) }}
 
 @include('mail.partials.booking-summary')
 
 @if($booking->hold_expires_at)
-Tenda kami tahan sampai {{ $booking->hold_expires_at->locale('id')->translatedFormat('j F Y, H:i') }} WIB. Setelah itu tenda dilepas untuk tamu lain.
+{{ __('Tenda kami tahan sampai :time WIB. Setelah itu tenda dilepas untuk tamu lain.', ['time' => $booking->hold_expires_at->locale(app()->getLocale())->translatedFormat('j F Y, H:i')]) }}
 @endif
 
 @if($bank->isComplete())
-Transfer sebesar {{ 'Rp '.number_format($booking->total - $booking->paid_amount, 0, ',', '.') }} ke rekening {{ $bank->bankName }} {{ $bank->accountNumber }} atas nama {{ $bank->accountHolder }}, lalu unggah bukti transfernya di halaman pembayaran.
+{{ __('Transfer sebesar :amount ke rekening :bank :number atas nama :holder, lalu unggah bukti transfernya di halaman pembayaran.', ['amount' => 'Rp '.number_format($booking->total - $booking->paid_amount, 0, ',', '.'), 'bank' => $bank->bankName, 'number' => $bank->accountNumber, 'holder' => $bank->accountHolder]) }}
 @else
-Nomor rekening belum diatur. Hubungi admin lewat halaman pembayaran untuk mendapat nomor rekening.
+{{ __('Nomor rekening belum diatur. Hubungi admin lewat halaman pembayaran untuk mendapat nomor rekening.') }}
 @endif
 
 <x-mail::button :url="$checkoutUrl">
-Unggah bukti transfer
+{{ __('Unggah bukti transfer') }}
 </x-mail::button>
 
-Simpan email ini. Saat tiba di lokasi, tunjukkan email konfirmasi pembayaran kepada petugas.
+{{ __('Simpan email ini. Saat tiba di lokasi, tunjukkan email konfirmasi pembayaran kepada petugas.') }}
 </x-mail::message>

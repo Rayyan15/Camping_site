@@ -1,11 +1,9 @@
-const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-const WEEKDAYS_SHORT = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-const WEEKDAYS_LONG = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
 
 const MIN_GUESTS = 1;
 const MAX_GUESTS = 12;
 const DEFAULT_GUESTS = 2;
+import { t, formatLong, formatShort, formatMonth, weekdayHeads } from './modules/i18n';
+
 const COMPACT_QUERY = '(max-width: 767px)';
 
 const pad = (n) => String(n).padStart(2, '0');
@@ -20,8 +18,6 @@ function fromIso(value) {
     return match ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])) : null;
 }
 
-const formatShort = (d) => `${WEEKDAYS_SHORT[mondayIndex(d)]}, ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
-const formatLong = (d) => `${WEEKDAYS_LONG[mondayIndex(d)]}, ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 
 class StaySearch {
     constructor(root) {
@@ -205,10 +201,10 @@ class StaySearch {
         const rows = [];
         for (let i = 0; i < cells.length; i += 7) rows.push(`<div role="row" class="cal-row">${cells.slice(i, i + 7).join('')}</div>`);
 
-        const heads = WEEKDAYS_SHORT.map((d) => `<div role="columnheader" class="cal-head">${d}</div>`).join('');
+        const heads = weekdayHeads.map((d) => `<div role="columnheader" class="cal-head">${d}</div>`).join('');
         const id = `ss-month-${year}-${month}`;
 
-        return `<div class="cal-month"><p id="${id}" class="cal-title" aria-live="polite">${MONTHS[month]} ${year}</p><div role="grid" aria-labelledby="${id}" class="cal-grid"><div role="row" class="cal-row">${heads}</div>${rows.join('')}</div></div>`;
+        return `<div class="cal-month"><p id="${id}" class="cal-title" aria-live="polite">${formatMonth(year, month)}</p><div role="grid" aria-labelledby="${id}" class="cal-grid"><div role="row" class="cal-row">${heads}</div>${rows.join('')}</div></div>`;
     }
 
     paint() {
@@ -316,18 +312,18 @@ class StaySearch {
 
         this.setValue('check_in', this.start ? formatShort(this.start) : null);
         this.setValue('check_out', this.end ? formatShort(this.end) : null);
-        this.values.guests.textContent = `${this.guests} tamu`;
+        this.values.guests.textContent = t(':count tamu', { count: this.guests });
         this.guestCountEl.textContent = this.guests;
 
         this.root.querySelector('[data-ss-minus]').disabled = this.guests <= MIN_GUESTS;
         this.root.querySelector('[data-ss-plus]').disabled = this.guests >= MAX_GUESTS;
 
         const nights = this.start && this.end ? Math.round((this.end - this.start) / 86400000) : 0;
-        this.nightsEl.textContent = nights ? `${nights} malam` : 'Pilih check-in, lalu check-out';
+        this.nightsEl.textContent = nights ? t(':count malam', { count: nights }) : t('Pilih check-in, lalu check-out');
     }
 
     setValue(name, text) {
-        this.values[name].textContent = text ?? 'Pilih tanggal';
+        this.values[name].textContent = text ?? t('Pilih tanggal');
         this.values[name].classList.toggle('is-empty', text === null);
     }
 

@@ -1,3 +1,5 @@
+import { t } from './i18n';
+
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** Hero photo drifts slower than the page. Transform only, so layout never shifts. */
@@ -118,7 +120,7 @@ function initRailAutoplay(rail) {
     const setPaused = (paused) => {
         userPaused = paused;
         toggle?.setAttribute('aria-pressed', String(paused));
-        toggle?.setAttribute('aria-label', paused ? 'Putar geser otomatis' : 'Jeda geser otomatis');
+        toggle?.setAttribute('aria-label', paused ? t('Putar geser otomatis') : t('Jeda geser otomatis'));
         toggle?.querySelector('[data-label="pause"]')?.classList.toggle('hidden', paused);
         toggle?.querySelector('[data-label="play"]')?.classList.toggle('hidden', !paused);
     };
