@@ -27,12 +27,11 @@ class ClientAnswersSeedTest extends TestCase
         );
     }
 
-    public function test_settings_seeder_means_no_tax_no_down_payment_and_fixed_hours(): void
+    public function test_settings_seeder_means_no_down_payment_and_fixed_hours(): void
     {
         $this->seed(SettingsSeeder::class);
         $settings = app(SettingRepository::class);
 
-        $this->assertSame(0.0, $settings->taxRate());
         $this->assertSame(0, $settings->downPaymentPercent());
         $this->assertSame('14:00', $settings->checkInTime());
         $this->assertSame('12:00', $settings->checkOutTime());

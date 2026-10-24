@@ -137,16 +137,6 @@ class PricingService
         }, array_values($items));
     }
 
-    public function taxRate(): float
-    {
-        return app(SettingRepository::class)->taxRate();
-    }
-
-    public function taxFor(int $subtotal): int
-    {
-        return (int) round($subtotal * $this->taxRate());
-    }
-
     private function isWeekendNight(CarbonInterface $night): bool
     {
         return in_array($night->dayOfWeekIso, config('booking.weekend_night_weekdays'), true);

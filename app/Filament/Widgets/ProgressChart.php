@@ -13,7 +13,10 @@ class ProgressChart extends ChartWidget
 
     protected ?string $maxHeight = '280px';
 
-    protected ?string $heading = 'Okupansi per Tipe Unit';
+    public function getHeading(): ?string
+    {
+        return __('Okupansi per Tipe Unit');
+    }
 
     protected static ?int $sort = 3;
 
@@ -30,9 +33,9 @@ class ProgressChart extends ChartWidget
 
         return [
             'datasets' => [
-                ['label' => 'Terisi', 'data' => $series['occupied'], 'backgroundColor' => config('brand.forest.600'), 'borderRadius' => 6, 'borderSkipped' => false, 'maxBarThickness' => 32],
+                ['label' => __('Terisi'), 'data' => $series['occupied'], 'backgroundColor' => config('brand.forest.600'), 'borderRadius' => 6, 'borderSkipped' => false, 'maxBarThickness' => 32],
                 [
-                    'label' => 'Kosong',
+                    'label' => __('Kosong'),
                     'data' => $series['available'],
                     'backgroundColor' => 'rgba(127, 163, 138, 0.35)',
                     'borderRadius' => 6,

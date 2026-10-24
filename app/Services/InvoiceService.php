@@ -33,7 +33,7 @@ class InvoiceService
     /**
      * Lines and totals shown on the invoice.
      *
-     * @return array{unitLines: array, addonLines: array, foodLines: array, subtotal: int, tax: int, grandTotal: int, balance: int, isSettled: bool}
+     * @return array{unitLines: array, addonLines: array, foodLines: array, subtotal: int, grandTotal: int, balance: int, isSettled: bool}
      */
     public function invoiceData(Booking $booking): array
     {
@@ -47,7 +47,6 @@ class InvoiceService
             'addonLines' => $this->addonLines($booking),
             'foodLines' => $this->foodLines($booking),
             'subtotal' => $billing['subtotal'],
-            'tax' => $billing['tax'],
             'grandTotal' => $grandTotal,
             'balance' => max(0, $grandTotal - $booking->paid_amount),
             'isSettled' => $booking->paid_amount >= $grandTotal,

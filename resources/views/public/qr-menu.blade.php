@@ -8,13 +8,20 @@
     $selectedChoice = old('payment_choice', QrPaymentChoice::Cashier->value);
 @endphp
 
-@section('title', 'Pesan makanan - '.$spot->name.' - '.config('site.name'))
+@section('title', __('Pesan makanan').' - '.$spot->name.' - '.config('site.name'))
 
 @section('content')
     <header class="relative overflow-hidden bg-forest-900 px-5 pb-10 pt-8 text-cream">
-        <p class="eyebrow text-forest-300">{{ config('site.name') }}</p>
+        <div class="flex items-center justify-between gap-4">
+            <p class="eyebrow text-forest-300">{{ config('site.name') }}</p>
+            <div class="flex items-center gap-1.5 rounded-full border border-forest-700 bg-forest-800/80 px-2 py-1 text-xs font-semibold text-forest-100">
+                <a href="{{ route('lang.switch', 'id') }}" class="px-1.5 py-0.5 rounded transition {{ app()->getLocale() === 'id' ? 'bg-cream text-forest-950 font-bold' : 'hover:text-cream' }}">ID</a>
+                <span class="text-forest-600">|</span>
+                <a href="{{ route('lang.switch', 'en') }}" class="px-1.5 py-0.5 rounded transition {{ app()->getLocale() === 'en' ? 'bg-cream text-forest-950 font-bold' : 'hover:text-cream' }}">EN</a>
+            </div>
+        </div>
         <h1 class="font-display mt-3 text-4xl font-semibold leading-tight">{{ $spot->name }}</h1>
-        <p class="mt-2 max-w-sm text-sm leading-relaxed text-forest-100">Pilih menu, kirim, dan dapur langsung menyiapkan. Pesanan diantar ke lokasi ini.</p>
+        <p class="mt-2 max-w-sm text-sm leading-relaxed text-forest-100">{{ __('Pilih menu, kirim, dan dapur langsung menyiapkan. Pesanan diantar ke lokasi ini.') }}</p>
         <svg class="absolute inset-x-0 bottom-0 h-4 w-full text-cream" viewBox="0 0 360 16" preserveAspectRatio="none" aria-hidden="true">
             <path d="M0 16V9l30-5 40 7 50-8 60 9 55-7 50 6 45-8 30 6v10z" fill="currentColor"/>
         </svg>
@@ -22,7 +29,7 @@
 
     @if($errors->any())
         <div role="alert" class="mx-4 mt-4 rounded-2xl bg-ember-soft px-4 py-3 text-sm font-semibold text-ember-dark">
-            <p>Pesanan belum terkirim. Periksa kembali:</p>
+            <p>{{ __('Pesanan belum terkirim. Periksa kembali:') }}</p>
             <ul class="mt-1 list-inside list-disc font-medium">
                 @foreach($errors->all() as $message)
                     <li>{{ $message }}</li>
@@ -32,12 +39,12 @@
     @endif
 
     @if($categories->isEmpty())
-        <p class="px-5 py-16 text-center text-ink-soft">Menu belum tersedia saat ini. Silakan tanya langsung ke kasir.</p>
+        <p class="px-5 py-16 text-center text-ink-soft">{{ __('Menu belum tersedia saat ini. Silakan tanya langsung ke kasir.') }}</p>
     @else
         <form id="order-form" action="{{ route('qr.store', $spot->qr_token) }}" method="POST" class="flex-1 pb-36">
             @csrf
 
-            <nav aria-label="Kategori menu" class="sticky top-0 z-20 border-b border-sand bg-cream/95 backdrop-blur">
+            <nav aria-label="{{ __('Kategori menu') }}" class="sticky top-0 z-20 border-b border-sand bg-cream/95 backdrop-blur">
                 <ul class="flex gap-2 overflow-x-auto px-4 py-3 [scrollbar-width:none]">
                     @foreach($categories as $category)
                         <li class="shrink-0">
@@ -69,13 +76,13 @@
                                         <div class="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
                                             <p class="font-bold text-ember-dark">{{ $rupiah($item->price) }}</p>
                                             <div class="inline-flex shrink-0 items-center rounded-full border border-sand-dark bg-[#fffdf8]">
-                                                <button type="button" data-step="-1" class="grid size-11 place-items-center rounded-full text-forest-800 transition hover:bg-forest-100 disabled:opacity-35" aria-label="Kurangi {{ $item->name }}">
+                                                <button type="button" data-step="-1" class="grid size-11 place-items-center rounded-full text-forest-800 transition hover:bg-forest-100 disabled:opacity-35" aria-label="{{ __('Kurangi :name', ['name' => $item->name]) }}">
                                                     <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" d="M5 12h14"/></svg>
                                                 </button>
                                                 <input type="number" name="items[{{ $item->id }}][qty]" value="{{ $qty }}" min="0" max="{{ \App\Http\Requests\Public\StoreQrOrderRequest::MAX_QTY }}" inputmode="numeric"
-                                                       aria-label="Jumlah {{ $item->name }}" data-qty
+                                                       aria-label="{{ __('Jumlah :name', ['name' => $item->name]) }}" data-qty
                                                        class="h-11 w-9 appearance-none border-0 bg-transparent p-0 text-center font-bold text-forest-900 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none">
-                                                <button type="button" data-step="1" class="grid size-11 place-items-center rounded-full text-forest-800 transition hover:bg-forest-100 disabled:opacity-35" aria-label="Tambah {{ $item->name }}">
+                                                <button type="button" data-step="1" class="grid size-11 place-items-center rounded-full text-forest-800 transition hover:bg-forest-100 disabled:opacity-35" aria-label="{{ __('Tambah :name', ['name' => $item->name]) }}">
                                                     <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
                                                 </button>
                                             </div>
@@ -83,8 +90,8 @@
                                     </div>
                                 </div>
                                 <div data-notes @if($qty === 0) hidden @endif class="mt-3">
-                                    <label for="catatan-{{ $item->id }}" class="field-label">Catatan untuk {{ $item->name }}</label>
-                                    <input id="catatan-{{ $item->id }}" type="text" name="items[{{ $item->id }}][notes]" value="{{ $note }}" maxlength="{{ \App\Http\Requests\Public\StoreQrOrderRequest::MAX_NOTE_LENGTH }}" placeholder="Contoh: tidak pedas" class="field-input !min-h-11 !font-medium">
+                                    <label for="catatan-{{ $item->id }}" class="field-label">{{ __('Catatan untuk :name', ['name' => $item->name]) }}</label>
+                                    <input id="catatan-{{ $item->id }}" type="text" name="items[{{ $item->id }}][notes]" value="{{ $note }}" maxlength="{{ \App\Http\Requests\Public\StoreQrOrderRequest::MAX_NOTE_LENGTH }}" placeholder="{{ __('Contoh: tidak pedas') }}" class="field-input !min-h-11 !font-medium">
                                 </div>
                             </li>
                         @endforeach
@@ -93,26 +100,26 @@
             @endforeach
 
             <section class="mx-4 mt-10 rounded-3xl border border-sand bg-[#fffdf8] p-5" aria-labelledby="judul-pemesan">
-                <h2 id="judul-pemesan" class="font-display text-2xl font-semibold text-forest-900">Data pemesan</h2>
+                <h2 id="judul-pemesan" class="font-display text-2xl font-semibold text-forest-900">{{ __('Data pemesan') }}</h2>
 
                 <div class="mt-4">
-                    <label for="customer_name" class="field-label">Nama</label>
+                    <label for="customer_name" class="field-label">{{ __('Nama') }}</label>
                     <input id="customer_name" name="customer_name" type="text" required maxlength="80" autocomplete="name" value="{{ old('customer_name') }}" class="field-input">
                 </div>
                 <div class="mt-4">
-                    <label for="customer_phone" class="field-label">Nomor WhatsApp (opsional)</label>
+                    <label for="customer_phone" class="field-label">{{ __('Nomor WhatsApp (opsional)') }}</label>
                     <input id="customer_phone" name="customer_phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" value="{{ old('customer_phone') }}" class="field-input">
                 </div>
 
                 <fieldset class="mt-6">
-                    <legend class="field-label">Cara bayar</legend>
+                    <legend class="field-label">{{ __('Cara bayar') }}</legend>
                     <div class="grid gap-2">
                         @foreach($choices as $choice)
                             <label class="flex min-h-14 cursor-pointer items-center gap-3 rounded-xl border-[1.5px] border-sand-dark bg-cream px-4 py-3 has-[:checked]:border-forest-700 has-[:checked]:bg-forest-100">
                                 <input type="radio" name="payment_choice" value="{{ $choice->value }}" required @checked($selectedChoice === $choice->value) class="size-5 accent-forest-800">
                                 <span class="font-semibold text-forest-900">
-                                    {{ $choice->label() }}
-                                    <span class="block text-sm font-medium text-ink-soft">{{ $choice->hint() }}</span>
+                                    {{ __($choice->label()) }}
+                                    <span class="block text-sm font-medium text-ink-soft">{{ __($choice->hint()) }}</span>
                                 </span>
                             </label>
                         @endforeach
@@ -121,13 +128,13 @@
             </section>
         </form>
 
-        <div class="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-xl rounded-t-3xl bg-forest-900 px-5 pb-5 pt-4 text-cream shadow-[0_-8px_24px_rgb(20_38_27/0.25)]" role="region" aria-label="Keranjang">
+        <div class="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-xl rounded-t-3xl bg-forest-900 px-5 pb-5 pt-4 text-cream shadow-[0_-8px_24px_rgb(20_38_27/0.25)]" role="region" aria-label="{{ __('Keranjang') }}">
             <div class="flex items-center justify-between gap-4">
                 <div>
                     <p class="text-xs font-bold uppercase tracking-widest text-forest-300"><span data-cart-count>0</span> item</p>
                     <p class="font-display text-2xl font-semibold tabular-nums" data-cart-total aria-live="polite">Rp 0</p>
                 </div>
-                <button type="submit" form="order-form" data-cart-submit class="btn btn-primary min-w-40 disabled:cursor-not-allowed disabled:opacity-50">Kirim pesanan</button>
+                <button type="submit" form="order-form" data-cart-submit class="btn btn-primary min-w-40 disabled:cursor-not-allowed disabled:opacity-50">{{ __('Kirim pesanan') }}</button>
             </div>
         </div>
     @endif

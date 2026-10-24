@@ -49,10 +49,8 @@ class OrderService
         $billToBooking ??= $source === Order::SOURCE_PREORDER || $bookingId !== null;
 
         $total = array_sum(array_column($lines, 'subtotal'));
-        // Pre-orders are taxed inside booking.total at checkout; other food billed to a booking keeps its own tax.
-        $tax = $billToBooking && $source !== Order::SOURCE_PREORDER ? $this->pricing->taxFor($total) : null;
 
-        return DB::transaction(function () use ($source, $lines, $bookingId, $diningSpotId, $scheduledAt, $customerName, $customerPhone, $billToBooking, $total, $tax) {
+        return DB::transaction(function () use ($source, $lines, $bookingId, $diningSpotId, $scheduledAt, $customerName, $customerPhone, $billToBooking, $total) {
             $order = Order::create([
                 'code' => $this->generateCode(),
                 'source' => $source,
@@ -63,7 +61,6 @@ class OrderService
                 'scheduled_at' => $scheduledAt,
                 'status' => OrderStatus::Baru->value,
                 'total' => $total,
-                'tax' => $tax,
                 'payment_status' => Order::PAYMENT_UNPAID,
                 'bill_to_booking' => $billToBooking,
             ]);

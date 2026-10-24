@@ -10,7 +10,7 @@
     $ogImageHeight = $hasCustomOgImage ? 1067 : 630;
 @endphp
 <!DOCTYPE html>
-<html lang="id">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -25,7 +25,7 @@
     <meta property="og:title" content="{{ $pageTitle }}">
     <meta property="og:description" content="{{ $pageDescription }}">
     <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:locale" content="id_ID">
+    <meta property="og:locale" content="{{ app()->getLocale() === 'en' ? 'en_US' : 'id_ID' }}">
     <meta property="og:image" content="{{ $ogImage }}">
     <meta property="og:image:width" content="{{ $ogImageWidth }}">
     <meta property="og:image:height" content="{{ $ogImageHeight }}">
@@ -39,7 +39,7 @@
     @stack('head')
 </head>
 <body class="min-h-screen flex flex-col">
-    <a href="#konten" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:bg-cream focus:text-forest-900 focus:px-4 focus:py-2 focus:rounded-lg">Lewati ke konten</a>
+    <a href="#konten" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:bg-cream focus:text-forest-900 focus:px-4 focus:py-2 focus:rounded-lg">{{ __('Lewati ke konten') }}</a>
 
     @include('partials.public-nav')
 

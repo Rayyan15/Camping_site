@@ -27,11 +27,11 @@
     {{-- Petang: the visitor has picked a tent and is deciding on a night. Same dusk tint and tent-peak edge as the landing. --}}
     <div class="relative bg-dusk-100 pb-32 pt-8 text-forest-900 sm:pb-40 sm:pt-10">
         <div class="mx-auto max-w-6xl px-4 sm:px-6">
-            <nav aria-label="Jejak halaman">
+            <nav aria-label="{{ __('Jejak halaman') }}">
                 <ol class="flex flex-wrap items-center gap-x-2 text-sm font-semibold text-ink-soft">
-                    <li><a href="{{ route('home') }}" class="inline-flex min-h-11 items-center underline-offset-4 hover:text-forest-900 hover:underline">Beranda</a></li>
+                    <li><a href="{{ route('home') }}" class="inline-flex min-h-11 items-center underline-offset-4 hover:text-forest-900 hover:underline">{{ __('Beranda') }}</a></li>
                     <li aria-hidden="true">/</li>
-                    <li><a href="{{ route('tenda.index') }}" class="inline-flex min-h-11 items-center underline-offset-4 hover:text-forest-900 hover:underline">Semua tenda</a></li>
+                    <li><a href="{{ route('tenda.index') }}" class="inline-flex min-h-11 items-center underline-offset-4 hover:text-forest-900 hover:underline">{{ __('Semua tenda') }}</a></li>
                     <li aria-hidden="true">/</li>
                     <li aria-current="page" class="text-forest-900">{{ $unitType->name }}</li>
                 </ol>
@@ -39,29 +39,29 @@
 
             <header class="mt-4 grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-end">
                 <div>
-                    <p class="font-display text-xl italic text-ember-dark">Petang</p>
+                    <p class="font-display text-xl italic text-ember-dark">{{ __('Petang') }}</p>
                     <h1 class="font-display mt-2 text-[clamp(3.5rem,11vw,8rem)] font-semibold leading-[0.95]">{{ $unitType->name }}</h1>
                 </div>
                 <div>
                     <dl class="grid grid-cols-2 gap-x-6 gap-y-4 border-t border-forest-900/25 pt-4">
                         <div>
-                            <dt class="text-xs font-semibold text-ink-soft">Weekday, per malam</dt>
+                            <dt class="text-xs font-semibold text-ink-soft">{{ __('Weekday, per malam') }}</dt>
                             <dd class="font-display text-3xl font-semibold">{{ $formatRupiah($unitType->base_price_weekday) }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs font-semibold text-ink-soft">Weekend, per malam</dt>
+                            <dt class="text-xs font-semibold text-ink-soft">{{ __('Weekend, per malam') }}</dt>
                             <dd class="font-display text-3xl font-semibold">{{ $formatRupiah($unitType->base_price_weekend) }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs font-semibold text-ink-soft">Kapasitas</dt>
-                            <dd class="text-lg font-bold">Hingga {{ $unitType->capacity }} orang</dd>
+                            <dt class="text-xs font-semibold text-ink-soft">{{ __('Kapasitas') }}</dt>
+                            <dd class="text-lg font-bold">{{ __('Hingga :count orang', ['count' => $unitType->capacity]) }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs font-semibold text-ink-soft">Jumlah unit</dt>
-                            <dd class="text-lg font-bold">{{ $unitType->units_count }} unit</dd>
+                            <dt class="text-xs font-semibold text-ink-soft">{{ __('Jumlah unit') }}</dt>
+                            <dd class="text-lg font-bold">{{ __(':count unit', ['count' => $unitType->units_count]) }}</dd>
                         </div>
                     </dl>
-                    <a href="#ketersediaan" class="btn btn-primary mt-6 w-full sm:w-auto">Cek ketersediaan</a>
+                    <a href="#ketersediaan" class="btn btn-primary mt-6 w-full sm:w-auto">{{ __('Cek ketersediaan') }}</a>
                 </div>
             </header>
 

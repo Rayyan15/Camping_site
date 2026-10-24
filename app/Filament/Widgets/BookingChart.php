@@ -13,7 +13,10 @@ class BookingChart extends ChartWidget
 
     protected ?string $maxHeight = '280px';
 
-    protected ?string $heading = 'Booking Masuk, 14 Hari Terakhir';
+    public function getHeading(): ?string
+    {
+        return __('Booking Masuk, 14 Hari Terakhir');
+    }
 
     protected static ?int $sort = 5;
 
@@ -31,7 +34,7 @@ class BookingChart extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => 'Booking',
+                    'label' => __('Booking'),
                     'data' => $series['data'],
                     'backgroundColor' => config('brand.forest.600'),
                     'borderRadius' => 6,

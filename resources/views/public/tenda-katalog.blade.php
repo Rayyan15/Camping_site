@@ -2,44 +2,48 @@
 
 @php
     $formatRupiah = fn (int $amount) => 'Rp '.number_format($amount, 0, ',', '.');
-    $sortOptions = ['termurah' => 'Termurah', 'termahal' => 'Termahal', 'kapasitas' => 'Paling lega'];
+    $sortOptions = [
+        'termurah' => __('Termurah'),
+        'termahal' => __('Termahal'),
+        'kapasitas' => __('Paling lega'),
+    ];
     $isFiltered = $filters['tamu'] || $filters['fasilitas'] !== [] || $filters['urutkan'] !== 'termurah';
 @endphp
 
-@section('title', 'Katalog tenda - '.config('site.name'))
-@section('description', 'Semua tipe tenda '.config('site.name').' dengan kapasitas, fasilitas, dan harga per malam. Saring sesuai rombongan Anda.')
+@section('title', __('Katalog tenda').' - '.config('site.name'))
+@section('description', __('Semua tipe tenda :site dengan kapasitas, fasilitas, dan harga per malam. Saring sesuai rombongan Anda.', ['site' => config('site.name')]))
 
 @section('content')
     <div class="relative bg-dusk-100 pb-32 pt-8 text-forest-900 sm:pb-40 sm:pt-10">
         <div class="mx-auto max-w-6xl px-4 sm:px-6">
-            <nav aria-label="Jejak halaman">
+            <nav aria-label="{{ __('Jejak halaman') }}">
                 <ol class="flex flex-wrap items-center gap-x-2 text-sm font-semibold text-ink-soft">
-                    <li><a href="{{ route('home') }}" class="inline-flex min-h-11 items-center underline-offset-4 hover:text-forest-900 hover:underline">Beranda</a></li>
+                    <li><a href="{{ route('home') }}" class="inline-flex min-h-11 items-center underline-offset-4 hover:text-forest-900 hover:underline">{{ __('Beranda') }}</a></li>
                     <li aria-hidden="true">/</li>
-                    <li aria-current="page" class="text-forest-900">Katalog tenda</li>
+                    <li aria-current="page" class="text-forest-900">{{ __('Katalog tenda') }}</li>
                 </ol>
             </nav>
 
             <header class="mt-4 max-w-3xl">
-                <p class="font-display text-xl italic text-ember-dark">Katalog</p>
-                <h1 class="font-display mt-2 text-4xl font-semibold leading-[1.05] sm:text-6xl">Semua tenda, berdampingan.</h1>
-                <p class="mt-4 max-w-prose text-ink-soft">Bandingkan kapasitas, fasilitas, dan harga per malam. Pilih tanggal di halaman tenda untuk melihat unit yang masih kosong.</p>
+                <p class="font-display text-xl italic text-ember-dark">{{ __('Katalog') }}</p>
+                <h1 class="font-display mt-2 text-4xl font-semibold leading-[1.05] sm:text-6xl">{{ __('Semua tenda, berdampingan.') }}</h1>
+                <p class="mt-4 max-w-prose text-ink-soft">{{ __('Bandingkan kapasitas, fasilitas, dan harga per malam. Pilih tanggal di halaman tenda untuk melihat unit yang masih kosong.') }}</p>
             </header>
 
-            <form method="GET" action="{{ route('tenda.index') }}" class="mt-8 rounded-3xl border border-sand bg-[#fffdf8] p-5 sm:p-6" aria-label="Saring tenda">
+            <form method="GET" action="{{ route('tenda.index') }}" class="mt-8 rounded-3xl border border-sand bg-[#fffdf8] p-5 sm:p-6" aria-label="{{ __('Saring tenda') }}">
                 <div class="grid gap-6 lg:grid-cols-[12rem_1fr_auto] lg:items-end">
                     <div>
-                        <label for="tamu" class="field-label">Jumlah tamu</label>
+                        <label for="tamu" class="field-label">{{ __('Jumlah tamu') }}</label>
                         <select id="tamu" name="tamu" class="field-input">
-                            <option value="">Berapa saja</option>
+                            <option value="">{{ __('Berapa saja') }}</option>
                             @foreach(range(1, 12) as $count)
-                                <option value="{{ $count }}" @selected($filters['tamu'] === $count)>{{ $count }} orang</option>
+                                <option value="{{ $count }}" @selected($filters['tamu'] === $count)>{{ $count }} {{ __('orang') }}</option>
                             @endforeach
                         </select>
                     </div>
 
                     <fieldset>
-                        <legend class="field-label">Urutkan</legend>
+                        <legend class="field-label">{{ __('Urutkan') }}</legend>
                         <div class="flex flex-wrap gap-2">
                             @foreach($sortOptions as $value => $label)
                                 <label class="cursor-pointer">
@@ -51,9 +55,9 @@
                     </fieldset>
 
                     <div class="flex items-center gap-3">
-                        <button type="submit" class="btn btn-primary">Terapkan</button>
+                        <button type="submit" class="btn btn-primary">{{ __('Terapkan') }}</button>
                         @if($isFiltered)
-                            <a href="{{ route('tenda.index') }}" class="inline-flex min-h-11 items-center text-sm font-semibold text-ink-soft underline underline-offset-4 hover:text-forest-900">Hapus filter</a>
+                            <a href="{{ route('tenda.index') }}" class="inline-flex min-h-11 items-center text-sm font-semibold text-ink-soft underline underline-offset-4 hover:text-forest-900">{{ __('Hapus filter') }}</a>
                         @endif
                     </div>
                 </div>

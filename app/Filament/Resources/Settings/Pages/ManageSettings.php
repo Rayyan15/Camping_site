@@ -43,18 +43,10 @@ class ManageSettings extends Page
     public function form(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Tarif dan jam menginap')
-                ->description('Pajak dipakai pada setiap perhitungan harga booking dan pesanan makanan. Jam check-in dan check-out tampil sebagai informasi untuk tamu.')
+            Section::make('Jam menginap')
+                ->description('Jam check-in dan check-out tampil sebagai informasi untuk tamu.')
                 ->columns(3)
                 ->schema([
-                    TextInput::make('tax_rate_percent')
-                        ->label('Pajak dan biaya layanan')
-                        ->numeric()
-                        ->minValue(0)
-                        ->maxValue(100)
-                        ->step(0.01)
-                        ->suffix('%')
-                        ->required(),
                     TimePicker::make('check_in_time')
                         ->label('Jam check-in standar')
                         ->seconds(false)

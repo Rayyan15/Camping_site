@@ -14,7 +14,6 @@ use Illuminate\Database\Seeder;
 class SettingsSeeder extends Seeder
 {
     private const CONFIRMED = [
-        [SettingKey::TaxRate, '0'],
         [SettingKey::DownPaymentPercent, '0'],
         [SettingKey::CheckInTime, SettingKey::DEFAULT_CHECK_IN_TIME],
         [SettingKey::CheckOutTime, SettingKey::DEFAULT_CHECK_OUT_TIME],

@@ -16,13 +16,19 @@ class BookingResource extends Resource
 {
     protected static ?string $model = Booking::class;
 
-    protected static ?string $modelLabel = 'Booking';
+    public static function getModelLabel(): string
+    {
+        return __('Booking');
+    }
 
-    protected static ?string $pluralModelLabel = 'Daftar Booking';
+    public static function getPluralModelLabel(): string
+    {
+        return __('Daftar Booking');
+    }
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Operasional';
+        return __('Operasional');
     }
 
     public static function getNavigationSort(): ?int

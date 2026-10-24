@@ -21,14 +21,6 @@ class SettingRepository
         return $this->all()[$key->value] ?? null;
     }
 
-    /** Tax as a fraction, 0.11 means 11 percent. */
-    public function taxRate(): float
-    {
-        $configured = $this->get(SettingKey::TaxRate);
-
-        return $configured !== null ? (float) $configured : (float) config('booking.tax_rate');
-    }
-
     public function checkInTime(): string
     {
         return $this->get(SettingKey::CheckInTime) ?? SettingKey::DEFAULT_CHECK_IN_TIME;
@@ -68,12 +60,11 @@ class SettingRepository
     }
 
     /**
-     * @return array{tax_rate_percent: float, check_in_time: string, check_out_time: string, down_payment_percent: int, bank_name: ?string, bank_account_number: ?string, bank_account_holder: ?string, payment_transfer_enabled: bool, payment_qris_enabled: bool, payment_cash_enabled: bool, qris_image: ?string}
+     * @return array{check_in_time: string, check_out_time: string, down_payment_percent: int, bank_name: ?string, bank_account_number: ?string, bank_account_holder: ?string, payment_transfer_enabled: bool, payment_qris_enabled: bool, payment_cash_enabled: bool, qris_image: ?string}
      */
     public function formValues(): array
     {
         return [
-            'tax_rate_percent' => round($this->taxRate() * 100, 2),
             'check_in_time' => $this->checkInTime(),
             'check_out_time' => $this->checkOutTime(),
             'down_payment_percent' => $this->downPaymentPercent(),
@@ -88,12 +79,11 @@ class SettingRepository
     }
 
     /**
-     * @param  array{tax_rate_percent: int|float|string, check_in_time: string, check_out_time: string, down_payment_percent: int|string, bank_name?: ?string, bank_account_number?: ?string, bank_account_holder?: ?string, payment_transfer_enabled?: bool, payment_qris_enabled?: bool, payment_cash_enabled?: bool, qris_image?: ?string}  $values
+     * @param  array{check_in_time: string, check_out_time: string, down_payment_percent: int|string, bank_name?: ?string, bank_account_number?: ?string, bank_account_holder?: ?string, payment_transfer_enabled?: bool, payment_qris_enabled?: bool, payment_cash_enabled?: bool, qris_image?: ?string}  $values
      */
     public function saveFormValues(array $values): void
     {
         DB::transaction(function () use ($values) {
-            $this->put(SettingKey::TaxRate, (string) round((float) $values['tax_rate_percent'] / 100, 4));
             $this->put(SettingKey::CheckInTime, $values['check_in_time']);
             $this->put(SettingKey::CheckOutTime, $values['check_out_time']);
             $this->put(SettingKey::DownPaymentPercent, (string) (int) $values['down_payment_percent']);

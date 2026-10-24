@@ -1,16 +1,17 @@
 @php
+    $locale = app()->getLocale();
     $rupiah = fn (int $amount): string => 'Rp '.number_format($amount, 0, ',', '.');
     $lines = array_merge(
-        array_map(fn ($l) => $l + ['group' => 'Akomodasi'], $unitLines),
-        array_map(fn ($l) => $l + ['group' => 'Tambahan'], $addonLines),
-        array_map(fn ($l) => $l + ['group' => 'Pesanan makanan dan minuman'], $foodLines),
+        array_map(fn ($l) => $l + ['group' => __('Akomodasi')], $unitLines),
+        array_map(fn ($l) => $l + ['group' => __('Tambahan')], $addonLines),
+        array_map(fn ($l) => $l + ['group' => __('Pesanan makanan dan minuman')], $foodLines),
     );
 @endphp
 <!doctype html>
-<html lang="id">
+<html lang="{{ str_replace('_', '-', $locale) }}">
 <head>
     <meta charset="utf-8">
-    <title>Invoice {{ $invoiceNumber }}</title>
+    <title>{{ __('Invoice') }} {{ $invoiceNumber }}</title>
     <style>
         @page { margin: 40px 44px; }
         body { font-family: 'DejaVu Sans', sans-serif; font-size: 10px; color: #1f2a22; line-height: 1.5; }
@@ -57,7 +58,7 @@
     <table class="meta">
         <tr>
             <td style="width: 34%">
-                <div class="label">Ditagihkan kepada</div>
+                <div class="label">{{ __('Ditagihkan kepada') }}</div>
                 <strong>{{ $booking->customer?->name ?? '-' }}</strong>
                 @if($booking->customer?->phone)
                     <div class="muted">{{ $booking->customer->phone }}</div>
@@ -67,16 +68,16 @@
                 @endif
             </td>
             <td style="width: 33%">
-                <div class="label">Kode booking</div>
+                <div class="label">{{ __('Kode booking') }}</div>
                 <strong>{{ $booking->code }}</strong>
-                <div class="label" style="margin-top: 8px">Tamu</div>
-                {{ $booking->guests }} orang
+                <div class="label" style="margin-top: 8px">{{ __('Tamu') }}</div>
+                {{ $booking->guests }} {{ __('orang') }}
             </td>
             <td style="width: 33%">
-                <div class="label">Menginap</div>
-                {{ $booking->check_in->format('d/m/Y') }} sampai {{ $booking->check_out->format('d/m/Y') }}
-                <div class="label" style="margin-top: 8px">Status</div>
-                <span class="stamp {{ $isSettled ? '' : 'unpaid' }}">{{ $isSettled ? 'LUNAS' : 'BELUM LUNAS' }}</span>
+                <div class="label">{{ __('Menginap') }}</div>
+                {{ $booking->check_in->format('d/m/Y') }} {{ __('sampai') }} {{ $booking->check_out->format('d/m/Y') }}
+                <div class="label" style="margin-top: 8px">{{ __('Status') }}</div>
+                <span class="stamp {{ $isSettled ? '' : 'unpaid' }}">{{ $isSettled ? __('LUNAS') : __('BELUM LUNAS') }}</span>
             </td>
         </tr>
     </table>
@@ -84,10 +85,10 @@
     <table class="items">
         <thead>
             <tr>
-                <th>Deskripsi</th>
-                <th class="right" style="width: 8%">Jml</th>
-                <th class="right" style="width: 22%">Harga</th>
-                <th class="right" style="width: 22%">Subtotal</th>
+                <th>{{ __('Deskripsi') }}</th>
+                <th class="right" style="width: 8%">{{ __('Jml') }}</th>
+                <th class="right" style="width: 22%">{{ __('Harga') }}</th>
+                <th class="right" style="width: 22%">{{ __('Subtotal') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -108,19 +109,18 @@
     </table>
 
     <table class="totals">
-        <tr><td>Subtotal</td><td class="right">{{ $rupiah($subtotal) }}</td></tr>
-        <tr><td>Pajak</td><td class="right">{{ $rupiah($tax) }}</td></tr>
-        <tr class="grand"><td>Total</td><td class="right">{{ $rupiah($grandTotal) }}</td></tr>
-        <tr><td>Dibayar</td><td class="right">{{ $rupiah($booking->paid_amount) }}</td></tr>
-        <tr><td>Sisa tagihan</td><td class="right">{{ $rupiah($balance) }}</td></tr>
+        <tr><td>{{ __('Subtotal') }}</td><td class="right">{{ $rupiah($subtotal) }}</td></tr>
+        <tr class="grand"><td>{{ __('Total') }}</td><td class="right">{{ $rupiah($grandTotal) }}</td></tr>
+        <tr><td>{{ __('Dibayar') }}</td><td class="right">{{ $rupiah($booking->paid_amount) }}</td></tr>
+        <tr><td>{{ __('Sisa tagihan') }}</td><td class="right">{{ $rupiah($balance) }}</td></tr>
     </table>
 
     <div class="notes muted">
         @if($booking->notes)
-            <div><strong>Catatan:</strong> {{ $booking->notes }}</div>
+            <div><strong>{{ __('Catatan:') }}</strong> {{ $booking->notes }}</div>
         @endif
-        <div>Invoice ini dibuat otomatis dan sah tanpa tanda tangan. Simpan kode booking {{ $booking->code }} untuk check-in.</div>
-        <div>Terima kasih telah menginap di {{ $business['name'] ?? 'tempat kami' }}.</div>
+        <div>{{ __('Invoice ini dibuat otomatis dan sah tanpa tanda tangan. Simpan kode booking :code untuk check-in.', ['code' => $booking->code]) }}</div>
+        <div>{{ __('Terima kasih telah menginap di :name.', ['name' => $business['name'] ?? 'tempat kami']) }}</div>
     </div>
 </body>
 </html>

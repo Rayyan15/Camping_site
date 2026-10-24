@@ -7,6 +7,7 @@ use App\Filament\Pages\Auth\Login;
 use App\Http\Middleware\AuthenticateActiveUser;
 use App\Http\Middleware\EnsureOwnerHasTwoFactor;
 use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\SetLocale;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Enums\ThemeMode;
 use Filament\FontProviders\LocalFontProvider;
@@ -50,7 +51,7 @@ class AdminPanelProvider extends PanelProvider
             // Same body face as the public site, served from the build instead of a font CDN.
             ->font('Plus Jakarta Sans', provider: LocalFontProvider::class)
             ->favicon(asset('favicon-32.png'))
-            ->renderHook(PanelsRenderHook::USER_MENU_BEFORE, fn (): string => view('filament.theme-toggle')->render())
+            ->renderHook(PanelsRenderHook::USER_MENU_BEFORE, fn (): string => view('filament.language-switch')->render().view('filament.theme-toggle')->render())
             ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => view('filament.brand-tokens')->render().view('filament.panel-chrome')->render())
             ->sidebarCollapsibleOnDesktop()
             // Brand forest as the only accent, and a forest-tinted neutral as gray so every surface shares one hue.
@@ -64,12 +65,12 @@ class AdminPanelProvider extends PanelProvider
                 // Dashboard is auto-discovered
             ])
             ->navigationGroups([
-                'Operasional',
-                'Menu',
-                'Manajemen Tenda',
-                'SDM & Karyawan',
-                'Laporan & Keuangan',
-                'Pengaturan',
+                __('Operasional'),
+                __('Menu'),
+                __('Manajemen Tenda'),
+                __('SDM & Karyawan'),
+                __('Laporan & Keuangan'),
+                __('Pengaturan'),
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
@@ -79,6 +80,7 @@ class AdminPanelProvider extends PanelProvider
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
+                SetLocale::class,
                 AuthenticateSession::class,
                 SecurityHeaders::class,
                 ShareErrorsFromSession::class,

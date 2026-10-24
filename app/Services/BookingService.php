@@ -195,7 +195,6 @@ class BookingService
             $foodTotal = array_sum(array_column($this->pricing->menuLines($preorders), 'subtotal'));
 
             $subtotal = $unitLines->sum('subtotal') + array_sum(array_column($addonLines, 'subtotal')) + $foodTotal;
-            $tax = $this->pricing->taxFor($subtotal);
 
             $booking = Booking::create([
                 'code' => $this->codes->generate(),
@@ -206,8 +205,7 @@ class BookingService
                 'status' => BookingStatus::PendingPayment,
                 'hold_expires_at' => now()->addMinutes(config('booking.hold_minutes')),
                 'subtotal' => $subtotal,
-                'tax' => $tax,
-                'total' => $subtotal + $tax,
+                'total' => $subtotal,
                 'notes' => $notes,
             ]);
 

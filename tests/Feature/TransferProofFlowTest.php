@@ -101,11 +101,11 @@ class TransferProofFlowTest extends TestCase
         return $this->booking->payments()->where('status', PaymentStatus::Pending)->latest('id')->firstOrFail();
     }
 
-    public function test_hold_is_two_hours_by_default(): void
+    public function test_hold_is_configured_minutes_by_default(): void
     {
-        $this->assertSame(120, config('booking.hold_minutes'));
+        $this->assertSame(15, config('booking.hold_minutes'));
         $this->assertSame(24, config('booking.proof_review_hours'));
-        $this->assertTrue($this->booking->hold_expires_at->equalTo(now()->addMinutes(120)));
+        $this->assertTrue($this->booking->hold_expires_at->equalTo(now()->addMinutes(15)));
     }
 
     public function test_valid_upload_creates_a_pending_transfer_with_the_server_amount(): void
@@ -176,6 +176,7 @@ class TransferProofFlowTest extends TestCase
 
     public function test_checkout_shows_the_account_amount_and_upload_form(): void
     {
+        $expectedSeconds = config('booking.hold_minutes') * 60;
         $this->get(route('checkout.show', $this->booking->access_token))
             ->assertOk()
             ->assertSee('Bank Uji')
@@ -183,7 +184,7 @@ class TransferProofFlowTest extends TestCase
             ->assertSee('Pemilik Uji')
             ->assertSee('Rp '.number_format($this->booking->total, 0, ',', '.'))
             ->assertSee('name="proof"', false)
-            ->assertSee('data-remaining="7200"', false)
+            ->assertSee('data-remaining="'.$expectedSeconds.'"', false)
             ->assertDontSee('name="plan"', false);
     }
 
@@ -259,7 +260,7 @@ class TransferProofFlowTest extends TestCase
         $this->assertSame('Nominal tidak sesuai', $payment->rejection_reason);
         $this->assertSame(0, $this->booking->fresh()->paid_amount);
         Mail::assertQueued(TransferProofRejected::class, fn ($mail) => $mail->reason === 'Nominal tidak sesuai');
-        $this->assertTrue($this->booking->fresh()->hold_expires_at->equalTo(now()->addMinutes(120)));
+        $this->assertTrue($this->booking->fresh()->hold_expires_at->equalTo(now()->addMinutes(config('booking.hold_minutes'))));
 
         $this->get(route('booking.status', $this->booking->access_token))
             ->assertOk()

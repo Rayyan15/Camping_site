@@ -31,9 +31,6 @@ class BookingFlowTest extends TestCase
     {
         parent::setUp();
 
-        // Amounts below were written for an 11% tax; the client charges none, so pin the rate here.
-        config(['booking.tax_rate' => 0.11]);
-
         $this->travelTo('2026-12-01 10:00:00');
 
         $this->unitType = UnitType::create([
@@ -90,8 +87,7 @@ class BookingFlowTest extends TestCase
 
         // Unit 2 nights x 100000, extra bed 75000 x 1 x 2 nights, coffee 2 x 12000.
         $this->assertSame(200000 + 150000 + 24000, $booking->subtotal);
-        $this->assertSame(41140, $booking->tax);
-        $this->assertSame(374000 + 41140, $booking->total);
+        $this->assertSame(374000, $booking->total);
         $this->assertSame(BookingStatus::PendingPayment, $booking->status);
         $this->assertEquals(now()->addMinutes(config('booking.hold_minutes')), $booking->hold_expires_at);
         $this->assertSame('6281234567890', $booking->customer->phone);
@@ -177,7 +173,7 @@ class BookingFlowTest extends TestCase
             ->assertSee('Extra Bed')
             ->assertSee('Kopi')
             ->assertSee('Kirim bukti bayar')
-            ->assertSee('data-remaining="7200"', false);
+            ->assertSee('data-remaining="'.(config('booking.hold_minutes') * 60).'"', false);
     }
 
     public function test_checkout_shows_expired_state_after_hold_lapses(): void

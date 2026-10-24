@@ -29,7 +29,10 @@ class RevenueTrendChart extends ChartWidget
 
     protected static ?int $sort = 6;
 
-    protected ?string $heading = 'Pendapatan Bersih';
+    public function getHeading(): ?string
+    {
+        return __('Pendapatan Bersih');
+    }
 
     protected ?string $maxHeight = '320px';
 
@@ -44,7 +47,7 @@ class RevenueTrendChart extends ChartWidget
     {
         return $schema->components([
             Select::make('granularity')
-                ->label('Agregasi')
+                ->label(__('Agregasi'))
                 ->options(RevenueGranularity::options())
                 ->default(RevenueGranularity::Day->value)
                 ->native(false)

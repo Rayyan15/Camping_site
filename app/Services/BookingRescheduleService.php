@@ -65,8 +65,7 @@ class BookingRescheduleService
 
             $nights = $this->pricing->nightsBetween($checkIn, $checkOut);
             $newSubtotal = $this->repriceLines($locked, $lines, $unitIds, $checkIn, $checkOut, $nights);
-            $newTax = $this->pricing->taxFor($newSubtotal);
-            $newTotal = $newSubtotal + $newTax;
+            $newTotal = $newSubtotal;
             $difference = $newTotal - $locked->total;
 
             if ($difference > 0 && ! $allowPriceIncrease) {
@@ -86,7 +85,6 @@ class BookingRescheduleService
                 'check_in' => $checkIn,
                 'check_out' => $checkOut,
                 'subtotal' => $newSubtotal,
-                'tax' => $newTax,
                 'total' => $newTotal,
                 'reschedule_count' => $locked->reschedule_count + 1,
                 'reschedule_credit' => max(0, $locked->paid_amount - $newTotal),

@@ -33,9 +33,6 @@ class BookingPricingTest extends TestCase
     {
         parent::setUp();
 
-        // Amounts below were written for an 11% tax; the client charges none, so pin the rate here.
-        config(['booking.tax_rate' => 0.11]);
-
         $this->travelTo('2026-12-01 10:00:00');
 
         $this->unitType = UnitType::create([
@@ -54,14 +51,13 @@ class BookingPricingTest extends TestCase
         );
     }
 
-    public function test_weekday_nights_use_weekday_price_with_default_tax(): void
+    public function test_weekday_nights_use_weekday_price(): void
     {
         // Mon 2027-01-04 to Wed 2027-01-06: two weekday nights.
         $booking = $this->book('2027-01-04', '2027-01-06');
 
         $this->assertSame(200000, $booking->subtotal);
-        $this->assertSame(22000, $booking->tax);
-        $this->assertSame(222000, $booking->total);
+        $this->assertSame(200000, $booking->total);
     }
 
     public function test_friday_and_saturday_nights_use_weekend_price(): void
@@ -81,14 +77,13 @@ class BookingPricingTest extends TestCase
         $this->assertSame(400000 + self::WEEKDAY_PRICE, $booking->subtotal);
     }
 
-    public function test_addons_are_added_to_subtotal_before_tax(): void
+    public function test_addons_are_added_to_subtotal(): void
     {
         $addon = Addon::create(['name' => 'Kayu bakar', 'price' => 50000, 'unit' => 'per item', 'is_active' => true]);
 
         $booking = $this->book('2027-01-04', '2027-01-05', [$addon->id => 2]);
 
         $this->assertSame(self::WEEKDAY_PRICE + 100000, $booking->subtotal);
-        $this->assertSame(22000, $booking->tax);
         $this->assertSame(1, $booking->addons()->count());
     }
 

@@ -22,15 +22,15 @@ class LatestBookings extends BaseWidget
     {
         return $table
             ->query(Booking::query()->with('customer')->latest()->limit(5))
-            ->heading('Booking Terbaru')
-            ->emptyStateHeading('Belum ada booking')
+            ->heading(__('Booking Terbaru'))
+            ->emptyStateHeading(__('Belum ada booking'))
             ->columns([
                 TextColumn::make('customer.name')
-                    ->label('Pelanggan')
-                    ->description(fn (Booking $record): string => 'Check-in: '.$record->check_in->translatedFormat('d M Y'))
+                    ->label(__('Pelanggan'))
+                    ->description(fn (Booking $record): string => __('Check-in: :date', ['date' => $record->check_in->locale(app()->getLocale())->translatedFormat('d M Y')]))
                     ->weight('bold'),
                 TextColumn::make('status')
-                    ->label('Status')
+                    ->label(__('Status'))
                     ->badge(),
             ])
             ->paginated(false);

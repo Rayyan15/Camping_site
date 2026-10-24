@@ -56,7 +56,6 @@ class BugHuntRegressionTest extends TestCase
         parent::setUp();
 
         Mail::fake();
-        config(['booking.tax_rate' => 0]);
 
         $type = UnitType::create([
             'name' => 'Dome', 'slug' => 'dome', 'capacity' => 4,

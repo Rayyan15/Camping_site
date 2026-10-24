@@ -23,12 +23,10 @@ use App\Models\RefundPolicy;
 use App\Models\Unit;
 use App\Models\UnitType;
 use App\Models\User;
-use App\Services\BookingBilling;
 use App\Services\BookingService;
 use App\Services\BookingStatusTransition;
 use App\Services\CancellationOutcome;
 use App\Services\InvoiceService;
-use App\Services\OrderService;
 use App\Services\Payment\PaymentService;
 use App\Services\RefundService;
 use App\Services\SettingRepository;
@@ -52,9 +50,6 @@ class PaymentHardeningTest extends TestCase
     {
         parent::setUp();
 
-        // Amounts below were written for an 11% tax; the client charges none, so pin the rate here.
-        config(['booking.tax_rate' => 0.11]);
-
         $this->travelTo('2026-12-01 10:00:00');
         config([
             'payment.gateway' => 'midtrans',
@@ -69,7 +64,7 @@ class PaymentHardeningTest extends TestCase
         $this->customer = Customer::create(['name' => 'Tamu', 'phone' => '0811', 'email' => 'tamu@example.com']);
     }
 
-    /** Two weekday nights: subtotal 200000, tax 22000, total 222000. */
+    /** Two weekday nights: total 200000, no tax. */
     private function book(): Booking
     {
         return app(BookingService::class)->createBooking(
@@ -149,7 +144,7 @@ class PaymentHardeningTest extends TestCase
         $second = $service->initiate($booking->fresh());
 
         $this->assertNotSame($first->reference, $second->reference);
-        $this->assertSame(122000, Payment::where('gateway_ref', $second->reference)->value('amount'));
+        $this->assertSame(100000, Payment::where('gateway_ref', $second->reference)->value('amount'));
     }
 
     public function test_second_link_paid_after_the_first_is_recorded_but_flagged_for_refund(): void
@@ -162,11 +157,11 @@ class PaymentHardeningTest extends TestCase
         $this->travel(config('booking.hold_minutes') + 1)->minutes();
         $second = $service->initiate($booking);
 
-        $service->handleNotification($this->notification($first->reference, 222000));
-        $service->handleNotification($this->notification($second->reference, 222000));
+        $service->handleNotification($this->notification($first->reference, 200000));
+        $service->handleNotification($this->notification($second->reference, 200000));
 
         $booking->refresh();
-        $this->assertSame(222000, $booking->paid_amount);
+        $this->assertSame(200000, $booking->paid_amount);
         $this->assertSame(BookingStatus::Paid, $booking->status);
 
         $duplicate = Payment::where('gateway_ref', $second->reference)->firstOrFail();
@@ -204,13 +199,13 @@ class PaymentHardeningTest extends TestCase
         }
         $reference = Payment::firstOrFail()->gateway_ref;
 
-        $service->handleNotification($this->notification($reference, 222000));
+        $service->handleNotification($this->notification($reference, 200000));
 
         $payment = Payment::firstOrFail();
         $this->assertSame(PaymentStatus::Paid, $payment->status);
         $this->assertNull($payment->failure_reason);
         $this->assertSame(BookingStatus::Paid, $booking->fresh()->status);
-        $this->assertSame(222000, $booking->fresh()->paid_amount);
+        $this->assertSame(200000, $booking->fresh()->paid_amount);
     }
 
     public function test_network_failed_payment_still_rejects_bad_signature_and_wrong_amount(): void
@@ -225,7 +220,7 @@ class PaymentHardeningTest extends TestCase
         }
         $reference = Payment::firstOrFail()->gateway_ref;
 
-        $forged = $this->notification($reference, 222000);
+        $forged = $this->notification($reference, 200000);
         $forged['signature_key'] = 'forged';
 
         try {
@@ -256,7 +251,7 @@ class PaymentHardeningTest extends TestCase
         }
         $reference = Payment::firstOrFail()->gateway_ref;
 
-        $service->handleNotification($this->notification($reference, 222000, 'expire'));
+        $service->handleNotification($this->notification($reference, 200000, 'expire'));
 
         $this->assertSame(PaymentStatus::Failed, Payment::firstOrFail()->status);
     }
@@ -275,34 +270,32 @@ class PaymentHardeningTest extends TestCase
         $payment = Payment::firstOrFail();
         $this->assertNull($payment->failure_reason);
 
-        $service->handleNotification($this->notification($payment->gateway_ref, 222000));
+        $service->handleNotification($this->notification($payment->gateway_ref, 200000));
 
         $this->assertSame(PaymentStatus::Failed, $payment->fresh()->status);
         $this->assertSame(0, $booking->fresh()->paid_amount);
     }
 
-    public function test_extra_food_with_tax_is_charged_online_and_settles_the_invoice(): void
+    public function test_extra_food_is_charged_online_and_settles_the_invoice(): void
     {
         $this->fakeSnap();
         $booking = $this->book();
-        // 100000 of food plus 11 percent tax.
         $this->addRoomBilledFood($booking);
         $service = app(PaymentService::class);
 
         $intent = $service->initiate($booking);
 
-        $this->assertSame(333000, Payment::where('gateway_ref', $intent->reference)->value('amount'));
-        Http::assertSent(fn (Request $request) => $request['transaction_details']['gross_amount'] === 333000);
+        $this->assertSame(300000, Payment::where('gateway_ref', $intent->reference)->value('amount'));
+        Http::assertSent(fn (Request $request) => $request['transaction_details']['gross_amount'] === 300000);
 
-        $service->handleNotification($this->notification($intent->reference, 333000));
+        $service->handleNotification($this->notification($intent->reference, 300000));
 
         $booking->refresh();
-        $this->assertSame(333000, $booking->paid_amount);
+        $this->assertSame(300000, $booking->paid_amount);
         $this->assertSame(BookingStatus::Paid, $booking->status);
 
         $invoice = (new InvoiceService)->invoiceData($booking);
-        $this->assertSame(333000, $invoice['grandTotal']);
-        $this->assertSame(33000, $invoice['tax']);
+        $this->assertSame(300000, $invoice['grandTotal']);
         $this->assertSame(0, $invoice['balance']);
         $this->assertTrue($invoice['isSettled']);
     }
@@ -312,12 +305,12 @@ class PaymentHardeningTest extends TestCase
         $this->fakeSnap();
         $booking = $this->book();
         $service = app(PaymentService::class);
-        $service->handleNotification($this->notification($service->initiate($booking)->reference, 222000));
+        $service->handleNotification($this->notification($service->initiate($booking)->reference, 200000));
         $this->addRoomBilledFood($booking);
 
         $intent = $service->initiate($booking->fresh());
 
-        $this->assertSame(111000, Payment::where('gateway_ref', $intent->reference)->value('amount'));
+        $this->assertSame(100000, Payment::where('gateway_ref', $intent->reference)->value('amount'));
     }
 
     public function test_manual_payment_rejects_non_positive_amounts(): void
@@ -360,9 +353,9 @@ class PaymentHardeningTest extends TestCase
         $booking = $this->book();
         $this->addRoomBilledFood($booking);
 
-        $payment = app(PaymentService::class)->recordManual($booking, 333000, 'cash', null, User::factory()->create()->id);
+        $payment = app(PaymentService::class)->recordManual($booking, 300000, 'cash', null, User::factory()->create()->id);
 
-        $this->assertSame(333000, $payment->amount);
+        $this->assertSame(300000, $payment->amount);
         $this->assertSame(BookingStatus::Paid, $booking->fresh()->status);
     }
 
@@ -373,7 +366,7 @@ class PaymentHardeningTest extends TestCase
 
         $this->expectException(ManualPaymentException::class);
 
-        app(PaymentService::class)->recordManual($booking, 222000, 'cash', null, User::factory()->create()->id);
+        app(PaymentService::class)->recordManual($booking, 200000, 'cash', null, User::factory()->create()->id);
     }
 
     public function test_down_payment_is_refused_on_an_expired_booking_but_full_payment_revives_it(): void
@@ -389,7 +382,7 @@ class PaymentHardeningTest extends TestCase
         } catch (ManualPaymentException) {
         }
 
-        $service->recordManual($booking, 222000, 'cash', null, $user->id);
+        $service->recordManual($booking, 200000, 'cash', null, $user->id);
 
         $this->assertSame(BookingStatus::Paid, $booking->fresh()->status);
     }
@@ -426,17 +419,17 @@ class PaymentHardeningTest extends TestCase
         $service = app(PaymentService::class);
 
         $intent = $service->initiate($booking, downPayment: true);
-        $this->assertSame(66600, Payment::where('gateway_ref', $intent->reference)->value('amount'));
+        $this->assertSame(60000, Payment::where('gateway_ref', $intent->reference)->value('amount'));
 
-        $service->handleNotification($this->notification($intent->reference, 66600));
+        $service->handleNotification($this->notification($intent->reference, 60000));
 
         $booking->refresh();
-        $this->assertSame(66600, $booking->paid_amount);
+        $this->assertSame(60000, $booking->paid_amount);
         $this->assertSame(BookingStatus::PendingPayment, $booking->status);
         $this->assertTrue($booking->hold_expires_at->greaterThanOrEqualTo($booking->check_in->copy()->setTime(23, 59, 59)));
 
         $rest = $service->initiate($booking);
-        $service->handleNotification($this->notification($rest->reference, 155400));
+        $service->handleNotification($this->notification($rest->reference, 140000));
 
         $this->assertSame(BookingStatus::Paid, $booking->fresh()->status);
     }
@@ -499,7 +492,7 @@ class PaymentHardeningTest extends TestCase
         app(RefundService::class)->cancelWithOutcome($booking->fresh(), 'Batal');
         $this->assertSame(PaymentStatus::Expired, Payment::where('gateway_ref', $intent->reference)->value('status'));
 
-        $service->handleNotification($this->notification($intent->reference, 222000));
+        $service->handleNotification($this->notification($intent->reference, 200000));
 
         $booking->refresh();
         $payment = Payment::where('gateway_ref', $intent->reference)->firstOrFail();
@@ -538,19 +531,5 @@ class PaymentHardeningTest extends TestCase
 
         $this->assertNotSame($first->reference, $second->reference);
         $this->assertSame(PaymentStatus::Expired, Payment::where('gateway_ref', $first->reference)->value('status'));
-    }
-
-    public function test_food_billed_to_a_booking_keeps_the_tax_rate_of_its_day(): void
-    {
-        $booking = $this->book();
-        $category = MenuCategory::create(['name' => 'Makan', 'sort_order' => 1]);
-        $item = MenuItem::create(['category_id' => $category->id, 'name' => 'Nasi', 'price' => 100000, 'is_available' => true]);
-
-        app(OrderService::class)->createOrder(Order::SOURCE_QR, [['menu_item_id' => $item->id, 'qty' => 1]], $booking->id, billToBooking: true);
-        $before = app(BookingBilling::class)->grandTotal($booking);
-
-        app(SettingRepository::class)->put(SettingKey::TaxRate, '0.2');
-
-        $this->assertSame($before, app(BookingBilling::class)->grandTotal($booking->fresh()));
     }
 }

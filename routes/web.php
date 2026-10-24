@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\PaymentProofController;
 use App\Http\Controllers\Admin\ReportExportController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Public\BookingController;
 use App\Http\Controllers\Public\BookingLookupController;
 use App\Http\Controllers\Public\BookingStatusController;
@@ -17,6 +18,7 @@ use App\Http\Middleware\EnsureOwnerHasTwoFactor;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
+Route::get('/lang/{locale}', [LocaleController::class, 'switch'])->name('lang.switch');
 Route::get('/tenda', [UnitTypeController::class, 'index'])->name('tenda.index');
 Route::get('/tenda/{slug}', [UnitTypeController::class, 'show'])->name('tenda.show');
 Route::get('/tenda/{slug}/ketersediaan', [UnitTypeController::class, 'availability'])->middleware('throttle:availability-check')->name('tenda.ketersediaan');

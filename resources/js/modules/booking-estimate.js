@@ -8,7 +8,6 @@ export function initBookingEstimate() {
 
     const nights = Number(form.dataset.nights);
     const unitPrice = Number(form.dataset.unitPrice);
-    const taxRate = Number(form.dataset.taxRate);
     const field = (key) => form.querySelector(`[data-est="${key}"]`);
 
     const sum = (role, perNightAware) => {
@@ -26,14 +25,12 @@ export function initBookingEstimate() {
         const addons = sum('addon', true);
         const food = sum('food', false);
         const subtotal = unitsTotal + addons + food;
-        const tax = Math.round(subtotal * taxRate);
 
         field('units').textContent = rupiah(unitsTotal);
         form.querySelector('[data-est-label="units"]').textContent = `${units} unit x ${nights} malam`;
         field('addons').textContent = rupiah(addons);
         field('food').textContent = rupiah(food);
-        field('tax').textContent = rupiah(tax);
-        field('total').textContent = rupiah(subtotal + tax);
+        field('total').textContent = rupiah(subtotal);
     };
 
     const syncStepper = (box) => {

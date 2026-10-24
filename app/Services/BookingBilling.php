@@ -5,33 +5,30 @@ namespace App\Services;
 use App\Enums\OrderStatus;
 use App\Models\Booking;
 use App\Models\Order;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Single place that answers "how much does this booking cost in total". Pre-orders are already
  * priced into booking.total at checkout; food ordered later and billed to the booking is added
- * here with tax, so the invoice and the payment gateway always agree on the amount.
+ * here, so the invoice and the payment gateway always agree on the amount. No tax is charged
+ * (client decision, 24 Oct 2026).
  */
 class BookingBilling
 {
     public function __construct(
-        private readonly PricingService $pricing,
         private readonly SettingRepository $settings,
     ) {}
 
     /**
-     * @return array{subtotal: int, tax: int, total: int}
+     * @return array{subtotal: int, total: int}
      */
     public function breakdown(Booking $booking): array
     {
         $extraSubtotal = $this->extraFoodSubtotal($booking);
-        $extraTax = $this->extraFoodTax($booking);
 
         return [
             'subtotal' => $booking->subtotal + $extraSubtotal,
-            'tax' => $booking->tax + $extraTax,
-            'total' => $booking->total + $extraSubtotal + $extraTax,
+            'total' => $booking->total + $extraSubtotal,
         ];
     }
 
@@ -59,29 +56,6 @@ class BookingBilling
         }
 
         return (int) ceil($this->grandTotal($booking) * $percent / 100);
-    }
-
-    /**
-     * Tax stored on each order when it was billed, so changing the rate later never rewrites an old bill.
-     * Orders from before the column existed fall back to the current rate.
-     */
-    private function extraFoodTax(Booking $booking): int
-    {
-        return (int) $this->extraFoodOrders($booking)
-            ->get(['total', 'tax'])
-            ->sum(fn (Order $order) => $order->tax ?? $this->pricing->taxFor($order->total));
-    }
-
-    /**
-     * @return Builder<Order>
-     */
-    private function extraFoodOrders(Booking $booking): Builder
-    {
-        return Order::query()
-            ->where('booking_id', $booking->id)
-            ->where('bill_to_booking', true)
-            ->where('source', '!=', Order::SOURCE_PREORDER)
-            ->where('status', '!=', OrderStatus::Dibatalkan->value);
     }
 
     private function extraFoodSubtotal(Booking $booking): int

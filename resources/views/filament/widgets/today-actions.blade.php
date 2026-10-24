@@ -7,12 +7,12 @@
                 <x-filament::icon icon="heroicon-o-squares-2x2" class="hh-tile-icon" />
             </span>
             <div class="hh-head-text">
-                <h1 class="hh-head-title">Dasbor</h1>
+                <h1 class="hh-head-title">{{ __('Dasbor') }}</h1>
                 <p class="hh-muted">{{ $today }}</p>
             </div>
             @if($calendarUrl)
                 <x-filament::button tag="a" :href="$calendarUrl" color="gray" icon="heroicon-m-calendar-days">
-                    Kalender okupansi
+                    {{ __('Kalender okupansi') }}
                 </x-filament::button>
             @endif
         </header>
@@ -25,9 +25,9 @@
                             <x-filament::icon :icon="$card['icon']" class="hh-tile-icon" />
                         </span>
                         <span class="hh-stat-text">
-                            <span class="hh-stat-label">{{ $card['label'] }}</span>
+                            <span class="hh-stat-label">{{ __($card['label']) }}</span>
                             <span class="hh-stat-value">{{ $card['count'] }}</span>
-                            <span class="hh-muted hh-small">{{ $card['caption'] }}</span>
+                            <span class="hh-muted hh-small">{{ __($card['caption']) }}</span>
                         </span>
                     </a>
                 @endforeach

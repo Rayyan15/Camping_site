@@ -35,9 +35,6 @@ class PaymentTest extends TestCase
     {
         parent::setUp();
 
-        // Amounts below were written for an 11% tax; the client charges none, so pin the rate here.
-        config(['booking.tax_rate' => 0.11]);
-
         $this->travelTo('2026-12-01 10:00:00');
         config([
             'payment.gateway' => 'midtrans',
@@ -54,7 +51,7 @@ class PaymentTest extends TestCase
 
     private function book(): Booking
     {
-        // Two weekday nights: subtotal 200000, tax 22000, total 222000.
+        // Two weekday nights: total 200000, no tax.
         return app(BookingService::class)->createBooking(
             $this->customer->id, '2027-01-04', '2027-01-06', 2, [$this->unit->id],
         );
@@ -94,14 +91,14 @@ class PaymentTest extends TestCase
 
         $payment = Payment::where('gateway_ref', $intent->reference)->firstOrFail();
         $this->assertSame(PaymentStatus::Pending, $payment->status);
-        $this->assertSame(222000, $payment->amount);
+        $this->assertSame(200000, $payment->amount);
         $this->assertTrue($payment->payable->is($booking));
 
         Http::assertSent(function (Request $request) use ($intent) {
             return $request->hasHeader('Authorization', 'Basic '.base64_encode(self::SERVER_KEY.':'))
                 && str_contains($request->url(), 'sandbox')
                 && $request['transaction_details']['order_id'] === $intent->reference
-                && $request['transaction_details']['gross_amount'] === 222000
+                && $request['transaction_details']['gross_amount'] === 200000
                 && $request['customer_details']['first_name'] === 'Tamu';
         });
     }
@@ -146,12 +143,12 @@ class PaymentTest extends TestCase
         $booking = $this->book();
         $intent = app(PaymentService::class)->initiate($booking);
 
-        $this->postJson(route('webhook.payment'), $this->notification($intent->reference, 222000))
+        $this->postJson(route('webhook.payment'), $this->notification($intent->reference, 200000))
             ->assertOk();
 
         $booking->refresh();
         $this->assertSame(BookingStatus::Paid, $booking->status);
-        $this->assertSame(222000, $booking->paid_amount);
+        $this->assertSame(200000, $booking->paid_amount);
 
         $payment = Payment::firstOrFail();
         $this->assertSame(PaymentStatus::Paid, $payment->status);
@@ -164,7 +161,7 @@ class PaymentTest extends TestCase
         $booking = $this->book();
         $intent = app(PaymentService::class)->initiate($booking);
 
-        $this->postJson(route('webhook.payment'), $this->notification($intent->reference, 222000, 'settlement', 'forged'))
+        $this->postJson(route('webhook.payment'), $this->notification($intent->reference, 200000, 'settlement', 'forged'))
             ->assertForbidden();
 
         $this->assertSame(PaymentStatus::Pending, Payment::firstOrFail()->status);
@@ -182,12 +179,12 @@ class PaymentTest extends TestCase
         $this->fakeSnap();
         $booking = $this->book();
         $intent = app(PaymentService::class)->initiate($booking);
-        $payload = $this->notification($intent->reference, 222000);
+        $payload = $this->notification($intent->reference, 200000);
 
         $this->postJson(route('webhook.payment'), $payload)->assertOk();
         $this->postJson(route('webhook.payment'), $payload)->assertOk();
 
-        $this->assertSame(222000, $booking->refresh()->paid_amount);
+        $this->assertSame(200000, $booking->refresh()->paid_amount);
         $this->assertSame(1, Payment::count());
     }
 
@@ -196,7 +193,7 @@ class PaymentTest extends TestCase
         $this->fakeSnap();
         $intent = app(PaymentService::class)->initiate($this->book());
 
-        $this->postJson(route('webhook.payment'), $this->notification($intent->reference, 222000, 'expire'))
+        $this->postJson(route('webhook.payment'), $this->notification($intent->reference, 200000, 'expire'))
             ->assertOk();
 
         $this->assertSame(PaymentStatus::Expired, Payment::firstOrFail()->status);
@@ -209,7 +206,7 @@ class PaymentTest extends TestCase
         $intent = app(PaymentService::class)->initiate($booking);
         $booking->update(['status' => BookingStatus::Expired]);
 
-        $this->postJson(route('webhook.payment'), $this->notification($intent->reference, 222000))->assertOk();
+        $this->postJson(route('webhook.payment'), $this->notification($intent->reference, 200000))->assertOk();
 
         $this->assertSame(BookingStatus::Paid, $booking->refresh()->status);
     }
@@ -225,11 +222,11 @@ class PaymentTest extends TestCase
         $other = Customer::create(['name' => 'Lain', 'phone' => '0822']);
         app(BookingService::class)->createBooking($other->id, '2027-01-04', '2027-01-06', 2, [$this->unit->id]);
 
-        $this->postJson(route('webhook.payment'), $this->notification($intent->reference, 222000))->assertOk();
+        $this->postJson(route('webhook.payment'), $this->notification($intent->reference, 200000))->assertOk();
 
         $booking->refresh();
         $this->assertSame(BookingStatus::NeedsReview, $booking->status);
-        $this->assertSame(222000, $booking->paid_amount);
+        $this->assertSame(200000, $booking->paid_amount);
     }
 
     public function test_partial_then_full_payment(): void
@@ -242,9 +239,9 @@ class PaymentTest extends TestCase
         $this->assertSame(BookingStatus::PendingPayment, $booking->status);
         $this->assertSame(100000, $booking->paid_amount);
 
-        $service->recordManual($booking, 122000, 'transfer', 'proofs/a.jpg', $user->id);
+        $service->recordManual($booking, 100000, 'transfer', 'proofs/a.jpg', $user->id);
         $this->assertSame(BookingStatus::Paid, $booking->status);
-        $this->assertSame(222000, $booking->paid_amount);
+        $this->assertSame(200000, $booking->paid_amount);
     }
 
     public function test_record_manual_stores_payment_details(): void
@@ -252,7 +249,7 @@ class PaymentTest extends TestCase
         $booking = $this->book();
         $user = User::factory()->create();
 
-        $payment = app(PaymentService::class)->recordManual($booking, 222000, 'transfer', 'proofs/a.jpg', $user->id);
+        $payment = app(PaymentService::class)->recordManual($booking, 200000, 'transfer', 'proofs/a.jpg', $user->id);
 
         $this->assertSame(PaymentMethod::Transfer, $payment->method);
         $this->assertSame(PaymentStatus::Paid, $payment->status);
@@ -282,7 +279,7 @@ class PaymentTest extends TestCase
         $forged = hash('sha512', $intent->reference.'200222000.00');
         config(['services.midtrans.server_key' => '']);
 
-        $this->postJson(route('webhook.payment'), $this->notification($intent->reference, 222000, 'settlement', $forged))
+        $this->postJson(route('webhook.payment'), $this->notification($intent->reference, 200000, 'settlement', $forged))
             ->assertStatus(500);
 
         $this->assertSame(PaymentStatus::Pending, Payment::firstOrFail()->status);
@@ -310,6 +307,6 @@ class PaymentTest extends TestCase
         $intent = app(PaymentService::class)->initiate($this->book());
 
         $this->expectException(InvalidPaymentSignatureException::class);
-        app(PaymentService::class)->handleNotification($this->notification($intent->reference, 221999));
+        app(PaymentService::class)->handleNotification($this->notification($intent->reference, 199999));
     }
 }

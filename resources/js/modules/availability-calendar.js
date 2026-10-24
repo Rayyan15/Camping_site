@@ -324,7 +324,7 @@ class AvailabilityCalendar {
             invalid: [payload.message ?? 'Tanggal belum sesuai.', ''],
             ok: [
                 `${payload.nights} malam, 1 unit: Rp ${rupiahFormat.format(payload.total)}`,
-                'Sebelum pajak, extra bed, dan makanan. Harga akhir dihitung saat checkout.',
+                'Sebelum extra bed dan makanan. Harga akhir dihitung saat checkout.',
             ],
         };
         [main.textContent, note.textContent] = texts[state];

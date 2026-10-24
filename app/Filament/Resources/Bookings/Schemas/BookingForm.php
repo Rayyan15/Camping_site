@@ -72,12 +72,6 @@ class BookingForm
                                 ->disabled()
                                 ->dehydrated(false)
                                 ->numeric(),
-                            TextInput::make('tax')
-                                ->label('Pajak (Tax)')
-                                ->prefix('Rp')
-                                ->disabled()
-                                ->dehydrated(false)
-                                ->numeric(),
                             TextInput::make('total')
                                 ->label('Total Akhir')
                                 ->prefix('Rp')

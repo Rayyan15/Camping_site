@@ -7,7 +7,6 @@ namespace App\Enums;
  */
 enum SettingKey: string
 {
-    case TaxRate = 'tax_rate';
     case CheckInTime = 'check_in_time';
     case CheckOutTime = 'check_out_time';
     case DownPaymentPercent = 'down_payment_percent';
@@ -29,7 +28,6 @@ enum SettingKey: string
     public function label(): string
     {
         return match ($this) {
-            self::TaxRate => 'Pajak dan biaya layanan',
             self::CheckInTime => 'Jam check-in standar',
             self::CheckOutTime => 'Jam check-out standar',
             self::DownPaymentPercent => 'Persentase uang muka (DP)',

@@ -17,33 +17,33 @@
     $checkOutTime = str_replace(':', '.', $settings->checkOutTime());
     $extraGuestLimit = (int) config('booking.max_extra_guests_per_unit');
     $includesBreakfast = (bool) config('booking.base_price_includes_breakfast');
-    $headline = ['Satu', 'malam', 'di', 'bawah', 'kanvas.'];
+    $headline = explode(' ', __('Satu malam di bawah kanvas.'));
     $featuredDish = $menuByCategory->flatten()->filter(fn ($item) => $item->photoUrl())->sortByDesc('price')->first();
 
-    $phases = ['sore' => 'Sore', 'petang' => 'Petang', 'malam' => 'Malam', 'subuh' => 'Subuh'];
+    $phases = ['sore' => __('Sore'), 'petang' => __('Petang'), 'malam' => __('Malam'), 'subuh' => __('Subuh')];
 
     $steps = [
-        ['title' => 'Pilih tanggal', 'text' => 'Isi check-in, check-out, dan jumlah tamu. Sistem menampilkan tipe tenda yang masih kosong beserta sisa unitnya.'],
-        ['title' => 'Pilih tenda dan tambahan', 'text' => 'Pilih unit, tambah tamu bila perlu, dan jadwalkan makanan atau kopi yang ingin disiapkan sebelum Anda datang.'],
-        ['title' => 'Transfer dan kirim bukti', 'text' => 'Transfer ke rekening yang tampil di halaman pembayaran, lalu unggah bukti dalam '.$holdMinutes.' menit. Konfirmasi admin dikirim lewat email.'],
+        ['title' => __('Pilih tanggal'), 'text' => __('Isi check-in, check-out, dan jumlah tamu. Sistem menampilkan tipe tenda yang masih kosong beserta sisa unitnya.')],
+        ['title' => __('Pilih tenda dan tambahan'), 'text' => __('Pilih unit, tambah tamu bila perlu, dan jadwalkan makanan atau kopi yang ingin disiapkan sebelum Anda datang.')],
+        ['title' => __('Transfer dan kirim bukti'), 'text' => __('Transfer ke rekening yang tampil di halaman pembayaran, lalu unggah bukti dalam :minutes menit. Konfirmasi admin dikirim lewat email.', ['minutes' => $holdMinutes])],
     ];
 
     $facilities = [
-        ['title' => 'Nomor unit sendiri', 'text' => 'Tiap tenda punya kode unit, jadi tidak ada tenda yang dipesan dua kali.'],
-        ['title' => 'Resto', 'text' => 'Menu yang sama bisa dipesan saat booking atau dari QR di tenda.'],
-        ['title' => 'Coffeeshop', 'text' => 'Kopi dan minuman lewat menu yang sama, diantar ke lokasi Anda.'],
-        ['title' => 'Tamu tambahan', 'text' => 'Tiap tenda menampung 4 orang, bisa ditambah sampai '.$extraGuestLimit.' orang lewat add-on saat memilih tenda.'],
+        ['title' => __('Nomor unit sendiri'), 'text' => __('Tiap tenda punya kode unit, jadi tidak ada tenda yang dipesan dua kali.')],
+        ['title' => __('Resto'), 'text' => __('Menu yang sama bisa dipesan saat booking atau dari QR di tenda.')],
+        ['title' => __('Coffeeshop'), 'text' => __('Kopi dan minuman lewat menu yang sama, diantar ke lokasi Anda.')],
+        ['title' => __('Tamu tambahan'), 'text' => __('Tiap tenda menampung 4 orang, bisa ditambah sampai :limit orang lewat add-on saat memilih tenda.', ['limit' => $extraGuestLimit])],
     ];
 
     $faqs = [
-        ['q' => 'Jam berapa check-in dan check-out?', 'a' => 'Check-in mulai pukul '.$checkInTime.' dan check-out paling lambat pukul '.$checkOutTime.'.'.($whatsapp ? ' Untuk masuk lebih awal atau keluar lebih lambat, tanyakan dulu lewat WhatsApp.' : '')],
-        ['q' => 'Bagaimana aturan refund?', 'a' => $refundSummary ?? 'Aturan refund ditentukan pengelola. Tanyakan sebelum memesan.'],
-        ...($includesBreakfast ? [['q' => 'Apakah harga sudah termasuk sarapan?', 'a' => 'Ya, harga dasar per malam sudah termasuk sarapan.']] : []),
-        ['q' => 'Berapa lama tenda ditahan sebelum saya bayar?', 'a' => 'Tenda ditahan '.$holdMinutes.' menit sejak checkout dibuat. Bila belum dibayar, tahanan dilepas otomatis dan tenda kembali tersedia.'],
-        ['q' => 'Tamu saya melebihi kapasitas tenda. Bagaimana?', 'a' => 'Tiap tenda menampung 4 orang. Anda bisa menambah paling banyak '.$extraGuestLimit.' orang per tenda lewat add-on tamu tambahan saat memilih tenda.'],
-        ['q' => 'Bisakah memesan makanan sebelum datang?', 'a' => 'Bisa. Pilih menu, tanggal, dan jam penyajian saat booking. Setelah menginap, pesan tambahan lewat QR di tenda.'],
-        ['q' => 'Metode pembayaran apa yang tersedia?', 'a' => 'Transfer bank ke rekening yang tampil di halaman pembayaran, lalu unggah foto bukti transfer. Admin mencocokkan dengan mutasi dan mengirim konfirmasi lewat email.'],
-        ['q' => 'Bagaimana cek status booking saya?', 'a' => 'Buka halaman Cek status booking, lalu isi kode booking dan 4 digit terakhir nomor telepon atau email yang Anda pakai saat memesan.'],
+        ['q' => __('Jam berapa check-in dan check-out?'), 'a' => __('Check-in mulai pukul :in dan check-out paling lambat pukul :out.', ['in' => $checkInTime, 'out' => $checkOutTime]).($whatsapp ? ' '.__('Untuk masuk lebih awal atau keluar lebih lambat, tanyakan dulu lewat WhatsApp.') : '')],
+        ['q' => __('Bagaimana aturan refund?'), 'a' => $refundSummary ?? __('Aturan refund ditentukan pengelola. Tanyakan sebelum memesan.')],
+        ...($includesBreakfast ? [['q' => __('Apakah harga sudah termasuk sarapan?'), 'a' => __('Ya, harga dasar per malam sudah termasuk sarapan.')]] : []),
+        ['q' => __('Berapa lama tenda ditahan sebelum saya bayar?'), 'a' => __('Tenda ditahan :minutes menit sejak checkout dibuat. Bila belum dibayar, tahanan dilepas otomatis dan tenda kembali tersedia.', ['minutes' => $holdMinutes])],
+        ['q' => __('Tamu saya melebihi kapasitas tenda. Bagaimana?'), 'a' => __('Tiap tenda menampung 4 orang. Anda bisa menambah paling banyak :limit orang per tenda lewat add-on tamu tambahan saat memilih tenda.', ['limit' => $extraGuestLimit])],
+        ['q' => __('Bisakah memesan makanan sebelum datang?'), 'a' => __('Bisa. Pilih menu, tanggal, dan jam penyajian saat booking. Setelah menginap, pesan tambahan lewat QR di tenda.')],
+        ['q' => __('Metode pembayaran apa yang tersedia?'), 'a' => __('Transfer bank ke rekening yang tampil di halaman pembayaran, lalu unggah foto bukti transfer. Admin mencocokkan dengan mutasi dan mengirim konfirmasi lewat email.')],
+        ['q' => __('Bagaimana cek status booking saya?'), 'a' => __('Buka halaman Cek status booking, lalu isi kode booking dan 4 digit terakhir nomor telepon atau email yang Anda pakai saat memesan.')],
     ];
 @endphp
 
@@ -76,13 +76,13 @@
                 @foreach($headline as $word)<span class="rise-word" style="--i: {{ $loop->index }}">{{ $word }}</span>@if(! $loop->last) @endif @endforeach
             </h1>
             <p class="mt-6 max-w-xl text-lg leading-relaxed text-cream/90">
-                Pilih tanggal, lihat tenda yang masih kosong, lalu bayar online. Tenda, extra bed, dan makanan dalam satu checkout.
+                {{ __('Pilih tanggal, lihat tenda yang masih kosong, lalu bayar online. Tenda, extra bed, dan makanan dalam satu checkout.') }}
             </p>
             <div class="mt-10">
                 <x-stay-search :search="$search" :today="$today" />
             </div>
             <p class="mt-6 text-sm font-semibold text-cream/80">
-                {{ $totalUnits }} unit<span aria-hidden="true"> &middot; </span><span class="sr-only">, </span>{{ $unitTypes->count() }} tipe<span aria-hidden="true"> &middot; </span><span class="sr-only">, </span>ditahan {{ $holdMinutes }} menit setelah checkout
+                {{ $totalUnits }} {{ __('unit') }}<span aria-hidden="true"> &middot; </span><span class="sr-only">, </span>{{ $unitTypes->count() }} {{ __('tipe') }}<span aria-hidden="true"> &middot; </span><span class="sr-only">, </span>{{ __('ditahan :minutes menit setelah checkout', ['minutes' => $holdMinutes]) }}
             </p>
         </div>
         <x-ridge class="text-dusk-100" />
@@ -93,11 +93,11 @@
         <div class="mx-auto max-w-6xl px-4 sm:px-6">
             <div id="tenda" class="grid gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-end" data-reveal>
                 <div>
-                    <p class="font-display text-xl italic text-ember-dark">Petang</p>
-                    <h2 id="judul-tenda" class="font-display mt-2 text-5xl font-semibold leading-[1.02] sm:text-6xl lg:text-7xl">Pilih tenda untuk rombongan Anda.</h2>
+                    <p class="font-display text-xl italic text-ember-dark">{{ __('Petang') }}</p>
+                    <h2 id="judul-tenda" class="font-display mt-2 text-5xl font-semibold leading-[1.02] sm:text-6xl lg:text-7xl">{{ __('Pilih tenda untuk rombongan Anda.') }}</h2>
                 </div>
                 <div class="flex flex-col gap-5">
-                    <p class="max-w-md text-ink-soft">{{ $unitTypes->count() }} tipe, kapasitas dan harga berbeda. Harga per malam, weekday dan weekend. Geser ke samping, atau buka katalog untuk membandingkan semuanya.</p>
+                    <p class="max-w-md text-ink-soft">{{ __(':count tipe, kapasitas dan harga berbeda. Harga per malam, weekday dan weekend. Geser ke samping, atau buka katalog untuk membandingkan semuanya.', ['count' => $unitTypes->count()]) }}</p>
                 </div>
             </div>
 
@@ -167,26 +167,26 @@
 
             {{-- Autoplay needs a way to stop it (WCAG 2.2.2). It stays out of sight for mouse users, who stop it by hovering, and appears for keyboard and screen reader users. --}}
             <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 sm:px-6">
-                <a href="{{ route('tenda.index', array_filter(['tamu' => $guestsWanted ?: null])) }}" class="btn btn-primary">Lihat katalog tenda</a>
+                <a href="{{ route('tenda.index', array_filter(['tamu' => $guestsWanted ?: null])) }}" class="btn btn-primary">{{ __('Lihat katalog tenda') }}</a>
                 <div class="rail-controls hidden gap-2 sm:flex">
-                    <button type="button" data-rail-step="tenda" data-dir="-1" class="ss-nav" aria-label="Tenda sebelumnya">
+                    <button type="button" data-rail-step="tenda" data-dir="-1" class="ss-nav" aria-label="{{ __('Tenda sebelumnya') }}">
                         <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m15 18-6-6 6-6"/></svg>
                     </button>
-                    <button type="button" data-rail-step="tenda" data-dir="1" class="ss-nav" aria-label="Tenda berikutnya">
+                    <button type="button" data-rail-step="tenda" data-dir="1" class="ss-nav" aria-label="{{ __('Tenda berikutnya') }}">
                         <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m9 18 6-6-6-6"/></svg>
                     </button>
                 </div>
-                <button type="button" data-rail-toggle="tenda" aria-pressed="false" class="rail-controls btn btn-outline sr-only focus:not-sr-only focus:mt-3" aria-label="Jeda geser otomatis">
-                    <span data-label="pause">Jeda geser otomatis</span>
-                    <span data-label="play" class="hidden">Putar geser otomatis</span>
+                <button type="button" data-rail-toggle="tenda" aria-pressed="false" class="rail-controls btn btn-outline sr-only focus:not-sr-only focus:mt-3" aria-label="{{ __('Jeda geser otomatis') }}">
+                    <span data-label="pause">{{ __('Jeda geser otomatis') }}</span>
+                    <span data-label="play" class="hidden">{{ __('Putar geser otomatis') }}</span>
                 </button>
             </div>
         @endif
 
         <div id="cara-pesan" class="mx-auto mt-24 grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_1.7fr] lg:gap-16">
             <div class="lg:sticky lg:top-28 lg:self-start" data-reveal>
-                <p class="font-display text-xl italic text-ember-dark">Cara pesan</p>
-                <h2 class="font-display mt-2 text-4xl font-semibold leading-[1.05] sm:text-5xl">Dari tanggal sampai kode booking.</h2>
+                <p class="font-display text-xl italic text-ember-dark">{{ __('Cara pesan') }}</p>
+                <h2 class="font-display mt-2 text-4xl font-semibold leading-[1.05] sm:text-5xl">{{ __('Dari tanggal sampai kode booking.') }}</h2>
             </div>
             <ol class="border-t border-forest-900/25">
                 @foreach($steps as $step)
@@ -209,9 +209,9 @@
 
         <div id="fasilitas" class="relative mx-auto grid max-w-6xl gap-14 px-4 sm:px-6 lg:grid-cols-12 lg:items-center">
             <div class="lg:col-span-6" data-reveal>
-                <p class="font-display text-xl italic text-ember-light">Malam</p>
-                <h2 id="judul-fasilitas" class="font-display mt-2 text-5xl font-semibold leading-[1.02] sm:text-6xl">Lapar atau ingin kopi? Pesan dari tenda.</h2>
-                <p class="mt-5 max-w-lg text-forest-100">Setiap tenda punya QR sendiri. Scan, pilih menu, dan pesanan masuk ke antrean dapur dengan lokasi Anda sudah terisi. Tidak perlu login.</p>
+                <p class="font-display text-xl italic text-ember-light">{{ __('Malam') }}</p>
+                <h2 id="judul-fasilitas" class="font-display mt-2 text-5xl font-semibold leading-[1.02] sm:text-6xl">{{ __('Lapar atau ingin kopi? Pesan dari tenda.') }}</h2>
+                <p class="mt-5 max-w-lg text-forest-100">{{ __('Setiap tenda punya QR sendiri. Scan, pilih menu, dan pesanan masuk ke antrean dapur dengan lokasi Anda sudah terisi. Tidak perlu login.') }}</p>
                 <dl class="mt-8 grid gap-x-8 gap-y-5 sm:grid-cols-2">
                     @foreach($facilities as $facility)
                         <div class="border-t border-forest-300/40 pt-4">
@@ -223,14 +223,14 @@
             </div>
 
             <div class="relative lg:col-span-6" data-reveal data-reveal-delay="120">
-                <img src="{{ asset('images/tent-rocks-800.webp') }}" srcset="{{ asset('images/tent-rocks-480.webp') }} 480w, {{ asset('images/tent-rocks-800.webp') }} 800w, {{ asset('images/tent-rocks-1200.webp') }} 1200w" sizes="(min-width: 1152px) 560px, (min-width: 1024px) 45vw, 100vw" alt="Tenda kanvas putih terbuka di antara batu dan pepohonan" width="1200" height="800" loading="lazy" decoding="async" class="aspect-[4/5] w-full rounded-[2rem] object-cover sm:aspect-[5/4]">
+                <img src="{{ asset('images/tent-rocks-800.webp') }}" srcset="{{ asset('images/tent-rocks-480.webp') }} 480w, {{ asset('images/tent-rocks-800.webp') }} 800w, {{ asset('images/tent-rocks-1200.webp') }} 1200w" sizes="(min-width: 1152px) 560px, (min-width: 1024px) 45vw, 100vw" alt="{{ __('Tenda kanvas putih terbuka di antara batu dan pepohonan') }}" width="1200" height="800" loading="lazy" decoding="async" class="aspect-[4/5] w-full rounded-[2rem] object-cover sm:aspect-[5/4]">
                 <div class="absolute -bottom-8 left-4 flex w-72 items-center gap-4 rounded-3xl bg-cream p-4 text-forest-900 shadow-2xl shadow-black/40 sm:left-auto sm:-right-4">
-                    <svg class="size-20 shrink-0 rounded-xl bg-white p-1.5 text-forest-950" viewBox="0 0 21 21" shape-rendering="crispEdges" fill="currentColor" aria-label="Ilustrasi kode QR" role="img">
+                    <svg class="size-20 shrink-0 rounded-xl bg-white p-1.5 text-forest-950" viewBox="0 0 21 21" shape-rendering="crispEdges" fill="currentColor" aria-label="{{ __('Ilustrasi kode QR') }}" role="img">
                         <path d="M0 0h7v7H0zM1 1v5h5V1zM2 2h3v3H2zM14 0h7v7h-7zM15 1v5h5V1zM16 2h3v3h-3zM0 14h7v7H0zM1 15v5h5v-5zM2 16h3v3H2zM8 0h2v2H8zM9 3h2v2H9zM8 6h1v2H8zM11 8h2v2h-2zM8 9h2v2H8zM0 8h2v2H0zM3 9h2v2H3zM5 8h1v1H5zM14 8h2v2h-2zM17 9h3v2h-3zM19 8h2v1h-2zM8 13h2v2H8zM11 12h2v3h-2zM14 14h3v2h-3zM18 14h3v2h-3zM8 17h3v2H8zM12 18h2v3h-2zM16 17h2v2h-2zM19 18h2v3h-2zM10 20h1v1h-1z"/>
                     </svg>
                     <div>
-                        <p class="font-display text-lg italic leading-tight text-ember-dark">QR di tenda</p>
-                        <p class="mt-1 text-sm leading-snug text-ink-soft">Scan, pilih menu, pesanan diantar ke tenda Anda.</p>
+                        <p class="font-display text-lg italic leading-tight text-ember-dark">{{ __('QR di tenda') }}</p>
+                        <p class="mt-1 text-sm leading-snug text-ink-soft">{{ __('Scan, pilih menu, pesanan diantar ke tenda Anda.') }}</p>
                     </div>
                 </div>
             </div>
@@ -279,9 +279,9 @@
     <section id="subuh" data-phase="subuh" class="bg-forest-100 pt-16 text-forest-900 sm:pt-20" aria-labelledby="judul-faq">
         <div id="faq" class="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_1.7fr] lg:gap-16">
             <div class="lg:self-start" data-reveal>
-                <p class="font-display text-xl italic text-ember-dark">Subuh</p>
-                <h2 id="judul-faq" class="font-display mt-2 text-4xl font-semibold leading-[1.05] sm:text-5xl">Sebelum Anda memesan.</h2>
-                <p class="mt-5 max-w-sm text-ink-soft">Sudah punya booking? <a href="{{ route('booking.find') }}" class="font-bold text-forest-900 underline underline-offset-4">Cek status booking</a> dengan kode booking Anda.</p>
+                <p class="font-display text-xl italic text-ember-dark">{{ __('Subuh') }}</p>
+                <h2 id="judul-faq" class="font-display mt-2 text-4xl font-semibold leading-[1.05] sm:text-5xl">{{ __('Sebelum Anda memesan.') }}</h2>
+                <p class="mt-5 max-w-sm text-ink-soft">{{ __('Sudah punya booking?') }} <a href="{{ route('booking.find') }}" class="font-bold text-forest-900 underline underline-offset-4">{{ __('Cek status booking') }}</a> {{ __('dengan kode booking Anda.') }}</p>
             </div>
             <div class="divide-y divide-forest-900/20 border-y border-forest-900/20" data-reveal>
                 @foreach($faqs as $faq)
@@ -312,12 +312,12 @@
             <img src="{{ asset('images/tent-trees-800.webp') }}" srcset="{{ asset('images/tent-trees-480.webp') }} 480w, {{ asset('images/tent-trees-800.webp') }} 800w, {{ asset('images/tent-trees-1200.webp') }} 1200w" sizes="100vw" alt="" width="1200" height="800" loading="lazy" decoding="async" class="absolute inset-0 size-full object-cover">
             <div class="absolute inset-0 bg-forest-950/70" aria-hidden="true"></div>
             <div class="relative mx-auto max-w-6xl px-4 py-24 sm:px-6 sm:py-32">
-                <h2 class="font-display max-w-3xl text-5xl font-semibold leading-[1.02] sm:text-7xl">Pilih malam Anda.</h2>
-                <p class="mt-4 max-w-xl text-lg text-cream/90">Tenda ditahan {{ $holdMinutes }} menit setelah Anda checkout.</p>
+                <h2 class="font-display max-w-3xl text-5xl font-semibold leading-[1.02] sm:text-7xl">{{ __('Pilih malam Anda.') }}</h2>
+                <p class="mt-4 max-w-xl text-lg text-cream/90">{{ __('Tenda ditahan :minutes menit setelah Anda checkout.', ['minutes' => $holdMinutes]) }}</p>
                 <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-                    <a href="#cari" class="btn btn-primary">Cek ketersediaan</a>
+                    <a href="#cari" class="btn btn-primary">{{ __('Cek ketersediaan') }}</a>
                     @if($whatsapp)
-                        <a href="https://wa.me/{{ $whatsapp }}" target="_blank" rel="noopener" class="btn btn-outline-light">Tanya lewat WhatsApp</a>
+                        <a href="https://wa.me/{{ $whatsapp }}" target="_blank" rel="noopener" class="btn btn-outline-light">{{ __('Tanya lewat WhatsApp') }}</a>
                     @endif
                 </div>
             </div>

@@ -40,7 +40,6 @@ class BookingController extends Controller
             'availableUnits' => $availableUnits,
             'isAvailable' => $availableUnits->isNotEmpty(),
             'stayPrice' => $this->pricing->stayTotal($unitType, $stay['check_in'], $stay['check_out']),
-            'taxRate' => $this->pricing->taxRate(),
             'serveTimes' => config('booking.serve_times'),
             ...$this->bookingService->formOptions(),
         ]);

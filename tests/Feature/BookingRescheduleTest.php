@@ -41,7 +41,6 @@ class BookingRescheduleTest extends TestCase
 
         // The guest email view is owned by the frontend task; mail is asserted, not rendered.
         Mail::fake();
-        config(['booking.tax_rate' => 0]);
 
         $this->type = UnitType::create([
             'name' => 'Dome', 'slug' => 'dome', 'capacity' => 4,

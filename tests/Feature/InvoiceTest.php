@@ -87,10 +87,8 @@ class InvoiceTest extends TestCase
         $this->assertSame($line['subtotal'], $line['price'] * (int) $line['qty']);
     }
 
-    public function test_extra_food_is_taxed_on_the_invoice(): void
+    public function test_extra_food_is_added_to_the_invoice_without_tax(): void
     {
-        config(['booking.tax_rate' => 0.11]);
-
         $booking = $this->makeBooking('BK-TAX', 'paid');
         $category = MenuCategory::create(['name' => 'Minuman', 'sort_order' => 1]);
         $coffee = MenuItem::create(['category_id' => $category->id, 'name' => 'Kopi', 'price' => 10000, 'is_available' => true]);
@@ -102,9 +100,8 @@ class InvoiceTest extends TestCase
         $data = (new InvoiceService)->invoiceData($booking);
 
         $this->assertSame(1100000, $data['subtotal']);
-        $this->assertSame(121000, $data['tax']);
-        $this->assertSame(1221000, $data['grandTotal']);
-        $this->assertSame(111000, $data['balance']);
+        $this->assertSame(1210000, $data['grandTotal']);
+        $this->assertSame(100000, $data['balance']);
         $this->assertFalse($data['isSettled']);
     }
 
