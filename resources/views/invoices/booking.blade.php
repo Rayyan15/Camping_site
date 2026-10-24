@@ -71,7 +71,7 @@
                 <div class="label">{{ __('Kode booking') }}</div>
                 <strong>{{ $booking->code }}</strong>
                 <div class="label" style="margin-top: 8px">{{ __('Tamu') }}</div>
-                {{ $booking->guests }} {{ __('orang') }}
+                {{ trans_choice(':count orang', $booking->guests) }}
             </td>
             <td style="width: 33%">
                 <div class="label">{{ __('Menginap') }}</div>

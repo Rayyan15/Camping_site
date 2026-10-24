@@ -3,6 +3,7 @@
     '(belum)',
     '(saat ini)',
     '(selesai)',
+    ':count item',
     ':count malam',
     ':count malam, 1 unit: :total',
     ':count malam, :from sampai :to.',

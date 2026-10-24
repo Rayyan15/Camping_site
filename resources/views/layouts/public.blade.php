@@ -1,7 +1,7 @@
 @php
     $siteName = config('site.name');
-    $pageTitle = trim($__env->yieldContent('title')) ?: $siteName.' - Menginap di tenda, pesan online';
-    $pageDescription = trim($__env->yieldContent('description')) ?: 'Pesan tenda di '.$siteName.': 7 tipe tenda, 32 unit, cek ketersediaan per tanggal, bayar online, dan pesan makanan lewat QR dari tenda.';
+    $pageTitle = trim($__env->yieldContent('title')) ?: $siteName.' - '.__('Menginap di tenda, pesan online');
+    $pageDescription = trim($__env->yieldContent('description')) ?: __('Pesan tenda di :site: 7 tipe tenda, 32 unit, cek ketersediaan per tanggal, bayar online, dan pesan makanan lewat QR dari tenda.', ['site' => $siteName]);
     $whatsapp = config('site.whatsapp_number');
     $customOgImage = trim($__env->yieldContent('og_image'));
     $hasCustomOgImage = $customOgImage !== '';

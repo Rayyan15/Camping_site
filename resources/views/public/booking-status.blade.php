@@ -112,7 +112,7 @@
             <ul class="mt-6 divide-y divide-sand">
                 @foreach($booking->bookingUnits as $line)
                     <li class="flex items-baseline justify-between gap-4 py-3">
-                        <span>{{ $line->unit->unitType->name }} <span class="text-ink-soft">- {{ __('unit') }} {{ $line->unit->code }}, {{ $line->nights }} {{ __('malam') }}</span></span>
+                        <span>{{ $line->unit->unitType->name }} <span class="text-ink-soft">- {{ __('unit') }} {{ $line->unit->code }}, {{ trans_choice(':count malam', $line->nights) }}</span></span>
                         <span class="font-semibold">{{ $money($line->subtotal) }}</span>
                     </li>
                 @endforeach

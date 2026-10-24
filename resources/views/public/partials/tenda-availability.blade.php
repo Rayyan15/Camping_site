@@ -3,7 +3,7 @@
     <div class="max-w-2xl" data-reveal>
         <p class="font-display text-xl italic text-ember-dark">{{ __('Pilih malam') }}</p>
         <h2 id="judul-ketersediaan" class="font-display mt-2 text-4xl font-semibold leading-[1.05] sm:text-5xl">{{ __('Kapan :name masih kosong?', ['name' => $unitType->name]) }}</h2>
-        <p class="mt-4 text-ink-soft">{{ __('Tanggal yang dicoret sudah lewat. Tanggal berpola garis penuh untuk semua :count unit, baik karena dipesan, ditahan :minutes menit saat checkout, maupun diblokir pengelola.', ['count' => $unitType->units_count, 'minutes' => config('booking.hold_minutes')]) }}</p>
+        <p class="mt-4 text-ink-soft">{{ trans_choice('Tanggal yang dicoret sudah lewat. Tanggal berpola garis penuh untuk semua :count unit, baik karena dipesan, ditahan :minutes menit saat checkout, maupun diblokir pengelola.', $unitType->units_count, ['minutes' => config('booking.hold_minutes')]) }}</p>
     </div>
 
     <div class="mt-10 grid gap-8 lg:grid-cols-[1.6fr_1fr] lg:items-start lg:gap-10">

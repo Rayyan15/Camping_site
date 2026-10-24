@@ -8,14 +8,14 @@
         '@type' => 'BreadcrumbList',
         'itemListElement' => [
             ['@type' => 'ListItem', 'position' => 1, 'name' => config('site.name'), 'item' => route('home')],
-            ['@type' => 'ListItem', 'position' => 2, 'name' => 'Tenda', 'item' => route('tenda.index')],
+            ['@type' => 'ListItem', 'position' => 2, 'name' => __('Tenda'), 'item' => route('tenda.index')],
             ['@type' => 'ListItem', 'position' => 3, 'name' => $unitType->name, 'item' => route('tenda.show', ['slug' => $unitType->slug])],
         ],
     ];
 @endphp
 
 @section('title', $unitType->name.' - '.config('site.name'))
-@section('description', 'Tenda '.$unitType->name.' untuk hingga '.$unitType->capacity.' orang. Cek ketersediaan dan pesan online.')
+@section('description', __('Tenda :name untuk hingga :count orang. Cek ketersediaan dan pesan online.', ['name' => $unitType->name, 'count' => $unitType->capacity]))
 
 @section('og_image', $photos->first()?->url ?? '')
 

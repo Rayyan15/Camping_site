@@ -103,7 +103,10 @@
 
             @if($searched)
                 <p class="mt-8 rounded-2xl border border-forest-300 bg-forest-100 px-5 py-4 text-sm font-semibold text-forest-900" role="status">
-                    Hasil untuk {{ \Carbon\Carbon::parse($search['check_in'])->format('d M Y') }} sampai {{ \Carbon\Carbon::parse($search['check_out'])->format('d M Y') }}@if($guestsWanted), {{ $guestsWanted }} tamu @endif.
+                    @php
+                        $searchDates = ['from' => \Carbon\Carbon::parse($search['check_in'])->translatedFormat('d M Y'), 'to' => \Carbon\Carbon::parse($search['check_out'])->translatedFormat('d M Y')];
+                    @endphp
+                    {{ $guestsWanted ? trans_choice('Hasil untuk :from sampai :to, :count tamu.', $guestsWanted, $searchDates) : __('Hasil untuk :from sampai :to.', $searchDates) }}
                     <a href="{{ route('home') }}#tenda" class="ml-2 underline underline-offset-4">{{ __('Hapus pencarian') }}</a>
                 </p>
             @endif

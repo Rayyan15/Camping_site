@@ -1,9 +1,8 @@
+import { t, formatLong, formatShort, formatMonth, weekdayHeads } from './modules/i18n';
 
 const MIN_GUESTS = 1;
 const MAX_GUESTS = 12;
 const DEFAULT_GUESTS = 2;
-import { t, formatLong, formatShort, formatMonth, weekdayHeads } from './modules/i18n';
-
 const COMPACT_QUERY = '(max-width: 767px)';
 
 const pad = (n) => String(n).padStart(2, '0');

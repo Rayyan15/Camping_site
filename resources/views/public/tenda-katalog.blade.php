@@ -37,7 +37,7 @@
                         <select id="tamu" name="tamu" class="field-input">
                             <option value="">{{ __('Berapa saja') }}</option>
                             @foreach(range(1, 12) as $count)
-                                <option value="{{ $count }}" @selected($filters['tamu'] === $count)>{{ $count }} {{ __('orang') }}</option>
+                                <option value="{{ $count }}" @selected($filters['tamu'] === $count)>{{ trans_choice(':count orang', $count) }}</option>
                             @endforeach
                         </select>
                     </div>

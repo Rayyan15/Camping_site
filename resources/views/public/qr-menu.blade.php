@@ -131,7 +131,7 @@
         <div class="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-xl rounded-t-3xl bg-forest-900 px-5 pb-5 pt-4 text-cream shadow-[0_-8px_24px_rgb(20_38_27/0.25)]" role="region" aria-label="{{ __('Keranjang') }}">
             <div class="flex items-center justify-between gap-4">
                 <div>
-                    <p class="text-xs font-bold uppercase tracking-widest text-forest-300"><span data-cart-count>0</span> item</p>
+                    <p class="text-xs font-bold uppercase tracking-widest text-forest-300"><span data-cart-count>{{ trans_choice(':count item', 0) }}</span></p>
                     <p class="font-display text-2xl font-semibold tabular-nums" data-cart-total aria-live="polite">Rp 0</p>
                 </div>
                 <button type="submit" form="order-form" data-cart-submit class="btn btn-primary min-w-40 disabled:cursor-not-allowed disabled:opacity-50">{{ __('Kirim pesanan') }}</button>

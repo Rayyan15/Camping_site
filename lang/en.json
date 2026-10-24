@@ -145,7 +145,7 @@
     "Kirim pesanan": "Submit order",
     "Pesanan :code": "Order :code",
     "Kode pesanan": "Order code",
-    "atas nama :name": "for :name",
+    "atas nama :name": "booked under :name",
     "Tahapan pesanan": "Order progress",
     "Pesanan masuk, menunggu dapur.": "Order received, waiting for kitchen.",
     "Dapur sedang menyiapkan pesanan Anda.": "Kitchen is preparing your order.",
@@ -346,7 +346,7 @@
     "Bagikan ke WhatsApp": "Share on WhatsApp",
     "Pilih malam": "Pick your nights",
     "Kapan :name masih kosong?": "When is :name still open?",
-    "Tanggal yang dicoret sudah lewat. Tanggal berpola garis penuh untuk semua :count unit, baik karena dipesan, ditahan :minutes menit saat checkout, maupun diblokir pengelola.": "Crossed-out dates have passed. Striped dates are full for all :count units, because they are booked, held for :minutes minutes at checkout, or blocked by the management.",
+    "Tanggal yang dicoret sudah lewat. Tanggal berpola garis penuh untuk semua :count unit, baik karena dipesan, ditahan :minutes menit saat checkout, maupun diblokir pengelola.": "{1} Crossed-out dates have passed. Striped dates are full for the only unit, because it is booked, held for :minutes minutes at checkout, or blocked by the management.|[2,*] Crossed-out dates have passed. Striped dates are full for all :count units, because they are booked, held for :minutes minutes at checkout, or blocked by the management.",
     "Kalender membutuhkan JavaScript. Isi kolom check-in dan check-out pada formulir di samping, lalu tekan Cek dan pesan. Hasilnya sama.": "The calendar needs JavaScript. Fill in check-in and check-out in the form beside it, then press Check and book. The result is the same.",
     "Arahkan atau fokuskan ke sebuah tanggal untuk melihat sisa unitnya.": "Hover over or focus a date to see how many units are left.",
     "Memuat ketersediaan...": "Loading availability...",
@@ -560,5 +560,11 @@
     "Pesan tenda online, :types tipe, :units unit": "Book a tent online, :types types, :units units",
     "Penuh di tanggal ini": "Full on these dates",
     "Sisa :count unit": "{1} :count unit left|[2,*] :count units left",
-    "Harga terendah": "Lowest price"
+    "Harga terendah": "Lowest price",
+    "Hasil untuk :from sampai :to, :count tamu.": "{1} Results for :from to :to, :count guest.|[2,*] Results for :from to :to, :count guests.",
+    "Hasil untuk :from sampai :to.": "Results for :from to :to.",
+    "Menginap di tenda, pesan online": "Stay in a tent, book online",
+    "Pesan tenda di :site: 7 tipe tenda, 32 unit, cek ketersediaan per tanggal, bayar online, dan pesan makanan lewat QR dari tenda.": "Book a tent at :site: 7 tent types, 32 units, availability by date, online payment, and food orders by QR code from your tent.",
+    ":count item": ":count item|:count items",
+    "Tenda :name untuk hingga :count orang. Cek ketersediaan dan pesan online.": ":name tent for up to :count people. Check availability and book online."
 }

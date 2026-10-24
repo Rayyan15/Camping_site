@@ -40,7 +40,7 @@
                 <section class="rounded-3xl border border-sand bg-[#fffdf8] p-6 sm:p-8" aria-labelledby="sum-title">
                     <h2 id="sum-title" class="font-display text-xl font-semibold text-forest-900">{{ __('Rincian pesanan') }}</h2>
                     <p class="mt-1 text-sm text-ink-soft">
-                        {{ $checkIn->translatedFormat('j F') }} {{ __('sampai') }} {{ $checkOut->translatedFormat('j F Y') }}, {{ $nights }} {{ __('malam') }}, {{ $booking->guests }} {{ __('tamu') }}, {{ __('atas nama') }} {{ $booking->customer->name }}.
+                        {{ $checkIn->translatedFormat('j F') }} {{ __('sampai') }} {{ $checkOut->translatedFormat('j F Y') }}, {{ trans_choice(':count malam', $nights) }}, {{ trans_choice(':count tamu', $booking->guests) }}, {{ __('atas nama :name', ['name' => $booking->customer->name]) }}.
                     </p>
 
                     <table class="mt-6 w-full text-sm">
@@ -50,7 +50,7 @@
                                 <tr>
                                     <td class="py-3 pr-4">
                                         <span class="font-bold text-forest-900">{{ $line->unit->unitType->name }}</span>
-                                        <span class="block text-ink-soft">{{ __('Unit') }} {{ $line->unit->code }}, {{ $line->nights }} {{ __('malam') }}</span>
+                                        <span class="block text-ink-soft">{{ __('Unit') }} {{ $line->unit->code }}, {{ trans_choice(':count malam', $line->nights) }}</span>
                                     </td>
                                     <td class="py-3 text-right font-bold text-forest-900">{{ $rupiah($line->subtotal) }}</td>
                                 </tr>
@@ -61,7 +61,7 @@
                                     <td class="py-3 pr-4">
                                         <span class="font-bold text-forest-900">{{ $line->addon->name }}</span>
                                         <span class="block text-ink-soft">
-                                            {{ $line->qty }} x {{ $rupiah($line->price) }}@if($line->addon->isPerNight()) x {{ $nights }} {{ __('malam') }} @endif
+                                            {{ $line->qty }} x {{ $rupiah($line->price) }}@if($line->addon->isPerNight()) x {{ trans_choice(':count malam', $nights) }} @endif
                                         </span>
                                     </td>
                                     <td class="py-3 text-right font-bold text-forest-900">{{ $rupiah($line->subtotal) }}</td>

@@ -18,7 +18,7 @@
         <h1 class="font-display mt-2 text-3xl font-semibold text-forest-900 sm:text-4xl">{{ __('Lengkapi pemesanan') }}</h1>
         <p class="mt-2 max-w-prose text-ink-soft">
             {{ $unitType->name }}, {{ $checkInDate->translatedFormat('j F') }} {{ __('sampai') }} {{ $checkOutDate->translatedFormat('j F Y') }}
-            ({{ $nights }} {{ __('malam') }}). {{ __('Unit ditahan :minutes menit setelah Anda melanjutkan ke pembayaran.', ['minutes' => config('booking.hold_minutes')]) }}
+            ({{ trans_choice(':count malam', $nights) }}). {{ __('Unit ditahan :minutes menit setelah Anda melanjutkan ke pembayaran.', ['minutes' => config('booking.hold_minutes')]) }}
         </p>
 
         @if(session('error'))

@@ -1,5 +1,4 @@
-
-import { rupiah } from './i18n';
+import { rupiah, t } from './i18n';
 
 export function initQrCart() {
     const form = document.getElementById('order-form');
@@ -33,7 +32,7 @@ export function initQrCart() {
             line.querySelector('[data-notes]').hidden = quantity === 0;
         });
 
-        countEl.textContent = count;
+        countEl.textContent = t(':count item', { count });
         totalEl.textContent = rupiah(total);
         submit.disabled = count === 0;
     };
