@@ -80,7 +80,7 @@ class LandingController extends Controller
             '@type' => 'Campground',
             'name' => config('site.name'),
             'url' => route('home'),
-            'image' => [asset('images/og-default.jpg'), asset('images/hero-canvas-tent-1600.webp')],
+            'image' => [asset('images/og-default.jpg'), asset('images/hero-safari-sunset-1200.webp')],
             'numberOfRooms' => $unitTypes->sum('units_count'),
         ];
 

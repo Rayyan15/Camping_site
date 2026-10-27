@@ -66,7 +66,7 @@
     {{-- SORE: arrive and check dates. --}}
     <section id="sore" data-phase="sore" class="relative z-20 flex min-h-[100svh] items-end text-cream" aria-labelledby="judul-hero">
         <div class="hero-lqip absolute inset-0 overflow-hidden">
-            <img data-parallax="-0.25" src="{{ asset('images/hero-canvas-tent-1200.webp') }}" srcset="{{ asset('images/hero-canvas-tent-480.webp') }} 480w, {{ asset('images/hero-canvas-tent-800.webp') }} 800w, {{ asset('images/hero-canvas-tent-1200.webp') }} 1200w, {{ asset('images/hero-canvas-tent-1600.webp') }} 1600w" sizes="100vw" alt="{{ __('Tenda kanvas di antara pepohonan dengan teras kayu, tamu duduk di depannya') }}" width="1600" height="898" fetchpriority="high" decoding="async" class="absolute inset-x-0 -top-[28%] h-[128%] w-full object-cover object-[60%_50%]">
+            <img data-parallax="-0.25" src="{{ asset('images/hero-safari-sunset-1200.webp') }}" srcset="{{ asset('images/hero-safari-sunset-480.webp') }} 480w, {{ asset('images/hero-safari-sunset-800.webp') }} 800w, {{ asset('images/hero-safari-sunset-1200.webp') }} 1200w" sizes="100vw" alt="{{ __('Tenda Safari di Halimun Highland saat matahari terbenam, dengan meja dan kursi di teras') }}" width="1200" height="1264" fetchpriority="high" decoding="async" class="absolute inset-x-0 -top-[28%] h-[128%] w-full object-cover object-[50%_60%]">
             {{-- Scrim keeps the headline readable over the brightest part of the photo. --}}
             <div class="absolute inset-0 bg-gradient-to-t from-forest-950 via-forest-950/50 to-forest-950/20" aria-hidden="true"></div>
         </div>
@@ -226,7 +226,7 @@
             </div>
 
             <div class="relative lg:col-span-6" data-reveal data-reveal-delay="120">
-                <img src="{{ asset('images/tent-rocks-800.webp') }}" srcset="{{ asset('images/tent-rocks-480.webp') }} 480w, {{ asset('images/tent-rocks-800.webp') }} 800w, {{ asset('images/tent-rocks-1200.webp') }} 1200w" sizes="(min-width: 1152px) 560px, (min-width: 1024px) 45vw, 100vw" alt="{{ __('Tenda kanvas putih terbuka di antara batu dan pepohonan') }}" width="1200" height="800" loading="lazy" decoding="async" class="aspect-[4/5] w-full rounded-[2rem] object-cover sm:aspect-[5/4]">
+                <img src="{{ asset('images/safari-interior-800.webp') }}" srcset="{{ asset('images/safari-interior-480.webp') }} 480w, {{ asset('images/safari-interior-800.webp') }} 800w, {{ asset('images/safari-interior-1200.webp') }} 1200w" sizes="(min-width: 1152px) 560px, (min-width: 1024px) 45vw, 100vw" alt="{{ __('Bagian dalam tenda Safari: kasur, rak, dan kursi lipat') }}" width="1200" height="1113" loading="lazy" decoding="async" class="aspect-[4/5] w-full rounded-[2rem] object-cover sm:aspect-[5/4]">
                 <div class="absolute -bottom-8 left-4 flex w-72 items-center gap-4 rounded-3xl bg-cream p-4 text-forest-900 shadow-2xl shadow-black/40 sm:left-auto sm:-right-4">
                     <svg class="size-20 shrink-0 rounded-xl bg-white p-1.5 text-forest-950" viewBox="0 0 21 21" shape-rendering="crispEdges" fill="currentColor" aria-label="{{ __('Ilustrasi kode QR') }}" role="img">
                         <path d="M0 0h7v7H0zM1 1v5h5V1zM2 2h3v3H2zM14 0h7v7h-7zM15 1v5h5V1zM16 2h3v3h-3zM0 14h7v7H0zM1 15v5h5v-5zM2 16h3v3H2zM8 0h2v2H8zM9 3h2v2H9zM8 6h1v2H8zM11 8h2v2h-2zM8 9h2v2H8zM0 8h2v2H0zM3 9h2v2H3zM5 8h1v1H5zM14 8h2v2h-2zM17 9h3v2h-3zM19 8h2v1h-2zM8 13h2v2H8zM11 12h2v3h-2zM14 14h3v2h-3zM18 14h3v2h-3zM8 17h3v2H8zM12 18h2v3h-2zM16 17h2v2h-2zM19 18h2v3h-2zM10 20h1v1h-1z"/>
@@ -312,7 +312,7 @@
         @endif
 
         <div class="relative mt-20 overflow-hidden bg-forest-950 text-cream" data-reveal>
-            <img src="{{ asset('images/tent-trees-800.webp') }}" srcset="{{ asset('images/tent-trees-480.webp') }} 480w, {{ asset('images/tent-trees-800.webp') }} 800w, {{ asset('images/tent-trees-1200.webp') }} 1200w" sizes="100vw" alt="" width="1200" height="800" loading="lazy" decoding="async" class="absolute inset-0 size-full object-cover">
+            <img src="{{ asset('images/safari-row-dusk-800.webp') }}" srcset="{{ asset('images/safari-row-dusk-480.webp') }} 480w, {{ asset('images/safari-row-dusk-800.webp') }} 800w, {{ asset('images/safari-row-dusk-1200.webp') }} 900w" sizes="100vw" alt="" width="900" height="1600" loading="lazy" decoding="async" class="absolute inset-0 size-full object-cover object-[50%_35%]">
             <div class="absolute inset-0 bg-forest-950/70" aria-hidden="true"></div>
             <div class="relative mx-auto max-w-6xl px-4 py-24 sm:px-6 sm:py-32">
                 <h2 class="font-display max-w-3xl text-5xl font-semibold leading-[1.02] sm:text-7xl">{{ __('Pilih malam Anda.') }}</h2>

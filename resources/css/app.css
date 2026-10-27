@@ -446,9 +446,9 @@
 /* Tiny blurred copy of the hero photo shows while the real image loads. */
 .hero-lqip {
     background-color: var(--color-forest-950);
-    background-image: url("data:image/webp;base64,UklGRkoAAABXRUJQVlA4ID4AAACwAQCdASoQAAkAA4BaJZQC7ADaP05AAP3AJSkjXjc2Mp8CMwcGmpPXy6rff/yFMrk6sa+c7N5YpZwCSYAAAA==");
+    background-image: url("data:image/webp;base64,UklGRnQAAABXRUJQVlA4IGgAAAAwBACdASoQABEAPxFysFAsJqSisAgBgCIJbACdMoMrZEAabB9k1roS0wAAyx7N/H3lmBwCU/W2CUkXnrtksG1lRHYgrck+qQDacpBYKMHuowqsdw5yp67NRslV3QyzvDl4xTiVwbgAAA==");
     background-size: cover;
-    background-position: 60% 50%;
+    background-position: 50% 60%;
 }
 
 /* Landing: "satu malam". Dusk is a tint of the forest/ember family, not a new hue. */
