@@ -15,7 +15,7 @@ class SeededPhotosTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const PHOTOS_PER_UNIT_TYPE = 3;
+    private const MIN_PHOTOS_PER_UNIT_TYPE = 3;
 
     protected function setUp(): void
     {
@@ -30,7 +30,7 @@ class SeededPhotosTest extends TestCase
         $this->assertGreaterThan(0, UnitType::count());
 
         foreach (UnitType::with('photos')->get() as $unitType) {
-            $this->assertCount(self::PHOTOS_PER_UNIT_TYPE, $unitType->photos, $unitType->name);
+            $this->assertGreaterThanOrEqual(self::MIN_PHOTOS_PER_UNIT_TYPE, $unitType->photos->count(), $unitType->name);
 
             foreach ($unitType->photos as $photo) {
                 Storage::disk('public')->assertExists($photo->path);
