@@ -10,7 +10,7 @@ class AdminTranslationsTest extends TestCase
     {
         app()->setLocale('id');
 
-        $this->assertSame('Nama wajib diisi.', __('validation.required', ['attribute' => 'Nama']));
+        $this->assertSame('Nama wajib diisi.', __('validation.required', ['attribute' => 'nama']));
         $this->assertSame('3 hasil', trans_choice('filament-tables::table.result_count', 3));
     }
 }
