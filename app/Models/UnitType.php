@@ -43,4 +43,20 @@ class UnitType extends Model
     {
         return $this->hasMany(SpecialPrice::class);
     }
+
+    /**
+     * Owners type facilities freely, so "grill" and "Grill" would show up as two catalog filters.
+     *
+     * @param  array<int, string>|null  $facilities
+     * @return array<int, string>
+     */
+    public static function normalizeFacilities(?array $facilities): array
+    {
+        return collect($facilities ?? [])
+            ->map(fn (string $facility): string => ucfirst(trim($facility)))
+            ->filter()
+            ->unique(fn (string $facility): string => mb_strtolower($facility))
+            ->values()
+            ->all();
+    }
 }

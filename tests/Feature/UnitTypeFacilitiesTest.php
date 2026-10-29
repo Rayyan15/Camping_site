@@ -34,4 +34,12 @@ class UnitTypeFacilitiesTest extends TestCase
         $this->assertSame(['Kasur', 'Listrik', 'Grill'], $unitType->fresh()->facilities);
         $this->get(route('home'))->assertOk()->assertSee('Grill');
     }
+
+    public function test_facilities_are_capitalized_and_deduplicated_case_insensitively(): void
+    {
+        $this->assertSame(
+            ['Grill', 'Air minum'],
+            UnitType::normalizeFacilities(['Grill', ' grill', 'air minum', '', 'Air Minum']),
+        );
+    }
 }

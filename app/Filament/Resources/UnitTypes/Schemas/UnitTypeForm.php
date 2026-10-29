@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\UnitTypes\Schemas;
 
+use App\Models\UnitType;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -58,6 +59,7 @@ class UnitTypeForm
                                 ->label('Fasilitas Utama')
                                 ->placeholder('Ketik fasilitas lalu tekan Enter')
                                 ->splitKeys(['Tab', ','])
+                                ->dehydrateStateUsing(fn (?array $state): array => UnitType::normalizeFacilities($state))
                                 ->columnSpanFull(),
                             Textarea::make('description')
                                 ->label('Deskripsi')
