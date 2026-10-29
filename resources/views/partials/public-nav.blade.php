@@ -17,7 +17,7 @@
             <span class="ml-2.5 font-display text-xl font-semibold leading-none tracking-tight">{{ config('site.name') }}</span>
         </a>
 
-        <nav aria-label="{{ __('Navigasi utama') }}" class="hidden items-center gap-8 text-sm font-semibold text-ink-soft md:flex">
+        <nav aria-label="{{ __('Navigasi utama') }}" class="hidden items-center gap-8 text-sm font-semibold text-ink-soft lg:flex">
             @foreach($navLinks as $label => $href)
                 <a href="{{ $href }}" class="inline-flex min-h-11 items-center transition hover:text-forest-900">{{ $label }}</a>
             @endforeach
@@ -66,10 +66,10 @@
                 </div>
             </details>
 
-            <a href="{{ $findBookingHref }}" class="hidden min-h-11 items-center px-3 text-sm font-semibold text-ink-soft transition hover:text-forest-900 md:inline-flex">{{ __('Cek booking') }}</a>
+            <a href="{{ $findBookingHref }}" class="hidden min-h-11 items-center px-3 text-sm font-semibold text-ink-soft transition hover:text-forest-900 lg:inline-flex">{{ __('Cek booking') }}</a>
             <a href="{{ $home }}#cari" class="btn btn-primary hidden !px-5 sm:inline-flex">{{ __('Cek tanggal') }}</a>
 
-            <details class="group relative md:hidden">
+            <details class="group relative lg:hidden">
                 <summary class="flex size-11 cursor-pointer list-none items-center justify-center rounded-full border border-sand-dark text-forest-900 [&::-webkit-details-marker]:hidden" aria-label="{{ __('Buka menu') }}">
                     <svg class="size-6 group-open:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/></svg>
                     <svg class="hidden size-6 group-open:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></svg>
