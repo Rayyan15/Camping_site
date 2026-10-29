@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class UnitType extends Model
 {
     protected $fillable = [
-        'name', 'slug', 'description', 'capacity',
+        'name', 'slug', 'description', 'capacity', 'max_extra_guests',
         'facilities', 'base_price_weekday', 'base_price_weekend',
     ];
 
@@ -20,6 +20,7 @@ class UnitType extends Model
         return [
             'facilities' => 'array',
             'capacity' => 'integer',
+            'max_extra_guests' => 'integer',
             'base_price_weekday' => 'integer',
             'base_price_weekend' => 'integer',
         ];

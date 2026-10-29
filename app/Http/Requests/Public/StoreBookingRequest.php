@@ -121,17 +121,19 @@ class StoreBookingRequest extends FormRequest
             return;
         }
 
-        $maxExtraPerUnit = (int) config('booking.max_extra_guests_per_unit');
+        $maxExtraPerUnit = $unitType->max_extra_guests;
         $extraGuests = $this->extraBedCount();
 
         if ($extraGuests > $maxExtraPerUnit * $quantity) {
-            $validator->errors()->add('addons', "Tamu tambahan maksimal {$maxExtraPerUnit} orang per tenda.");
+            $validator->errors()->add('addons', $maxExtraPerUnit === 0
+                ? __(':name tidak bisa menambah tamu lewat extra bed.', ['name' => $unitType->name])
+                : __('Tamu tambahan maksimal :max orang per tenda.', ['max' => $maxExtraPerUnit]));
 
             return;
         }
 
         if ($this->integer('guests') > $unitType->capacity * $quantity + $extraGuests) {
-            $validator->errors()->add('guests', "Kapasitas {$unitType->name} adalah {$unitType->capacity} orang per unit, tambahan maksimal {$maxExtraPerUnit} orang per tenda. Tambah unit atau tamu tambahan.");
+            $validator->errors()->add('guests', __('Kapasitas :name adalah :capacity orang per unit. Tambah unit atau tamu tambahan.', ['name' => $unitType->name, 'capacity' => $unitType->capacity]));
         }
     }
 

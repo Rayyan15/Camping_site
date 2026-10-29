@@ -16,7 +16,7 @@ class ProductionSeeder extends Seeder
 {
     /** Inactive at price 0 so nothing is sold until the owner sets a real price and activates it. */
     private const ADDONS = [
-        ['name' => 'Extra Bed', 'unit' => AddonUnit::PerNight, 'extra_guests' => 1],
+        ['name' => 'Extra bed + sarapan 2 pax', 'unit' => AddonUnit::PerNight, 'extra_guests' => 2],
         ['name' => 'Paket Kayu Bakar', 'unit' => AddonUnit::PerItem],
         ['name' => 'Sewa Matras Tambahan', 'unit' => AddonUnit::PerItem],
     ];

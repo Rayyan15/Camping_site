@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\AddonUnit;
-use App\Models\Addon;
 use App\Models\Unit;
 use App\Models\UnitType;
 use App\Models\UnitTypePhoto;
@@ -17,13 +15,15 @@ class UnitTypeSeeder extends Seeder
      * Unit counts come from the PRD (section 3.1, 32 units in total).
      * Facilities and every price below are PLACEHOLDERS: the owner must confirm them.
      *
-     * @var array<int, array{name: string, code: string, units: int, capacity: int, weekday: int, weekend: int, description: string, facilities: array<int, string>}>
+     * @var array<int, array{name: string, code: string, units: int, capacity: int, max_extra_guests?: int, weekday: int, weekend: int, description: string, facilities: array<int, string>}>
      */
-    /** Every tent sleeps 4 (client answer, 10 Oct 2026); up to 2 more guests come through extra_guests add-ons. */
+    /** Capacities from the owner, 29 Oct 2026. Only Dome, Salak and Pancar take up to 2 extra guests. */
     private const TENT_CAPACITY = 4;
 
+    private const EXTRA_GUESTS_ALLOWED = 2;
+
     private const TYPES = [
-        ['name' => 'Dome', 'code' => 'DOM', 'units' => 1, 'capacity' => self::TENT_CAPACITY, 'weekday' => 650000, 'weekend' => 800000,
+        ['name' => 'Dome', 'code' => 'DOM', 'max_extra_guests' => self::EXTRA_GUESTS_ALLOWED, 'units' => 1, 'capacity' => self::TENT_CAPACITY, 'weekday' => 650000, 'weekend' => 800000,
             'description' => 'Satu-satunya tenda berbentuk kubah di area ini, dengan ruang tengah yang lega untuk rombongan kecil.',
             'facilities' => ['Kasur', 'Listrik', 'Kamar mandi dalam', 'Teras']],
         ['name' => 'Romance', 'code' => 'ROM', 'units' => 2, 'capacity' => self::TENT_CAPACITY, 'weekday' => 550000, 'weekend' => 700000,
@@ -35,14 +35,14 @@ class UnitTypeSeeder extends Seeder
         ['name' => 'Indian', 'code' => 'IND', 'units' => 5, 'capacity' => self::TENT_CAPACITY, 'weekday' => 400000, 'weekend' => 500000,
             'description' => 'Tenda tipi berpuncak tinggi dengan ruang berdiri yang leluasa.',
             'facilities' => ['Kasur', 'Listrik', 'Teras']],
-        ['name' => 'Pancar', 'code' => 'PNC', 'units' => 11, 'capacity' => self::TENT_CAPACITY, 'weekday' => 350000, 'weekend' => 450000,
+        ['name' => 'Pancar', 'code' => 'PNC', 'max_extra_guests' => self::EXTRA_GUESTS_ALLOWED, 'units' => 11, 'capacity' => self::TENT_CAPACITY, 'weekday' => 350000, 'weekend' => 450000,
             'description' => 'Tenda keluarga standar dan tipe paling banyak di area ini.',
             'facilities' => ['Kasur', 'Listrik', 'Toilet bersama']],
         ['name' => 'Safari', 'code' => 'SFR', 'units' => 6, 'capacity' => self::TENT_CAPACITY, 'weekday' => 500000, 'weekend' => 625000,
             'description' => 'Tenda kanvas besar ala safari dengan ruang untuk rombongan keluarga.',
             'facilities' => ['Kasur', 'Listrik', 'Kamar mandi dalam', 'Teras']],
-        ['name' => 'Salak', 'code' => 'SLK', 'units' => 5, 'capacity' => self::TENT_CAPACITY, 'weekday' => 600000, 'weekend' => 750000,
-            'description' => 'Tenda berkapasitas terbesar untuk rombongan atau keluarga besar.',
+        ['name' => 'Salak', 'code' => 'SLK', 'max_extra_guests' => self::EXTRA_GUESTS_ALLOWED, 'units' => 5, 'capacity' => 2, 'weekday' => 600000, 'weekend' => 750000,
+            'description' => 'Tenda untuk dua orang, bisa ditambah dua tamu lewat extra bed.',
             'facilities' => ['Kasur', 'Listrik', 'Kamar mandi dalam', 'Teras']],
     ];
 
@@ -70,6 +70,7 @@ class UnitTypeSeeder extends Seeder
                     'name' => $type['name'],
                     'description' => $type['description'],
                     'capacity' => $type['capacity'],
+                    'max_extra_guests' => $type['max_extra_guests'] ?? 0,
                     'facilities' => $type['facilities'],
                     'base_price_weekday' => $type['weekday'],
                     'base_price_weekend' => $type['weekend'],
@@ -86,18 +87,7 @@ class UnitTypeSeeder extends Seeder
             }
         }
 
-        Addon::firstOrCreate(
-            ['name' => 'Extra Bed'],
-            ['price' => 0, 'unit' => AddonUnit::PerNight, 'extra_guests' => 1, 'is_active' => false],
-        );
-        Addon::firstOrCreate(
-            ['name' => 'Paket Kayu Bakar'],
-            ['price' => 50000, 'unit' => AddonUnit::PerItem, 'is_active' => true],
-        );
-        Addon::firstOrCreate(
-            ['name' => 'Sewa Matras Tambahan'],
-            ['price' => 25000, 'unit' => AddonUnit::PerItem, 'is_active' => true],
-        );
+        $this->call(AddonSeeder::class);
     }
 
     private function seedPhotos(UnitType $unitType): void

@@ -100,7 +100,7 @@
                                                 {{ $rupiah($addon->price) }} {{ __($addon->unit->value) }}@if($addon->isPerNight()), {{ trans_choice('dihitung :nights malam', $nights, ['nights' => $nights]) }} @endif
                                             </p>
                                         </div>
-                                        <x-stepper :name="'addons['.$addon->id.']'" :label="$addon->name" :value="old('addons.'.$addon->id, 0)" :min="0" :max="$maxAddon" :price="$addon->price" :per-night="$addon->isPerNight()" role="addon" />
+                                        <x-stepper :name="'addons['.$addon->id.']'" :label="$addon->name" :value="old('addons.'.$addon->id, 0)" :min="0" :max="$addon->extra_guests > 0 ? intdiv($unitType->max_extra_guests, $addon->extra_guests) * $maxUnits : $maxAddon" :price="$addon->price" :per-night="$addon->isPerNight()" role="addon" />
                                     </li>
                                 @endforeach
                             </ul>

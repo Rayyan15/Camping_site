@@ -94,7 +94,6 @@
     "Coffeeshop": "Coffeeshop",
     "Kopi dan minuman lewat menu yang sama, diantar ke lokasi Anda.": "Coffee and beverages from the same menu, delivered to your location.",
     "Tamu tambahan": "Extra guests",
-    "Tiap tenda menampung 4 orang, bisa ditambah sampai :limit orang lewat add-on saat memilih tenda.": "Each tent accommodates 4 guests, expandable up to :limit extra guests via add-ons.",
     "Sebelum Anda memesan.": "Before you book.",
     "Sudah punya booking?": "Already have a booking?",
     "dengan kode booking Anda.": "using your booking code.",
@@ -214,7 +213,6 @@
     "Berapa lama tenda ditahan sebelum saya bayar?": "How long is the tent held before I pay?",
     "Tenda ditahan :minutes menit sejak checkout dibuat. Bila belum dibayar, tahanan dilepas otomatis dan tenda kembali tersedia.": "The tent is held for :minutes minutes after checkout. If it is not paid by then, the hold is released and the tent becomes available again.",
     "Tamu saya melebihi kapasitas tenda. Bagaimana?": "My group is larger than the tent capacity. What can I do?",
-    "Tiap tenda menampung 4 orang. Anda bisa menambah paling banyak :limit orang per tenda lewat add-on tamu tambahan saat memilih tenda.": "Each tent sleeps 4. You can add up to :limit more people per tent with the extra guest add-on when you choose your tent.",
     "Bisakah memesan makanan sebelum datang?": "Can I order food before I arrive?",
     "Bisa. Pilih menu, tanggal, dan jam penyajian saat booking. Setelah menginap, pesan tambahan lewat QR di tenda.": "Yes. Choose the dishes, date, and serving time when you book. During your stay, order more through the QR code at your tent.",
     "Metode pembayaran apa yang tersedia?": "Which payment methods are available?",
@@ -568,5 +566,13 @@
     ":count item": ":count item|:count items",
     "Tenda :name untuk hingga :count orang. Cek ketersediaan dan pesan online.": ":name tent for up to :count people. Check availability and book online.",
     "Tenda Safari di Halimun Highland saat matahari terbenam, dengan meja dan kursi di teras": "Safari tent at Halimun Highland at sunset, with a table and chairs on the deck",
-    "Bagian dalam tenda Safari: kasur, rak, dan kursi lipat": "Inside a Safari tent: bed, shelf and folding chairs"
+    "Bagian dalam tenda Safari: kasur, rak, dan kursi lipat": "Inside a Safari tent: bed, shelf and folding chairs",
+    "dan": "and",
+    "Kapasitas tiap tipe tertera di kartunya. Untuk rombongan besar, pesan lebih dari satu unit.": "Each type lists its capacity on its card. For a large group, book more than one unit.",
+    "Kapasitas tiap tipe tertera di kartunya. :types bisa ditambah sampai :limit orang lewat extra bed.": "Each type lists its capacity on its card. :types can take up to :limit more guests with an extra bed.",
+    "Pesan lebih dari satu unit. Kapasitas tiap tipe tertera di kartunya.": "Book more than one unit. Each type lists its capacity on its card.",
+    ":types bisa ditambah paling banyak :limit orang per tenda lewat extra bed saat memilih tenda. Untuk tipe lain, pesan unit tambahan.": ":types can take up to :limit more guests per tent with an extra bed, chosen when you pick the tent. For other types, book another unit.",
+    ":name tidak bisa menambah tamu lewat extra bed.": ":name cannot take extra guests with an extra bed.",
+    "Tamu tambahan maksimal :max orang per tenda.": "Up to :max extra guests per tent.",
+    "Kapasitas :name adalah :capacity orang per unit. Tambah unit atau tamu tambahan.": ":name sleeps :capacity per unit. Add a unit or extra guests."
 }

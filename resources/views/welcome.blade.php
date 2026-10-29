@@ -15,7 +15,9 @@
     $settings = app(\App\Services\SettingRepository::class);
     $checkInTime = str_replace(':', '.', $settings->checkInTime());
     $checkOutTime = str_replace(':', '.', $settings->checkOutTime());
-    $extraGuestLimit = (int) config('booking.max_extra_guests_per_unit');
+    $extendableTypes = $unitTypes->where('max_extra_guests', '>', 0);
+    $extraGuestLimit = (int) $extendableTypes->max('max_extra_guests');
+    $extendableNames = $extendableTypes->pluck('name')->join(', ', ' '.__('dan').' ');
     $includesBreakfast = (bool) config('booking.base_price_includes_breakfast');
     $headline = explode(' ', __('Satu malam di bawah kanvas.'));
     $featuredDish = $menuByCategory->flatten()->filter(fn ($item) => $item->photoUrl())->sortByDesc('price')->first();
@@ -32,7 +34,7 @@
         ['title' => __('Nomor unit sendiri'), 'text' => __('Tiap tenda punya kode unit, jadi tidak ada tenda yang dipesan dua kali.')],
         ['title' => __('Resto'), 'text' => __('Menu yang sama bisa dipesan saat booking atau dari QR di tenda.')],
         ['title' => __('Coffeeshop'), 'text' => __('Kopi dan minuman lewat menu yang sama, diantar ke lokasi Anda.')],
-        ['title' => __('Tamu tambahan'), 'text' => __('Tiap tenda menampung 4 orang, bisa ditambah sampai :limit orang lewat add-on saat memilih tenda.', ['limit' => $extraGuestLimit])],
+        ['title' => __('Tamu tambahan'), 'text' => $extendableTypes->isEmpty() ? __('Kapasitas tiap tipe tertera di kartunya. Untuk rombongan besar, pesan lebih dari satu unit.') : __('Kapasitas tiap tipe tertera di kartunya. :types bisa ditambah sampai :limit orang lewat extra bed.', ['types' => $extendableNames, 'limit' => $extraGuestLimit])],
     ];
 
     $faqs = [
@@ -40,7 +42,7 @@
         ['q' => __('Bagaimana aturan refund?'), 'a' => $refundSummary ?? __('Aturan refund ditentukan pengelola. Tanyakan sebelum memesan.')],
         ...($includesBreakfast ? [['q' => __('Apakah harga sudah termasuk sarapan?'), 'a' => __('Ya, harga dasar per malam sudah termasuk sarapan.')]] : []),
         ['q' => __('Berapa lama tenda ditahan sebelum saya bayar?'), 'a' => __('Tenda ditahan :minutes menit sejak checkout dibuat. Bila belum dibayar, tahanan dilepas otomatis dan tenda kembali tersedia.', ['minutes' => $holdMinutes])],
-        ['q' => __('Tamu saya melebihi kapasitas tenda. Bagaimana?'), 'a' => __('Tiap tenda menampung 4 orang. Anda bisa menambah paling banyak :limit orang per tenda lewat add-on tamu tambahan saat memilih tenda.', ['limit' => $extraGuestLimit])],
+        ['q' => __('Tamu saya melebihi kapasitas tenda. Bagaimana?'), 'a' => ($extendableTypes->isEmpty() ? __('Pesan lebih dari satu unit. Kapasitas tiap tipe tertera di kartunya.') : __(':types bisa ditambah paling banyak :limit orang per tenda lewat extra bed saat memilih tenda. Untuk tipe lain, pesan unit tambahan.', ['types' => $extendableNames, 'limit' => $extraGuestLimit]))],
         ['q' => __('Bisakah memesan makanan sebelum datang?'), 'a' => __('Bisa. Pilih menu, tanggal, dan jam penyajian saat booking. Setelah menginap, pesan tambahan lewat QR di tenda.')],
         ['q' => __('Metode pembayaran apa yang tersedia?'), 'a' => __('Transfer bank ke rekening yang tampil di halaman pembayaran, lalu unggah foto bukti transfer. Admin mencocokkan dengan mutasi dan mengirim konfirmasi lewat email.')],
         ['q' => __('Bagaimana cek status booking saya?'), 'a' => __('Buka halaman Cek status booking, lalu isi kode booking dan 4 digit terakhir nomor telepon atau email yang Anda pakai saat memesan.')],

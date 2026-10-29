@@ -11,6 +11,7 @@ use App\Models\Customer;
 use App\Models\MenuCategory;
 use App\Models\Order;
 use App\Models\Unit;
+use App\Models\UnitType;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -42,13 +43,17 @@ class BookingService
 
     /**
      * Options shown next to the booking form: bookable add-ons and the available menu.
+     * Extra bed add-ons only appear for tent types that take extra guests.
      *
      * @return array{addons: Collection<int, Addon>, menuCategories: Collection<int, MenuCategory>}
      */
-    public function formOptions(): array
+    public function formOptions(UnitType $unitType): array
     {
         return [
-            'addons' => Addon::where('is_active', true)->orderBy('name')->get(),
+            'addons' => Addon::where('is_active', true)
+                ->when($unitType->max_extra_guests === 0, fn ($q) => $q->where('extra_guests', 0))
+                ->orderBy('name')
+                ->get(),
             'menuCategories' => MenuCategory::with(['items' => fn ($q) => $q->where('is_available', true)->orderBy('name')])
                 ->orderBy('sort_order')
                 ->get()

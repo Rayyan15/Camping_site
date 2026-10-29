@@ -25,12 +25,6 @@ return [
     'db_transaction_attempts' => max(1, (int) env('BOOKING_DB_TRANSACTION_ATTEMPTS', 3)),
 
     /*
-    | Most guests a single tent takes beyond its type capacity, through extra_guests add-ons.
-    | Client answer of 10 Oct 2026: base capacity 4, at most 2 more.
-    */
-    'max_extra_guests_per_unit' => (int) env('BOOKING_MAX_EXTRA_GUESTS_PER_UNIT', 2),
-
-    /*
     | The base nightly price already includes breakfast (client answer, 10 Oct 2026).
     */
     'base_price_includes_breakfast' => true,

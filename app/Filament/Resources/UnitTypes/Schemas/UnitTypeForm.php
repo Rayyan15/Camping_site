@@ -46,6 +46,14 @@ class UnitTypeForm
                                 ->label('Kapasitas (Orang)')
                                 ->required()
                                 ->numeric(),
+                            TextInput::make('max_extra_guests')
+                                ->label('Maks. Tamu Tambahan per Tenda')
+                                ->helperText('0 bila tipe ini tidak bisa menambah tamu lewat extra bed.')
+                                ->required()
+                                ->integer()
+                                ->minValue(0)
+                                ->maxValue(10)
+                                ->default(0),
                             TagsInput::make('facilities')
                                 ->label('Fasilitas Utama')
                                 ->placeholder('Ketik fasilitas lalu tekan Enter')

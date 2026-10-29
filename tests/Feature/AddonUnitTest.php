@@ -55,7 +55,7 @@ class AddonUnitTest extends TestCase
 
         $this->assertSame(
             ['per malam', 'per malam', 'per malam', 'per item', 'per item'],
-            DB::table('addons')->orderBy('id')->pluck('unit')->all(),
+            DB::table('addons')->where('name', 'like', 'Lama %')->orderBy('id')->pluck('unit')->all(),
         );
         $this->assertTrue(Addon::where('name', 'Lama 0')->first()->isPerNight());
     }

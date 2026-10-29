@@ -34,7 +34,7 @@ class BookingFlowTest extends TestCase
         $this->travelTo('2026-12-01 10:00:00');
 
         $this->unitType = UnitType::create([
-            'name' => 'Dome', 'slug' => 'dome', 'capacity' => 2,
+            'name' => 'Dome', 'slug' => 'dome', 'capacity' => 2, 'max_extra_guests' => 2,
             'base_price_weekday' => 100000, 'base_price_weekend' => 150000,
         ]);
         Unit::create(['unit_type_id' => $this->unitType->id, 'code' => 'D1', 'status' => Unit::STATUS_ACTIVE]);
@@ -159,6 +159,18 @@ class BookingFlowTest extends TestCase
         $this->get(route('booking.cek', [
             'unit_type_id' => $this->unitType->id, 'check_in' => '2026-12-07', 'check_out' => '2026-12-09', 'guests' => 2,
         ]))->assertOk()->assertSee('Extra Bed')->assertSee('Kopi')->assertSee('Perkiraan biaya');
+    }
+
+    public function test_a_type_without_extra_guest_allowance_hides_and_rejects_the_extra_bed(): void
+    {
+        $this->unitType->update(['max_extra_guests' => 0]);
+
+        $this->get(route('booking.cek', [
+            'unit_type_id' => $this->unitType->id, 'check_in' => '2026-12-07', 'check_out' => '2026-12-09', 'guests' => 2,
+        ]))->assertOk()->assertDontSee('Extra Bed');
+
+        $this->post(route('booking.store'), $this->fullPayload())->assertSessionHasErrors('addons');
+        $this->assertSame(0, Booking::count());
     }
 
     public function test_checkout_page_shows_summary_and_countdown(): void
