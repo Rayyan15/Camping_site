@@ -49,7 +49,7 @@ class UnitTypeForm
                             TagsInput::make('facilities')
                                 ->label('Fasilitas Utama')
                                 ->placeholder('Ketik fasilitas lalu tekan Enter')
-                                ->separator(',')
+                                ->splitKeys(['Tab', ','])
                                 ->columnSpanFull(),
                             Textarea::make('description')
                                 ->label('Deskripsi')
