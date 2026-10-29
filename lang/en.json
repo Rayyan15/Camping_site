@@ -574,5 +574,6 @@
     ":types bisa ditambah paling banyak :limit orang per tenda lewat extra bed saat memilih tenda. Untuk tipe lain, pesan unit tambahan.": ":types can take up to :limit more guests per tent with an extra bed, chosen when you pick the tent. For other types, book another unit.",
     ":name tidak bisa menambah tamu lewat extra bed.": ":name cannot take extra guests with an extra bed.",
     "Tamu tambahan maksimal :max orang per tenda.": "Up to :max extra guests per tent.",
-    "Kapasitas :name adalah :capacity orang per unit. Tambah unit atau tamu tambahan.": ":name sleeps :capacity per unit. Add a unit or extra guests."
+    "Kapasitas :name adalah :capacity orang per unit. Tambah unit atau tamu tambahan.": ":name sleeps :capacity per unit. Add a unit or extra guests.",
+    "dan :count menu lain, lengkap saat booking atau lewat QR di tenda.": "{1} and :count more item, all listed when you book or through the QR code in your tent.|[2,*] and :count more items, all listed when you book or through the QR code in your tent."
 }

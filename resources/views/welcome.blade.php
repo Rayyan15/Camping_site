@@ -20,6 +20,8 @@
     $extendableNames = $extendableTypes->pluck('name')->join(', ', ' '.__('dan').' ');
     $includesBreakfast = (bool) config('booking.base_price_includes_breakfast');
     $headline = explode(' ', __('Satu malam di bawah kanvas.'));
+    // A short taste per category keeps the section scannable; the full list lives in the booking form and QR menu.
+    $menuItemsPerCategory = 6;
     $featuredDish = $menuByCategory->flatten()->filter(fn ($item) => $item->photoUrl())->sortByDesc('price')->first();
 
     $phases = ['sore' => __('Sore'), 'petang' => __('Petang'), 'malam' => __('Malam'), 'subuh' => __('Subuh')];
@@ -243,7 +245,7 @@
 
         @if($menuByCategory->isNotEmpty())
             <div class="relative mx-auto mt-28 max-w-6xl px-4 sm:px-6">
-                <div class="grid gap-10 lg:grid-cols-[22rem_1fr] lg:gap-14">
+                <div @class(['grid gap-10 lg:gap-14', 'lg:grid-cols-[22rem_1fr]' => $featuredDish])>
                     @if($featuredDish)
                         <figure class="self-start" data-reveal>
                             <img src="{{ $featuredDish->photoUrl() }}" alt="{{ $featuredDish->name }}" width="800" height="800" loading="lazy" decoding="async" class="aspect-square w-full rounded-3xl object-cover">
@@ -257,19 +259,22 @@
                     <div data-reveal data-reveal-delay="100">
                         <h3 class="font-display text-3xl font-semibold sm:text-4xl">{{ __('Menu yang sama untuk semua pesanan.') }}</h3>
                         <p class="mt-2 max-w-lg text-forest-100">{{ __('Dipesan saat booking atau lewat QR di tenda. Yang habis tidak ditampilkan.') }}</p>
-                        <div class="mt-8 grid gap-x-10 gap-y-8 sm:grid-cols-2">
+                        <div @class(["mt-8 grid gap-x-10 gap-y-8 sm:grid-cols-2", "lg:grid-cols-3" => ! $featuredDish])>
                             @foreach($menuByCategory as $category => $items)
                                 <section aria-label="{{ $category }}">
                                     <h4 class="font-display text-lg italic text-ember-light">{{ $category }}</h4>
                                     <ul class="mt-2">
-                                        @foreach($items as $item)
+                                        @foreach($items->take($menuItemsPerCategory) as $item)
                                             <li class="flex items-baseline gap-3 py-1.5">
                                                 <span class="font-semibold">{{ $item->name }}</span>
                                                 <span class="min-w-6 flex-1 border-b border-dotted border-forest-300/60" aria-hidden="true"></span>
-                                                <span class="text-sm text-forest-100">{{ $formatRupiah($item->price) }}</span>
+                                                <span class="whitespace-nowrap text-sm text-forest-100">{{ $formatRupiah($item->price) }}</span>
                                             </li>
                                         @endforeach
                                     </ul>
+                                    @if($items->count() > $menuItemsPerCategory)
+                                        <p class="mt-2 text-sm text-forest-100">{{ trans_choice('dan :count menu lain, lengkap saat booking atau lewat QR di tenda.', $items->count() - $menuItemsPerCategory) }}</p>
+                                    @endif
                                 </section>
                             @endforeach
                         </div>
