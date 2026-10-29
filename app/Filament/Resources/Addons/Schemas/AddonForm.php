@@ -42,7 +42,7 @@ class AddonForm
                                 ->maxValue(4)
                                 ->default(0)
                                 ->required()
-                                ->helperText('Isi 1 untuk biaya per orang di atas kapasitas 4 (maksimal 2 orang per tenda, harga per malam). Isi 0 untuk add-on yang tidak menambah kapasitas tenda.'),
+                                ->helperText('Jumlah tamu yang ditambah tiap item, misalnya 2 untuk extra bed 2 pax. Add-on dengan angka di atas 0 hanya muncul di tipe tenda yang "Maks. Tamu Tambahan per Tenda"-nya di atas 0. Isi 0 untuk add-on biasa yang muncul di semua tenda.'),
                             Toggle::make('is_active')
                                 ->label('Tersedia / Aktif')
                                 ->required()
