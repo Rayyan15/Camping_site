@@ -8,7 +8,7 @@
     <style>
         /* Cashier layout: menu to tap on the left, the running ticket on the right, so the order is never out of sight. */
         .wo { display: grid; gap: 1rem; align-items: start; }
-        @media (min-width: 64rem) { .wo { grid-template-columns: minmax(0, 1fr) 24rem; } .wo-ticket { position: sticky; top: 5rem; } }
+        @media (min-width: 64rem) { .wo { grid-template-columns: minmax(0, 1fr) 24rem; } .wo-ticket { position: sticky; top: 5rem; max-height: calc(100vh - 6rem); overflow-y: auto; } }
         .wo-panel { background: #fff; border: 1px solid var(--gray-200); border-radius: 0.75rem; padding: 1rem; }
         .wo-tools { display: grid; gap: 0.75rem; margin-bottom: 1rem; }
         .wo-searchbar { position: relative; }
