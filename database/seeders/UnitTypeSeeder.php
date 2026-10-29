@@ -47,7 +47,7 @@ class UnitTypeSeeder extends Seeder
     ];
 
     /**
-     * Bundled photos per type slug, cover first. Indian, Pancar and Safari use the owner's own photos (file names under database/seeders/images).
+     * Bundled photos per type slug, cover first. Indian, Pancar, Safari and Salak use the owner's own photos (file names under database/seeders/images).
      *
      * @var array<string, array<int, string>>
      */
@@ -58,7 +58,7 @@ class UnitTypeSeeder extends Seeder
         'indian' => ['tents/real/indian-1', 'tents/real/indian-2', 'tents/real/indian-3'],
         'pancar' => ['tents/real/pancar-1', 'tents/real/pancar-2', 'tents/real/pancar-3', 'tents/real/pancar-4'],
         'safari' => ['tents/real/safari-1', 'tents/real/safari-2', 'tents/real/safari-3', 'tents/real/safari-4'],
-        'salak' => ['tents/exterior-dome-forest', 'tents/interior-lodge-bed', 'scenes/forest-hammock'],
+        'salak' => ['tents/real/salak-1', 'tents/real/salak-2', 'tents/real/salak-3', 'tents/real/salak-4'],
     ];
 
     public function run(): void
