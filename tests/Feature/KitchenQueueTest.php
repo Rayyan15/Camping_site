@@ -144,6 +144,16 @@ class KitchenQueueTest extends TestCase
         $service->updateStatus($order, OrderStatus::Baru);
     }
 
+    public function test_new_order_can_be_closed_in_one_step(): void
+    {
+        $service = app(OrderService::class);
+        $order = $service->createOrder(Order::SOURCE_QR, [['menu_item_id' => $this->coffee->id, 'qty' => 1]]);
+
+        $service->updateStatus($order, OrderStatus::Selesai);
+
+        $this->assertSame('selesai', $order->fresh()->status);
+    }
+
     public function test_walkin_order_is_created_and_can_be_paid_immediately(): void
     {
         $user = $this->staff('create_walkin_orders');

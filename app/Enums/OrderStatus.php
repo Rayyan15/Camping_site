@@ -59,6 +59,11 @@ enum OrderStatus: string
             return $this === self::Baru;
         }
 
+        // The kitchen has no staff to click every step, so any open order can be closed in one go.
+        if ($target === self::Selesai) {
+            return ! $this->isClosed();
+        }
+
         return $this->next() === $target;
     }
 }

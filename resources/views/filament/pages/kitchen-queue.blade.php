@@ -12,7 +12,6 @@
 
 <x-filament-panels::page>
     <style>
-        .kq-board { display: grid; gap: 1rem; grid-template-columns: repeat(4, minmax(16rem, 1fr)); overflow-x: auto; align-items: start; }
         .kq-column { background: var(--gray-100); border-radius: 0.75rem; padding: 0.75rem; min-width: 16rem; }
         .kq-column-head { display: flex; align-items: center; justify-content: space-between; padding: 0.25rem 0.25rem 0.75rem; font-weight: 700; font-size: 0.8125rem; letter-spacing: 0.06em; text-transform: uppercase; }
         .kq-count { background: var(--gray-900); color: #fff; border-radius: 999px; padding: 0 0.625rem; font-size: 0.75rem; line-height: 1.5rem; }
@@ -58,28 +57,32 @@
         .kq-done-list { display: grid; gap: 0.5rem; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); margin-top: 0.5rem; }
         .dark .kq-column { background: var(--gray-900); }
         .dark .kq-count { background: var(--gray-100); color: var(--gray-900); }
-        @media (max-width: 1100px) { .kq-board { grid-template-columns: repeat(4, 16rem); } }
         @media (prefers-reduced-motion: no-preference) { .kq-card { animation: kq-in 0.25s ease-out; } }
         @keyframes kq-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
     </style>
 
     <div wire:poll.5s>
-        <div class="kq-board">
-            @foreach($columns as $status)
-                <section class="kq-column" aria-labelledby="kq-{{ $status->value }}">
-                    <h2 class="kq-column-head" id="kq-{{ $status->value }}">
-                        <span>{{ $status->label() }}</span>
-                        <span class="kq-count">{{ $board[$status->value]->count() }}</span>
-                    </h2>
+        {{-- One list instead of four status columns: the team is too small to move each order through every step. --}}
+        @php
+            $open = collect($columns)
+                ->flatMap(fn ($status) => $board[$status->value])
+                ->sortBy(fn ($order) => $order->scheduled_at ?? $order->created_at)
+                ->values();
+        @endphp
+        <section class="kq-column kq-single" aria-labelledby="kq-open">
+            <h2 class="kq-column-head" id="kq-open">
+                <span>Pesanan masuk</span>
+                <span class="kq-count">{{ $open->count() }}</span>
+            </h2>
 
-                    @forelse($board[$status->value] as $order)
-                        @include('filament.pages.partials.kitchen-card', ['order' => $order, 'sourceLabels' => $sourceLabels, 'rupiah' => $rupiah, 'canProcess' => $canProcess, 'lateAfterMinutes' => $lateAfterMinutes, 'showActions' => true])
-                    @empty
-                        <p class="kq-empty">Tidak ada pesanan.</p>
-                    @endforelse
-                </section>
-            @endforeach
-        </div>
+            <div class="kq-done-list">
+                @forelse($open as $order)
+                    @include('filament.pages.partials.kitchen-card', ['order' => $order, 'sourceLabels' => $sourceLabels, 'rupiah' => $rupiah, 'canProcess' => $canProcess, 'lateAfterMinutes' => $lateAfterMinutes, 'showActions' => true])
+                @empty
+                    <p class="kq-empty">Belum ada pesanan masuk. Pesanan dari QR, pre-order booking, dan walk-in muncul di sini.</p>
+                @endforelse
+            </div>
+        </section>
 
         {{-- The board polls every 5 s; ignore.self keeps the open state the cook chose. --}}
         <details class="kq-done" wire:ignore.self>

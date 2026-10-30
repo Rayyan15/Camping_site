@@ -221,7 +221,7 @@ class BookingFlowTest extends TestCase
         $this->assertSame('diproses', $order->fresh()->status);
 
         $this->expectException(InvalidOrderTransitionException::class);
-        $service->updateStatus($order, OrderStatus::Selesai);
+        $service->updateStatus($order, OrderStatus::Diantar);
     }
 
     public function test_serve_date_in_another_format_is_a_validation_error_not_a_crash(): void

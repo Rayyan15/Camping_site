@@ -3,7 +3,6 @@
     use App\Models\Order;
 
     $status = $order->statusEnum();
-    $next = $status->next();
     $place = $order->diningSpot?->name ?? ($order->booking ? 'Booking '.$order->booking->code : 'Di kasir');
     $canSettle = $showActions && auth()->user()->can('record_order_payment') && ! $order->isPaid() && ! $order->bill_to_booking;
     $span = function (int $minutes): string {
@@ -64,8 +63,9 @@
             <x-filament::badge size="sm" color="gray">Tagih ke booking</x-filament::badge>
         @elseif($order->isPaid())
             <x-filament::badge size="sm" color="success">Lunas</x-filament::badge>
+        @else
+            <x-filament::badge size="sm" color="danger">Belum bayar {{ $rupiah($order->total) }}</x-filament::badge>
         @endif
-        {{-- Owner asked to drop the red unpaid badge from the kitchen; the cashier still sees the Tunai and QRIS buttons on unpaid orders. --}}
         @if($isLate)
             <x-filament::badge size="sm" color="danger">Terlambat</x-filament::badge>
         @endif
@@ -73,11 +73,9 @@
 
     @if($showActions && $canProcess)
         <div class="kq-actions">
-            @if($next)
-                <x-filament::button class="kq-primary" wire:click="advance({{ $order->id }}, '{{ $next->value }}')" wire:loading.attr="disabled">
-                    Tandai {{ strtolower($next->label()) }}
-                </x-filament::button>
-            @endif
+            <x-filament::button class="kq-primary" wire:click="advance({{ $order->id }}, '{{ OrderStatus::Selesai->value }}')" wire:loading.attr="disabled">
+                Tandai selesai
+            </x-filament::button>
             <div class="kq-secondary">
                 @if($canSettle)
                     <x-filament::button size="sm" color="gray" outlined wire:click="markPaid({{ $order->id }}, 'cash')" wire:confirm="Catat pembayaran tunai {{ $rupiah($order->total) }}?">Tunai</x-filament::button>
