@@ -32,7 +32,7 @@
     $isLate = $tone === 'late' && $status === OrderStatus::Baru;
 @endphp
 
-<article class="kq-card" data-tone="{{ $showActions ? $tone : 'calm' }}" wire:key="order-{{ $order->id }}">
+<article class="kq-card" data-tone="{{ $showActions ? $tone : 'calm' }}" data-pay="{{ $order->bill_to_booking ? 'booking' : ($order->isPaid() ? 'paid' : 'unpaid') }}" wire:key="order-{{ $order->id }}">
     <p class="kq-time">
         <span class="kq-time-main">
             <svg class="kq-time-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>

@@ -17,6 +17,11 @@
         .kq-count { background: var(--gray-900); color: #fff; border-radius: 999px; padding: 0 0.625rem; font-size: 0.75rem; line-height: 1.5rem; }
         /* The time chip is the one thing a cook reads first, so it carries the urgency colour instead of a border stripe. */
         .kq-card { background: #fff; border: 1px solid var(--gray-200); border-radius: 0.75rem; padding: 0.875rem; margin-bottom: 0.625rem; display: grid; gap: 0.625rem; }
+        /* Payment state is read from across the kitchen, so it tints the whole card, not just the badge. */
+        .kq-card[data-pay="paid"] { background: var(--success-50); border-color: var(--success-300); }
+        .kq-card[data-pay="unpaid"] { background: var(--warning-50); border-color: var(--warning-300); }
+        .dark .kq-card[data-pay="paid"] { background: color-mix(in srgb, var(--success-500) 14%, var(--gray-800)); border-color: var(--success-700); }
+        .dark .kq-card[data-pay="unpaid"] { background: color-mix(in srgb, var(--warning-500) 14%, var(--gray-800)); border-color: var(--warning-700); }
         .kq-time { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.25rem 0.5rem; margin: 0; padding: 0.375rem 0.5rem 0.375rem 0.625rem; border-radius: 0.5rem; background: var(--gray-100); font-variant-numeric: tabular-nums; }
         .kq-time-main { display: inline-flex; align-items: center; gap: 0.375rem; font-weight: 700; font-size: 0.8125rem; white-space: nowrap; color: var(--gray-950); }
         .kq-time-icon { width: 1rem; height: 1rem; flex-shrink: 0; }
