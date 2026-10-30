@@ -4,6 +4,7 @@ namespace App\Filament\Resources\SpecialPrices\RelationManagers;
 
 use App\Filament\Resources\SpecialPrices\Schemas\SpecialPriceForm;
 use App\Filament\Resources\SpecialPrices\Tables\SpecialPricesTable;
+use App\Services\SpecialPriceService;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -28,7 +29,15 @@ class SpecialPricesRelationManager extends RelationManager
         return $table
             ->columns(SpecialPricesTable::dateAndPriceColumns())
             ->filters([SpecialPricesTable::dateRangeFilter()])
-            ->headerActions([CreateAction::make()])
+            ->headerActions([
+                CreateAction::make()->using(fn (array $data, CreateAction $action) => app(SpecialPriceService::class)->saveRange(
+                    (int) $this->getOwnerRecord()->getKey(),
+                    $data['date'],
+                    $action->getSchema()?->getRawState()['date_until'] ?? null,
+                    (int) $data['price'],
+                    $data['note'] ?? null,
+                )),
+            ])
             ->recordActions([EditAction::make()])
             ->emptyStateHeading('Belum ada harga khusus')
             ->emptyStateDescription('Tambahkan harga khusus untuk tipe tenda ini pada tanggal tertentu.')

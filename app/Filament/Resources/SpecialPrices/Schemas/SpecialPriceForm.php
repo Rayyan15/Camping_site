@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\SpecialPrices\Schemas;
 
 use App\Models\SpecialPrice;
+use App\Services\SpecialPriceService;
 use Closure;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -12,6 +13,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class SpecialPriceForm
 {
@@ -19,7 +21,7 @@ class SpecialPriceForm
     {
         return $schema->components([
             Section::make('Harga khusus per tanggal')
-                ->description('Harga ini menggantikan harga weekday atau weekend untuk satu malam yang dimulai pada tanggal tersebut.')
+                ->description('Harga ini menggantikan harga weekday atau weekend. Isi "Sampai tanggal" untuk memberi harga yang sama ke satu minggu, satu bulan, atau rentang lain sekaligus.')
                 ->columns(2)
                 ->schema([
                     Select::make('unit_type_id')
@@ -43,13 +45,18 @@ class SpecialPriceForm
     {
         return [
             DatePicker::make('date')
-                ->label('Tanggal malam')
+                ->label(fn (string $operation): string => $operation === 'create' ? 'Mulai tanggal' : 'Tanggal malam')
                 ->native(false)
                 ->displayFormat('d M Y')
                 ->required()
                 ->minDate(fn (string $operation) => $operation === 'create' ? today() : null)
                 // The date column is stored as a datetime, so the built-in unique rule would never match.
+                // A range overwrites its nights on purpose, so only a single night is checked for duplicates.
                 ->rule(fn (Get $get, ?Model $record): Closure => function (string $attribute, mixed $value, Closure $fail) use ($unitTypeId, $get, $record) {
+                    if (filled($get('date_until'))) {
+                        return;
+                    }
+
                     $exists = SpecialPrice::where('unit_type_id', $unitTypeId($get))
                         ->whereDate('date', $value)
                         ->when($record, fn ($query) => $query->whereKeyNot($record->getKey()))
@@ -60,6 +67,19 @@ class SpecialPriceForm
                     }
                 })
                 ->validationMessages(['after_or_equal' => 'Tanggal tidak boleh di masa lalu.']),
+            DatePicker::make('date_until')
+                ->label('Sampai tanggal (opsional)')
+                ->helperText('Kosongkan untuk satu malam. Malam yang sudah punya harga khusus ikut diganti.')
+                ->native(false)
+                ->displayFormat('d M Y')
+                ->afterOrEqual('date')
+                ->maxDate(fn (Get $get) => filled($get('date')) ? Carbon::parse($get('date'))->addDays(SpecialPriceService::MAX_RANGE_NIGHTS - 1) : null)
+                ->visibleOn('create')
+                ->dehydrated(false)
+                ->validationMessages([
+                    'after_or_equal' => 'Sampai tanggal harus sama atau setelah tanggal mulai.',
+                    'before_or_equal' => 'Rentang maksimal '.SpecialPriceService::MAX_RANGE_NIGHTS.' malam.',
+                ]),
             TextInput::make('price')
                 ->label('Harga per malam')
                 ->required()

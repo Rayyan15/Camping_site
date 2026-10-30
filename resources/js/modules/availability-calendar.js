@@ -194,6 +194,7 @@ class AvailabilityCalendar {
 
             btn.classList.toggle('cal-past', blocked);
             btn.classList.toggle('avail-full', !blocked && data?.free === 0);
+            btn.classList.toggle('avail-free', !blocked && data?.free > 0);
             btn.classList.toggle('avail-limited', !blocked && Boolean(data?.limited));
             btn.classList.toggle('cal-today', sameDay(date, this.today));
             btn.classList.toggle('cal-start', isStart);

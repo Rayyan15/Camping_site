@@ -47,6 +47,7 @@
     --color-forest-700: #2f5a3d;
     --color-forest-300: #a9c4b0;
     --color-forest-100: #dfe9e1;
+    --color-meadow: #c9e6cf;
 
     --color-cream: #f7f1e5;
     --color-cream-deep: #efe5d1;
@@ -610,6 +611,12 @@
         text-decoration-thickness: 1px;
     }
 
+    /* Owner asked for open nights in green so guests spot them at a glance. */
+    .avail-cal .cal-day.avail-free {
+        background: var(--color-meadow);
+        color: var(--color-forest-900);
+    }
+
     .avail-cal .cal-day.avail-limited {
         position: relative;
     }
@@ -662,6 +669,11 @@
 
     .avail-key-full {
         background-image: repeating-linear-gradient(135deg, transparent 0 3px, rgb(122 106 71 / 0.5) 3px 4px);
+    }
+
+    .avail-key-free {
+        border-color: var(--color-forest-300);
+        background: var(--color-meadow);
     }
 
     .avail-key-today {

@@ -96,6 +96,13 @@ return [
                 'manage_own_attendance',
             ],
         ],
+
+        // OB only files cleaning reports with a photo; owner or FO reviews them.
+        'operator_ob' => [
+            'resources' => [
+                'cleaning_log' => ['view_any', 'view', 'create'],
+            ],
+        ],
     ],
 
     /*

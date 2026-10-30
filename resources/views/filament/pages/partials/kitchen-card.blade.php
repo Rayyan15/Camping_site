@@ -64,9 +64,8 @@
             <x-filament::badge size="sm" color="gray">Tagih ke booking</x-filament::badge>
         @elseif($order->isPaid())
             <x-filament::badge size="sm" color="success">Lunas</x-filament::badge>
-        @else
-            <x-filament::badge size="sm" color="danger">Belum bayar {{ $rupiah($order->total) }}</x-filament::badge>
         @endif
+        {{-- Owner asked to drop the red unpaid badge from the kitchen; the cashier still sees the Tunai and QRIS buttons on unpaid orders. --}}
         @if($isLate)
             <x-filament::badge size="sm" color="danger">Terlambat</x-filament::badge>
         @endif

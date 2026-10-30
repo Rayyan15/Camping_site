@@ -12,7 +12,7 @@
         Tags carry their own solid label background so every text pair is checked: 8.11, 8.51, 6.41, 12.16, 7.43, 9.46, 9.32, 8.18.
     --}}
     <style>
-        .oc { --oc-line: var(--gray-300); --oc-head: var(--gray-50); --oc-muted: var(--gray-600); --oc-today: color-mix(in srgb, var(--hh-forest-700) 10%, transparent); --oc-weekend: rgb(120 113 108 / 0.10); --oc-focus: var(--primary-700); }
+        .oc { --oc-line: var(--gray-300); --oc-head: var(--gray-50); --oc-muted: var(--gray-600); --oc-today: color-mix(in srgb, var(--hh-forest-700) 10%, transparent); --oc-weekend: rgb(120 113 108 / 0.10); --oc-focus: var(--primary-700); --oc-open: #c9e6cf; }
         .dark .oc { --oc-line: var(--gray-700); --oc-head: var(--gray-900); --oc-muted: var(--gray-400); --oc-today: color-mix(in srgb, var(--hh-forest-300) 14%, transparent); --oc-weekend: rgb(161 161 170 / 0.12); --oc-focus: var(--primary-400); }
 
         /* Header: tonight's figure leads, the range controls sit under a hairline so the calendar keeps the stage. */
@@ -89,7 +89,7 @@
         .oc-blocked { --bg: var(--hh-sand); --fg: var(--hh-ink); --pat: repeating-linear-gradient(45deg, var(--hh-sand-dark) 0 2px, transparent 2px 7px), repeating-linear-gradient(-45deg, var(--hh-sand-dark) 0 2px, transparent 2px 7px); }
         .oc-needs_review { --bg: #ffffff; --fg: var(--hh-ember-dark); border: 2px dashed var(--fg); }
         .oc-unavailable { --bg: var(--hh-cream-deep); --fg: var(--hh-ink-soft); --pat: repeating-linear-gradient(0deg, var(--hh-sand) 0 1px, transparent 1px 5px); }
-        .oc-free-tag { --bg: transparent; --fg: var(--oc-muted); border-style: dotted; }
+        .oc-free-tag { --bg: var(--oc-open); --fg: var(--hh-forest-900); border-color: var(--hh-forest-300); }
 
         .oc-seg { display: block; width: 100%; min-height: 2.5rem; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 0.375rem; }
         .oc-seg:hover .oc-tag { filter: brightness(0.96); }

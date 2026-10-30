@@ -133,4 +133,34 @@ class SpecialPriceResourceTest extends TestCase
             Livewire::test(CreateSpecialPrice::class)->assertForbidden();
         }
     }
+
+    public function test_a_date_range_prices_every_night_and_overwrites_existing_ones(): void
+    {
+        $this->actAsOwner();
+        SpecialPrice::create(['unit_type_id' => $this->type->id, 'date' => '2027-01-05', 'price' => 300000]);
+
+        Livewire::test(CreateSpecialPrice::class)
+            ->fillForm([
+                'unit_type_id' => $this->type->id, 'date' => '2027-01-04', 'date_until' => '2027-01-10',
+                'price' => 250000, 'note' => 'Minggu libur',
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame(7, SpecialPrice::count());
+        $this->assertSame([250000], SpecialPrice::pluck('price')->unique()->values()->all());
+        $this->assertSame(500000, app(PricingService::class)->stayTotal($this->type, '2027-01-04', '2027-01-06'));
+    }
+
+    public function test_range_end_before_start_is_rejected(): void
+    {
+        $this->actAsOwner();
+
+        Livewire::test(CreateSpecialPrice::class)
+            ->fillForm(['unit_type_id' => $this->type->id, 'date' => '2027-01-10', 'date_until' => '2027-01-04', 'price' => 250000])
+            ->call('create')
+            ->assertHasFormErrors(['date_until']);
+
+        $this->assertSame(0, SpecialPrice::count());
+    }
 }

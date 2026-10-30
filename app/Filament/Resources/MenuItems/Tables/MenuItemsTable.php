@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\MenuItems\Tables;
 
+use Filament\Actions\Action;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\ImageColumn;
@@ -31,6 +32,11 @@ class MenuItemsTable
             ->recordActions([EditAction::make()])
             ->toolbarActions([DeleteBulkAction::make()])
             ->defaultSort('category_id')
+            // Guests see items ordered by sort_order inside each category, so dragging here sets that order.
+            ->reorderable('sort_order', fn (): bool => (bool) auth()->user()?->can('manage_menu'))
+            ->reorderRecordsTriggerAction(fn (Action $action, bool $isReordering) => $action
+                ->button()
+                ->label($isReordering ? 'Selesai mengurutkan' : 'Ubah urutan menu'))
             ->emptyStateHeading('Belum ada menu');
     }
 }

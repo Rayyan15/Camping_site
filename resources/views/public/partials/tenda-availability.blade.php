@@ -45,7 +45,7 @@
                 <p class="mt-4 min-h-6 text-sm font-semibold text-forest-900" role="status" data-cal-status></p>
 
                 <ul class="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-sand pt-4 text-xs font-semibold text-ink-soft" aria-label="{{ __('Keterangan kalender') }}">
-                    <li class="flex items-center gap-2"><span class="avail-key"></span>{{ __('Tersedia') }}</li>
+                    <li class="flex items-center gap-2"><span class="avail-key avail-key-free"></span>{{ __('Tersedia') }}</li>
                     <li class="flex items-center gap-2"><span class="avail-key avail-key-limited"></span>{{ __('Sisa :count unit atau kurang', ['count' => \App\Services\AvailabilityCalendarService::LIMITED_STOCK_THRESHOLD]) }}</li>
                     <li class="flex items-center gap-2"><span class="avail-key avail-key-full"></span>{{ __('Penuh') }}</li>
                     <li class="flex items-center gap-2"><span class="avail-key avail-key-today"></span>{{ __('Hari ini') }}</li>

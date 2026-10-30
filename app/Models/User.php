@@ -29,7 +29,9 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
 
     public const ROLE_CASHIER = 'operator_kasir';
 
-    public const PANEL_ROLES = [self::ROLE_OWNER, self::ROLE_FRONT_OFFICE, self::ROLE_CASHIER];
+    public const ROLE_CLEANING = 'operator_ob';
+
+    public const PANEL_ROLES = [self::ROLE_OWNER, self::ROLE_FRONT_OFFICE, self::ROLE_CASHIER, self::ROLE_CLEANING];
 
     /**
      * @var array<string, mixed>
