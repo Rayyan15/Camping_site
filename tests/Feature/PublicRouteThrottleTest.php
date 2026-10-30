@@ -6,6 +6,7 @@ use App\Models\SpecialPrice;
 use App\Models\Unit;
 use App\Models\UnitType;
 use App\Services\PricingService;
+use App\Support\BookingWindow;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -115,9 +116,9 @@ class PublicRouteThrottleTest extends TestCase
         $this->get('/booking/cek?'.$this->stayQuery('2026-12-10', $checkOut))->assertOk();
     }
 
-    public function test_check_in_beyond_max_advance_days_is_rejected(): void
+    public function test_check_in_beyond_the_booking_window_is_rejected(): void
     {
-        $checkIn = CarbonImmutable::today()->addDays(config('booking.max_advance_days') + 1);
+        $checkIn = BookingWindow::lastCheckIn()->addDay();
 
         $this->get('/booking/cek?'.$this->stayQuery($checkIn->toDateString(), $checkIn->addDay()->toDateString()))
             ->assertSessionHasErrors('check_in');

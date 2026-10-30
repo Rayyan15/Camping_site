@@ -29,7 +29,7 @@ class AvailabilityCalendar {
         this.compact = window.matchMedia(COMPACT_QUERY);
         this.endpoint = root.dataset.endpoint;
         this.today = fromIso(root.dataset.today) ?? new Date();
-        this.lastBookable = addDays(this.today, Number(root.dataset.maxAdvance) || 365);
+        this.lastBookable = fromIso(root.dataset.lastCheckIn) ?? this.today;
         this.maxNights = Number(root.dataset.maxNights) || 14;
 
         this.checkIn = document.getElementById(root.dataset.checkInId);

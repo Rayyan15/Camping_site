@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Public;
 
+use App\Support\BookingWindow;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Validation\Validator;
 
@@ -16,10 +17,11 @@ trait ValidatesStayLimits
         $checkIn = CarbonImmutable::parse($this->input('check_in'))->startOfDay();
         $checkOut = CarbonImmutable::parse($this->input('check_out'))->startOfDay();
         $maxNights = (int) config('booking.max_nights');
-        $maxAdvanceDays = (int) config('booking.max_advance_days');
 
-        if ($checkIn->gt(CarbonImmutable::today()->addDays($maxAdvanceDays))) {
-            $validator->errors()->add('check_in', __('Check-in maksimal :days hari dari sekarang.', ['days' => $maxAdvanceDays]));
+        $lastCheckIn = BookingWindow::lastCheckIn();
+
+        if ($checkIn->gt($lastCheckIn)) {
+            $validator->errors()->add('check_in', __('Check-in paling lambat :date.', ['date' => $lastCheckIn->locale(app()->getLocale())->translatedFormat('j F Y')]));
         }
 
         if ($checkIn->diffInDays($checkOut) > $maxNights) {

@@ -476,7 +476,7 @@
     "Satu pemesanan maksimal :count unit.": "One booking can include up to :count units.",
     "Jumlah per menu harus 1 sampai :max.": "Quantity per item must be 1 to :max.",
     "Catatan maksimal :max karakter.": "Notes can be up to :max characters.",
-    "Check-in maksimal :days hari dari sekarang.": "Check-in can be at most :days days from today.",
+    "Check-in paling lambat :date.": "Check-in can be no later than :date.",
     "Lama menginap maksimal :count malam.": "Stays can be at most :count nights.",
     "Jadwal booking sudah diubah. Harga di tanggal baru lebih rendah, kelebihan bayar akan dikembalikan oleh admin.": "Your dates have been changed. The new dates cost less, so our admin will return the overpayment.",
     "Jadwal booking sudah diubah.": "Your dates have been changed.",

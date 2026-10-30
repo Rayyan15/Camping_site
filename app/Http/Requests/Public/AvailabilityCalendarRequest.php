@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Public;
 
+use App\Support\BookingWindow;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
@@ -62,7 +63,7 @@ class AvailabilityCalendarRequest extends FormRequest
 
         $month = CarbonImmutable::createFromFormat('!Y-m', $this->input('bulan'));
         $earliest = CarbonImmutable::today()->startOfMonth();
-        $latest = CarbonImmutable::today()->addDays((int) config('booking.max_advance_days'))->startOfMonth();
+        $latest = BookingWindow::lastCheckIn()->startOfMonth();
 
         if ($month->lt($earliest) || $month->gt($latest)) {
             $validator->errors()->add('bulan', 'Bulan di luar jangkauan pemesanan.');

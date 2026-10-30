@@ -47,7 +47,7 @@ return [
     | for an unbounded number of nights.
     */
     'max_nights' => (int) env('BOOKING_MAX_NIGHTS', 14),
-    'max_advance_days' => (int) env('BOOKING_MAX_ADVANCE_DAYS', 365),
+    'max_advance_months' => (int) env('BOOKING_MAX_ADVANCE_MONTHS', 5),
 
     /*
     | Per-minute limits on public routes. Lookups by booking code or QR token are limited per

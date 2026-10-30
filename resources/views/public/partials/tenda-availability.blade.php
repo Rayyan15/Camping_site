@@ -11,7 +11,7 @@
             data-avail-cal
             data-endpoint="{{ route('tenda.ketersediaan', ['slug' => $unitType->slug]) }}"
             data-today="{{ $today }}"
-            data-max-advance="{{ $maxAdvanceDays }}"
+            data-last-check-in="{{ $lastCheckIn }}"
             data-max-nights="{{ $maxNights }}"
             data-check-in-id="check_in"
             data-check-out-id="check_out"
@@ -61,7 +61,7 @@
             <div class="mt-4 grid grid-cols-2 gap-3">
                 <div>
                     <label for="check_in" class="field-label">Check-in</label>
-                    <input id="check_in" type="date" name="check_in" value="{{ request('check_in', $today) }}" min="{{ $today }}" max="{{ \Carbon\Carbon::parse($today)->addDays($maxAdvanceDays)->toDateString() }}" required class="field-input">
+                    <input id="check_in" type="date" name="check_in" value="{{ request('check_in', $today) }}" min="{{ $today }}" max="{{ $lastCheckIn }}" required class="field-input">
                 </div>
                 <div>
                     <label for="check_out" class="field-label">Check-out</label>

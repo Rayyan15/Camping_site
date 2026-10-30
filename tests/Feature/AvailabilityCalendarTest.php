@@ -187,7 +187,7 @@ class AvailabilityCalendarTest extends TestCase
 
     public function test_the_last_bookable_month_is_accepted(): void
     {
-        config(['booking.max_advance_days' => 60]);
+        config(['booking.max_advance_months' => 2]);
 
         $this->getJson(route('tenda.ketersediaan', ['slug' => 'dome', 'bulan' => '2027-01']))->assertOk();
         $this->getJson(route('tenda.ketersediaan', ['slug' => 'dome', 'bulan' => '2027-03']))->assertStatus(422);

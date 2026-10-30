@@ -8,6 +8,7 @@ use App\Http\Requests\Public\CatalogRequest;
 use App\Models\Unit;
 use App\Models\UnitType;
 use App\Services\AvailabilityCalendarService;
+use App\Support\BookingWindow;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -50,7 +51,7 @@ class UnitTypeController extends Controller
             'today' => today()->toDateString(),
             'tomorrow' => today()->addDay()->toDateString(),
             'maxNights' => (int) config('booking.max_nights'),
-            'maxAdvanceDays' => (int) config('booking.max_advance_days'),
+            'lastCheckIn' => BookingWindow::lastCheckIn()->toDateString(),
         ]);
     }
 
