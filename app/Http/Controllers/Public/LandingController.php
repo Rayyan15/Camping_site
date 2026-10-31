@@ -98,7 +98,7 @@ class LandingController extends Controller
             $data['telephone'] = '+'.config('site.whatsapp_number');
         }
 
-        $sameAs = array_values(array_filter([config('site.instagram_url'), config('site.maps_url')]));
+        $sameAs = array_values(array_filter([config('site.instagram_url'), config('site.tiktok_url'), config('site.maps_url')]));
         if ($sameAs !== []) {
             $data['sameAs'] = $sameAs;
         }

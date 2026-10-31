@@ -3,6 +3,7 @@
     $address = config('site.address');
     $mapsUrl = config('site.maps_url');
     $instagram = config('site.instagram_url');
+    $tiktok = config('site.tiktok_url');
 @endphp
 <footer class="bg-forest-950 text-forest-300">
     <div class="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr]">
@@ -34,7 +35,8 @@
                 @if($mapsUrl)<li><a class="underline underline-offset-4 hover:text-cream" href="{{ $mapsUrl }}" target="_blank" rel="noopener">{{ __('Lihat di peta') }}</a></li>@endif
                 @if($whatsapp)<li><a class="underline underline-offset-4 hover:text-cream" href="https://wa.me/{{ $whatsapp }}" target="_blank" rel="noopener">WhatsApp</a></li>@endif
                 @if($instagram)<li><a class="underline underline-offset-4 hover:text-cream" href="{{ $instagram }}" target="_blank" rel="noopener">Instagram</a></li>@endif
-                @if(! $address && ! $mapsUrl && ! $whatsapp && ! $instagram)<li>{{ __('Kontak segera tersedia.') }}</li>@endif
+                @if($tiktok)<li><a class="underline underline-offset-4 hover:text-cream" href="{{ $tiktok }}" target="_blank" rel="noopener">TikTok</a></li>@endif
+                @if(! $address && ! $mapsUrl && ! $whatsapp && ! $instagram && ! $tiktok)<li>{{ __('Kontak segera tersedia.') }}</li>@endif
             </ul>
         </div>
     </div>
