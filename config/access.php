@@ -127,7 +127,7 @@ return [
 
     'owner_bootstrap_password' => env('OWNER_PASSWORD'),
 
-    'min_password_length' => 12,
+    'min_password_length' => 8,
 
     'owner_two_factor_required' => (bool) env('OWNER_2FA_REQUIRED', env('APP_ENV') === 'production'),
 ];
