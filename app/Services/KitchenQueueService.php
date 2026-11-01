@@ -21,7 +21,7 @@ class KitchenQueueService
     public function board(): array
     {
         $orders = $this->visibleOrders()
-            ->with(['items.menuItem', 'booking.customer', 'diningSpot'])
+            ->with(['items.menuItem', 'booking.customer', 'booking.units.unitType', 'diningSpot'])
             ->orderByRaw('COALESCE(scheduled_at, created_at) asc')
             ->get()
             ->groupBy('status');

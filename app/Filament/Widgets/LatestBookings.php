@@ -21,7 +21,7 @@ class LatestBookings extends BaseWidget
     public function table(Table $table): Table
     {
         return $table
-            ->query(Booking::query()->with(['customer', 'units.unitType'])->latest()->limit(5))
+            ->query(Booking::query()->with(['customer', 'units.unitType', 'addons.addon', 'orders.items.menuItem'])->latest()->limit(5))
             ->heading(__('Booking Terbaru'))
             ->emptyStateHeading(__('Belum ada booking'))
             ->columns([
@@ -33,6 +33,11 @@ class LatestBookings extends BaseWidget
                     ->label(__('Tenda'))
                     ->state(fn (Booking $record): array => $record->tentLabels())
                     ->listWithLineBreaks(),
+                TextColumn::make('extras')
+                    ->label(__('Tambahan'))
+                    ->state(fn (Booking $record): array => [...$record->addonLabels(), ...$record->foodLabels()])
+                    ->listWithLineBreaks()
+                    ->placeholder('-'),
                 TextColumn::make('status')
                     ->label(__('Status'))
                     ->badge(),

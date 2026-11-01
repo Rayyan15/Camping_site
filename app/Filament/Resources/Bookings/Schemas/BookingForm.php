@@ -10,6 +10,7 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -61,6 +62,27 @@ class BookingForm
                                 ->label('Batas Waktu Hold')
                                 ->disabled()
                                 ->dehydrated(false),
+                        ]),
+                    ]),
+
+                Section::make('Rincian Pesanan')
+                    ->schema([
+                        Grid::make(3)->schema([
+                            TextEntry::make('tent_list')
+                                ->label('Tenda')
+                                ->state(fn (?Booking $record): array => $record?->tentLabels() ?? [])
+                                ->listWithLineBreaks()
+                                ->placeholder('-'),
+                            TextEntry::make('addon_list')
+                                ->label('Tambahan')
+                                ->state(fn (?Booking $record): array => $record?->addonLabels() ?? [])
+                                ->listWithLineBreaks()
+                                ->placeholder('Tidak ada'),
+                            TextEntry::make('food_list')
+                                ->label('Pesanan makanan')
+                                ->state(fn (?Booking $record): array => $record?->foodLabels() ?? [])
+                                ->listWithLineBreaks()
+                                ->placeholder('Tidak ada'),
                         ]),
                     ]),
 

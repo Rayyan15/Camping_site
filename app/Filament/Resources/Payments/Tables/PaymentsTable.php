@@ -38,6 +38,11 @@ class PaymentsTable
                     ->state(fn (Payment $record): array => $record->payable instanceof Booking ? $record->payable->tentLabels() : [])
                     ->listWithLineBreaks()
                     ->placeholder('-'),
+                TextColumn::make('extras')
+                    ->label('Tambahan')
+                    ->state(fn (Payment $record): array => $record->payable instanceof Booking ? [...$record->payable->addonLabels(), ...$record->payable->foodLabels()] : [])
+                    ->listWithLineBreaks()
+                    ->placeholder('-'),
                 TextColumn::make('payer')
                     ->label('Atas nama')
                     ->state(fn (Payment $record): string => PaymentLabels::payerName($record)),

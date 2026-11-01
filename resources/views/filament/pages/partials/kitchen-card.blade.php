@@ -3,7 +3,7 @@
     use App\Models\Order;
 
     $status = $order->statusEnum();
-    $place = $order->diningSpot?->name ?? ($order->booking ? 'Booking '.$order->booking->code : 'Di kasir');
+    $place = $order->diningSpot?->name ?? ($order->booking ? (implode(', ', $order->booking->tentLabels()) ?: 'Booking '.$order->booking->code) : 'Di kasir');
     $canSettle = $showActions && auth()->user()->can('record_order_payment') && ! $order->isPaid() && ! $order->bill_to_booking;
     $span = function (int $minutes): string {
         return match (true) {

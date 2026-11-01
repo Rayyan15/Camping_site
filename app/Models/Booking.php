@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\BookingStatus;
+use App\Enums\OrderStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -128,6 +129,23 @@ class Booking extends Model
     public function tentLabels(): array
     {
         return $this->units->map(fn (Unit $unit): string => $unit->unitType->name.' ('.$unit->code.')')->all();
+    }
+
+    /** @return array<int, string> e.g. "Extra bed x2" */
+    public function addonLabels(): array
+    {
+        return $this->addons->map(fn (BookingAddon $line): string => $line->addon->name.' x'.$line->qty)->all();
+    }
+
+    /** @return array<int, string> e.g. "Sab 2/11 08:00: 2x Kopi, 1x Nasi goreng" */
+    public function foodLabels(): array
+    {
+        return $this->orders
+            ->reject(fn (Order $order): bool => $order->statusEnum() === OrderStatus::Dibatalkan)
+            ->map(fn (Order $order): string => ($order->scheduled_at ? $order->scheduled_at->locale('id')->translatedFormat('D j/n H:i').': ' : '')
+                .$order->items->map(fn (OrderItem $item): string => $item->qty.'x '.$item->menuItem->name)->implode(', '))
+            ->values()
+            ->all();
     }
 
     /** @return HasMany<BookingAddon, $this> */
