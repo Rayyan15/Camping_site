@@ -64,7 +64,8 @@ class BookingsTable
                 TextColumn::make('review_age')
                     ->label('Umur review')
                     ->state(fn (Booking $record): ?string => self::reviewAge($record))
-                    ->placeholder('-'),
+                    ->placeholder('-')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('total')
                     ->label('Total Harga')
                     ->money('IDR', locale: 'id', decimalPlaces: 0)
