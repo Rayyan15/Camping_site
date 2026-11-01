@@ -202,7 +202,7 @@ class BookingActions
                     ->integer()
                     ->minValue(0)
                     ->maxValue(20)
-                    ->default(0))
+                    ->placeholder('0'))
                 ->all())
             ->action(function (array $data, Booking $record, Component $livewire): void {
                 try {
