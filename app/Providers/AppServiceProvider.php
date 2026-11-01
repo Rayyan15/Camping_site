@@ -41,6 +41,7 @@ use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -81,6 +82,7 @@ class AppServiceProvider extends ServiceProvider
         $this->forceHttpsInProduction();
         $this->configureRateLimiters();
         $this->configureFilamentTables();
+        $this->shareInventoryCounts();
 
         Relation::enforceMorphMap(config('morph_map'));
 
@@ -110,6 +112,17 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('availability-check', fn (Request $request) => Limit::perMinute(
             config('booking.throttle.availability_per_ip')
         )->by($request->ip()));
+    }
+
+    // The owner adds and removes units in the admin, so public copy reads the counts instead of hardcoding them.
+    private function shareInventoryCounts(): void
+    {
+        View::composer(['layouts.public', 'partials.public-footer'], function ($view) {
+            $view->with([
+                'inventoryTypes' => UnitType::count(),
+                'inventoryUnits' => Unit::where('status', Unit::STATUS_ACTIVE)->count(),
+            ]);
+        });
     }
 
     private function configureProxies(): void

@@ -34,6 +34,7 @@ class BookingsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->with('units.unitType'))
             ->columns([
                 TextColumn::make('code')
                     ->label('Kode')
@@ -44,6 +45,10 @@ class BookingsTable
                     ->label('Pelanggan')
                     ->sortable()
                     ->searchable(),
+                TextColumn::make('tents')
+                    ->label('Tenda')
+                    ->state(fn ($record): array => $record->units->map(fn ($unit): string => $unit->unitType->name.' ('.$unit->code.')')->all())
+                    ->listWithLineBreaks(),
                 TextColumn::make('check_in')
                     ->label('Check In')
                     ->date('d M Y')

@@ -15,7 +15,7 @@
                 </span>
                 <p class="font-display text-2xl font-semibold text-cream">{{ config('site.name') }}</p>
             </div>
-            <p class="mt-3 max-w-sm text-sm leading-relaxed">{{ __('32 unit dalam 7 tipe tenda. Pesan online, bayar online, dan pesan makanan dari resto atau coffeeshop lewat QR di tenda.') }}</p>
+            <p class="mt-3 max-w-sm text-sm leading-relaxed">{{ __(':units unit dalam :types tipe tenda. Pesan online, bayar online, dan pesan makanan dari resto atau coffeeshop lewat QR di tenda.', ['units' => $inventoryUnits, 'types' => $inventoryTypes]) }}</p>
         </div>
 
         <nav aria-label="{{ __('Tautan footer') }}">
