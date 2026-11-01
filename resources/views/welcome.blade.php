@@ -51,7 +51,7 @@
     ];
 @endphp
 
-@section('title', config('site.name').' - '.__('Pesan tenda online, :types tipe, :units unit', ['types' => $unitTypes->count(), 'units' => $totalUnits]))
+@section('title', config('site.name').' - '.__('Glamping dan Camping di Cisarua, Bogor'))
 
 @push('head')
     <script type="application/ld+json">{!! json_encode($structuredData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) !!}</script>
