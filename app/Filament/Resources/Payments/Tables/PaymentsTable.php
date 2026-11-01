@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Payments\Tables;
 use App\Enums\PaymentStatus;
 use App\Filament\Resources\Payments\Actions\TransferProofActions;
 use App\Filament\Resources\Payments\PaymentLabels;
+use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\User;
 use Filament\Actions\ViewAction;
@@ -32,6 +33,11 @@ class PaymentsTable
                     ->state(fn (Payment $record): string => PaymentLabels::payableCode($record))
                     ->description(fn (Payment $record): string => PaymentLabels::payableType($record))
                     ->weight('bold'),
+                TextColumn::make('tents')
+                    ->label('Tenda')
+                    ->state(fn (Payment $record): array => $record->payable instanceof Booking ? $record->payable->tentLabels() : [])
+                    ->listWithLineBreaks()
+                    ->placeholder('-'),
                 TextColumn::make('payer')
                     ->label('Atas nama')
                     ->state(fn (Payment $record): string => PaymentLabels::payerName($record)),

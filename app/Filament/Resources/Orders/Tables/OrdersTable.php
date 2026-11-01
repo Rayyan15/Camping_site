@@ -52,7 +52,7 @@ class OrdersTable
                     ->description(fn (Order $record) => $record->diningSpot?->name ?? ($record->booking ? 'Booking '.$record->booking->code : null)),
                 TextColumn::make('tents')
                     ->label('Tenda')
-                    ->state(fn (Order $record): array => $record->booking?->units->map(fn ($unit): string => $unit->unitType->name.' ('.$unit->code.')')->all() ?? [])
+                    ->state(fn (Order $record): array => $record->booking?->tentLabels() ?? [])
                     ->listWithLineBreaks()
                     ->placeholder('-'),
                 TextColumn::make('scheduled_at')->label('Waktu saji')->dateTime('d/m/y H:i')->placeholder('-')->sortable(),

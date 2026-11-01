@@ -47,7 +47,7 @@ class BookingsTable
                     ->searchable(),
                 TextColumn::make('tents')
                     ->label('Tenda')
-                    ->state(fn ($record): array => $record->units->map(fn ($unit): string => $unit->unitType->name.' ('.$unit->code.')')->all())
+                    ->state(fn (Booking $record): array => $record->tentLabels())
                     ->listWithLineBreaks(),
                 TextColumn::make('check_in')
                     ->label('Check In')

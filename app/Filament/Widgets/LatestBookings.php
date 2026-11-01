@@ -21,7 +21,7 @@ class LatestBookings extends BaseWidget
     public function table(Table $table): Table
     {
         return $table
-            ->query(Booking::query()->with('customer')->latest()->limit(5))
+            ->query(Booking::query()->with(['customer', 'units.unitType'])->latest()->limit(5))
             ->heading(__('Booking Terbaru'))
             ->emptyStateHeading(__('Belum ada booking'))
             ->columns([
@@ -29,6 +29,10 @@ class LatestBookings extends BaseWidget
                     ->label(__('Pelanggan'))
                     ->description(fn (Booking $record): string => __('Check-in: :date', ['date' => $record->check_in->locale(app()->getLocale())->translatedFormat('d M Y')]))
                     ->weight('bold'),
+                TextColumn::make('tents')
+                    ->label(__('Tenda'))
+                    ->state(fn (Booking $record): array => $record->tentLabels())
+                    ->listWithLineBreaks(),
                 TextColumn::make('status')
                     ->label(__('Status'))
                     ->badge(),

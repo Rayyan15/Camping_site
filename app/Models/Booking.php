@@ -120,6 +120,16 @@ class Booking extends Model
         return $this->hasMany(BookingUnit::class);
     }
 
+    /**
+     * Staff identify a booking by its tents, e.g. "Salak (SLK-01)".
+     *
+     * @return array<int, string>
+     */
+    public function tentLabels(): array
+    {
+        return $this->units->map(fn (Unit $unit): string => $unit->unitType->name.' ('.$unit->code.')')->all();
+    }
+
     /** @return HasMany<BookingAddon, $this> */
     public function addons(): HasMany
     {
