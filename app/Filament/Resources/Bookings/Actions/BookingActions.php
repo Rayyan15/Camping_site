@@ -4,14 +4,17 @@ namespace App\Filament\Resources\Bookings\Actions;
 
 use App\Enums\BookingStatus;
 use App\Enums\PaymentMethod;
+use App\Exceptions\BookingAddonChangeException;
 use App\Exceptions\BookingRescheduleException;
 use App\Exceptions\BookingReviewException;
 use App\Exceptions\InvalidBookingTransitionException;
 use App\Exceptions\PaymentException;
 use App\Exceptions\RefundException;
 use App\Filament\Resources\Payments\Actions\TransferProofActions;
+use App\Models\Addon;
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Services\BookingAddonService;
 use App\Services\BookingRescheduleService;
 use App\Services\BookingReviewService;
 use App\Services\BookingStatusTransition;
@@ -176,6 +179,46 @@ class BookingActions
                 }
 
                 Notification::make()->title('Jadwal booking diubah')->body(self::rescheduleSummary($result->priceDifference))->success()->send();
+                self::refreshPage($livewire);
+            });
+    }
+
+    public static function changeAddons(): Action
+    {
+        return Action::make('changeAddons')
+            ->label('Ubah tambahan')
+            ->icon('heroicon-o-plus-circle')
+            ->color('gray')
+            ->authorize('update')
+            ->visible(fn (Booking $record): bool => in_array($record->status, [BookingStatus::PendingPayment, BookingStatus::Paid, BookingStatus::CheckedIn, BookingStatus::NeedsReview], true))
+            ->modalHeading('Ubah tambahan booking')
+            ->modalDescription('Isi jumlah tiap tambahan, 0 untuk menghapus. Total dan sisa tagihan dihitung ulang oleh sistem.')
+            ->modalSubmitActionLabel('Simpan tambahan')
+            ->fillForm(fn (Booking $record): array => ['qty' => $record->addons->pluck('qty', 'addon_id')->all()])
+            ->schema(fn (): array => Addon::where('is_active', true)->orderBy('name')->get()
+                ->map(fn (Addon $addon) => TextInput::make('qty.'.$addon->id)
+                    ->label($addon->name)
+                    ->helperText('Rp '.number_format($addon->price, 0, ',', '.').($addon->isPerNight() ? ' per malam' : ''))
+                    ->integer()
+                    ->minValue(0)
+                    ->maxValue(20)
+                    ->default(0))
+                ->all())
+            ->action(function (array $data, Booking $record, Component $livewire): void {
+                try {
+                    $difference = app(BookingAddonService::class)->replace($record, array_map('intval', array_filter($data['qty'] ?? [], 'filled')));
+                } catch (BookingAddonChangeException $e) {
+                    Notification::make()->title('Tambahan tidak diubah')->body($e->getMessage())->danger()->send();
+
+                    return;
+                }
+
+                $amount = number_format(abs($difference), 0, ',', '.');
+                Notification::make()->title('Tambahan disimpan')->body(match (true) {
+                    $difference > 0 => "Total naik Rp {$amount}. Tagih lewat Catat pembayaran.",
+                    $difference < 0 => "Total turun Rp {$amount}. Bila sudah dibayar, kembalikan selisihnya ke tamu.",
+                    default => 'Total tidak berubah.',
+                })->success()->send();
                 self::refreshPage($livewire);
             });
     }

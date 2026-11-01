@@ -45,6 +45,7 @@ class EditBooking extends EditRecord
             BookingActions::rejectTransferProof(),
             BookingActions::recordPayment(),
             BookingActions::reschedule(),
+            BookingActions::changeAddons(),
             BookingActions::resolveReview(),
         ];
     }
