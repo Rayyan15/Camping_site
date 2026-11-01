@@ -103,6 +103,14 @@ return [
                 'cleaning_log' => ['view_any', 'view', 'create'],
             ],
         ],
+
+        // Kitchen staff only see and finish incoming food orders.
+        'operator_dapur' => [
+            'functional' => [
+                'view_kitchen_queue',
+                'process_orders',
+            ],
+        ],
     ],
 
     /*

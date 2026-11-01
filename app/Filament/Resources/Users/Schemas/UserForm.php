@@ -16,6 +16,7 @@ class UserForm
         User::ROLE_FRONT_OFFICE => 'Operator Front Office',
         User::ROLE_CASHIER => 'Operator Kasir/Dapur',
         User::ROLE_CLEANING => 'OB / Kebersihan',
+        User::ROLE_KITCHEN => 'Dapur',
     ];
 
     public static function configure(Schema $schema): Schema

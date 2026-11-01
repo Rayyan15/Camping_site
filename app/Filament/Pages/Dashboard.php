@@ -8,17 +8,21 @@ use Illuminate\Contracts\Support\Htmlable;
 
 class Dashboard extends \Filament\Pages\Dashboard
 {
-    // OB has no dashboard data to see, so its home is the cleaning report list.
+    // OB and kitchen have no dashboard data to see, so each lands on its only work list.
     public function mount(): void
     {
-        if (auth()->user()?->hasRole(User::ROLE_CLEANING)) {
+        $user = auth()->user();
+
+        if ($user?->hasRole(User::ROLE_CLEANING)) {
             $this->redirect(CleaningLogResource::getUrl('index'));
+        } elseif ($user?->hasRole(User::ROLE_KITCHEN)) {
+            $this->redirect(KitchenQueue::getUrl());
         }
     }
 
     public static function shouldRegisterNavigation(): bool
     {
-        return ! auth()->user()?->hasRole(User::ROLE_CLEANING);
+        return ! auth()->user()?->hasAnyRole([User::ROLE_CLEANING, User::ROLE_KITCHEN]);
     }
 
     public function getColumns(): int|array
