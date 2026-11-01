@@ -104,8 +104,12 @@ return [
             ],
         ],
 
-        // Kitchen staff only see and finish incoming food orders.
+        // Kitchen staff only see and finish food orders; the order list is read-only for them.
         'operator_dapur' => [
+            'resources' => [
+                'order' => ['view_any', 'view'],
+                'order_item' => ['view_any', 'view'],
+            ],
             'functional' => [
                 'view_kitchen_queue',
                 'process_orders',

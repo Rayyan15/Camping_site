@@ -30,8 +30,9 @@ class KitchenRoleAccessTest extends TestCase
         $this->actingAs($this->kitchen());
 
         $this->get(KitchenQueue::getUrl())->assertOk();
+        $this->get('/admin/orders')->assertOk();
 
-        foreach (['/admin/bookings', '/admin/orders', '/admin/order-walk-in', '/admin/laporan', '/admin/settings', '/admin/users', '/admin/menu-items', '/admin/payments', '/admin/customers', '/admin/cleaning-logs'] as $path) {
+        foreach (['/admin/bookings', '/admin/order-walk-in', '/admin/laporan', '/admin/settings', '/admin/users', '/admin/menu-items', '/admin/payments', '/admin/customers', '/admin/cleaning-logs'] as $path) {
             $this->get($path)->assertForbidden();
         }
     }
