@@ -8,7 +8,6 @@ use Filament\Actions\EditAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class MenuItemsTable
@@ -25,9 +24,6 @@ class MenuItemsTable
                     ->label('Tersedia')
                     ->disabled(fn () => ! (auth()->user()?->can('manage_menu') || auth()->user()?->can('toggle_menu_availability'))),
                 TextColumn::make('sort_order')->label('Urutan')->sortable()->toggleable(),
-            ])
-            ->filters([
-                SelectFilter::make('category_id')->label('Kategori')->relationship('category', 'name'),
             ])
             ->recordActions([EditAction::make()])
             ->toolbarActions([DeleteBulkAction::make()])
