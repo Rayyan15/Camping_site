@@ -27,8 +27,7 @@ class MenuItemsTable
             ])
             ->recordActions([EditAction::make()])
             ->toolbarActions([DeleteBulkAction::make()])
-            // Urutan restarts at 1 in every category, so rows are grouped by category to keep it readable.
-            ->defaultGroup('category.name')
+            // Urutan restarts at 1 in every category; the category chips on the list page keep that readable.
             ->defaultSort(fn ($query) => $query->orderBy('category_id')->orderBy('sort_order'))
             // Guests see items ordered by sort_order inside each category, so dragging here sets that order.
             ->reorderable('sort_order', fn (): bool => (bool) auth()->user()?->can('manage_menu'))
