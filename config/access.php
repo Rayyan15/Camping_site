@@ -109,10 +109,13 @@ return [
             'resources' => [
                 'order' => ['view_any', 'view'],
                 'order_item' => ['view_any', 'view'],
+                'menu_category' => ['view_any', 'view'],
+                'menu_item' => ['view_any', 'view'],
             ],
             'functional' => [
                 'view_kitchen_queue',
                 'process_orders',
+                'toggle_menu_availability',
             ],
         ],
     ],

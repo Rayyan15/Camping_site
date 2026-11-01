@@ -7,6 +7,7 @@ use App\Enums\PaymentDirection;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Enums\QrPaymentChoice;
+use App\Events\OrderPlaced;
 use App\Exceptions\InvalidOrderTransitionException;
 use App\Exceptions\MenuItemUnavailableException;
 use App\Exceptions\OrderBillingException;
@@ -113,6 +114,8 @@ class OrderService
 
             $order->update(['payment_choice' => $choice]);
 
+            OrderPlaced::dispatch($order);
+
             return $order;
         });
     }
@@ -146,6 +149,8 @@ class OrderService
             if ($paidWith !== null) {
                 $this->markPaidAtCashier($order, $paidWith, $userId);
             }
+
+            OrderPlaced::dispatch($order);
 
             return $order;
         });
