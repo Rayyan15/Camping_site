@@ -73,7 +73,8 @@ class BookingsTable
                 TextColumn::make('paid_amount')
                     ->label('Dibayar')
                     ->money('IDR', locale: 'id', decimalPlaces: 0)
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('remaining')
                     ->label('Sisa Tagihan')
                     ->state(fn (Booking $record): int => BookingActions::remainingBalance($record))
