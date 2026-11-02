@@ -16,6 +16,12 @@ class PrintQrSheet extends Page
 
     protected string $view = 'filament.pages.dining-spot-qr-sheet';
 
+    // Bare layout without sidebar, topbar or scroll container: the full panel layout printed blank pages.
+    public function getLayout(): string
+    {
+        return 'filament-panels::components.layout.base';
+    }
+
     #[Url]
     public ?int $spot = null;
 
