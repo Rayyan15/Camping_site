@@ -25,6 +25,9 @@ class PrintQrSheet extends Page
     #[Url]
     public ?int $spot = null;
 
+    #[Url]
+    public ?string $type = null;
+
     /**
      * @return array<string, mixed>
      */
@@ -34,6 +37,8 @@ class PrintQrSheet extends Page
 
         $sheets = DiningSpot::query()
             ->when($this->spot, fn ($query) => $query->whereKey($this->spot))
+            ->when(! $this->spot && in_array($this->type, [DiningSpot::TYPE_TABLE, DiningSpot::TYPE_TENT], true), fn ($query) => $query->where('type', $this->type))
+            ->orderBy('type')
             ->orderBy('name')
             ->get()
             ->map(fn (DiningSpot $spot) => [
@@ -41,6 +46,13 @@ class PrintQrSheet extends Page
                 'svg' => $service->qrSvg($spot),
             ]);
 
-        return ['sheets' => $sheets];
+        return [
+            'sheets' => $sheets,
+            'filters' => [
+                '' => 'Semua',
+                DiningSpot::TYPE_TABLE => 'Meja',
+                DiningSpot::TYPE_TENT => 'Tenda',
+            ],
+        ];
     }
 }
