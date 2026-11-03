@@ -116,6 +116,7 @@ class BookingActionsTest extends TestCase
         $review = $this->makeBooking(BookingStatus::NeedsReview, 100000);
 
         Livewire::test(ListBookings::class)
+            ->set('activeTab', 'all')
             ->assertTableActionHidden('check_in', $pending)
             ->assertTableActionHidden('check_out', $pending)
             ->assertTableActionHidden('check_in', $cancelled)

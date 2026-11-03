@@ -73,8 +73,24 @@ class BookingAdminTest extends TestCase
         $bookings = $this->bookingsOfEveryStatus();
 
         Livewire::test(ListBookings::class)
+            ->set('activeTab', 'all')
             ->assertSuccessful()
             ->assertCanSeeTableRecords($bookings);
+    }
+
+    public function test_default_tab_hides_expired_and_cancelled_bookings(): void
+    {
+        $pending = $this->makeBooking(BookingStatus::PendingPayment, 'BK-PENDING');
+        $paid = $this->makeBooking(BookingStatus::Paid, 'BK-PAID');
+        $expired = $this->makeBooking(BookingStatus::Expired, 'BK-EXPIRED');
+        $cancelled = $this->makeBooking(BookingStatus::Cancelled, 'BK-CANCELLED');
+
+        Livewire::test(ListBookings::class)
+            ->assertCanSeeTableRecords([$pending, $paid])
+            ->assertCanNotSeeTableRecords([$expired, $cancelled])
+            ->set('activeTab', 'closed')
+            ->assertCanSeeTableRecords([$expired, $cancelled])
+            ->assertCanNotSeeTableRecords([$pending, $paid]);
     }
 
     public function test_latest_bookings_widget_renders_every_status_label(): void

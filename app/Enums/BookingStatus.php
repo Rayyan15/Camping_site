@@ -26,6 +26,26 @@ enum BookingStatus: string implements HasColor, HasLabel
         return [self::Paid, self::CheckedIn, self::NeedsReview];
     }
 
+    /**
+     * Bookings staff still have to act on: waiting for payment or holding a unit.
+     *
+     * @return array<int, self>
+     */
+    public static function active(): array
+    {
+        return [self::PendingPayment, ...self::occupying()];
+    }
+
+    /**
+     * Bookings that no longer hold a unit and never will without staff intervention.
+     *
+     * @return array<int, self>
+     */
+    public static function closed(): array
+    {
+        return [self::Expired, self::Cancelled, self::Refunded];
+    }
+
     public function getLabel(): string
     {
         return match ($this) {
