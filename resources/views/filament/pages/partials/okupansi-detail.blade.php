@@ -16,6 +16,11 @@
             <dt class="">Tamu</dt>
             <dd>{{ $guest ?? 'Tanpa nama' }}</dd>
 
+            @if($phone)
+                <dt class="">No. HP</dt>
+                <dd><a class="font-semibold underline" href="https://wa.me/{{ preg_replace('/\D/', '', $phone) }}" target="_blank" rel="noopener">{{ $phone }}</a></dd>
+            @endif
+
             <dt class="">Status booking</dt>
             <dd>{{ $booking->status->getLabel() }}</dd>
 
@@ -30,6 +35,9 @@
 
             <dt class="">Unit</dt>
             <dd>{{ $booking->bookingUnits->map(fn ($line) => $line->unit?->code)->filter()->join(', ') }}</dd>
+
+            <dt class="">Tambahan</dt>
+            <dd>{{ $extras === [] ? '-' : implode('; ', $extras) }}</dd>
         </dl>
 
         @if($editUrl)

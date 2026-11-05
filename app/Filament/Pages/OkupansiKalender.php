@@ -131,8 +131,13 @@ class OkupansiKalender extends Page
 
         $booking = $detail['booking'];
 
+        // Front office checks guests in, so staff allowed to see contacts get the full name and phone.
+        $customer = $booking !== null && auth()->user()->can('view_customer_contact') ? $booking->customer : null;
+
         return $detail + [
-            'guest' => $detail['cell']['guest'],
+            'guest' => $customer->name ?? $detail['cell']['guest'],
+            'phone' => $customer?->phone,
+            'extras' => $booking === null ? [] : [...$booking->addonLabels(), ...$booking->foodLabels()],
             'editUrl' => $booking !== null && auth()->user()->can('update', $booking)
                 ? BookingResource::getUrl('edit', ['record' => $booking])
                 : null,

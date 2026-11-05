@@ -6,11 +6,13 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Exceptions\InvalidOrderTransitionException;
 use App\Exceptions\OrderBillingException;
+use App\Filament\Resources\MenuItems\MenuItemResource;
 use App\Filament\Resources\Orders\Tables\OrdersTable;
 use App\Models\Order;
 use App\Services\KitchenQueueService;
 use App\Services\OrderService;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
@@ -34,6 +36,19 @@ class KitchenQueue extends Page
     private const LATE_AFTER_MINUTES = 10;
 
     protected string $view = 'filament.pages.kitchen-queue';
+
+    /** @return array<int, Action> */
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('sold_out')
+                ->label('Atur menu habis')
+                ->icon(Heroicon::OutlinedNoSymbol)
+                ->color('gray')
+                ->url(MenuItemResource::getUrl('index'))
+                ->visible(fn (): bool => (bool) auth()->user()?->can('toggle_menu_availability')),
+        ];
+    }
 
     public static function canAccess(): bool
     {

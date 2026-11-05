@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Filament\Pages\KitchenQueue;
+use App\Filament\Resources\MenuItems\Pages\ListMenuItems;
 use App\Models\MenuCategory;
 use App\Models\MenuItem;
 use App\Models\User;
@@ -11,6 +12,7 @@ use Database\Seeders\RoleSeeder;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class KitchenRoleAccessTest extends TestCase
@@ -46,6 +48,18 @@ class KitchenRoleAccessTest extends TestCase
         $this->actingAs($this->kitchen());
 
         $this->get('/admin')->assertRedirect(KitchenQueue::getUrl());
+    }
+
+    public function test_kitchen_marks_a_menu_item_sold_out(): void
+    {
+        $this->actingAs($this->kitchen());
+        $category = MenuCategory::create(['name' => 'Minuman', 'sort_order' => 1]);
+        $coffee = MenuItem::create(['category_id' => $category->id, 'name' => 'Kopi', 'price' => 12000, 'is_available' => true]);
+
+        Livewire::test(ListMenuItems::class)
+            ->call('updateTableColumnState', 'is_available', (string) $coffee->getKey(), false);
+
+        $this->assertFalse($coffee->fresh()->is_available);
     }
 
     public function test_kitchen_is_told_about_a_new_walkin_order(): void

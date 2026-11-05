@@ -128,7 +128,8 @@ class OccupancyCalendarPageTest extends TestCase
         $html = $this->modalHtml(User::ROLE_FRONT_OFFICE, $this->unit->id, '2026-10-09');
 
         $this->assertStringContainsString('RCM-OKUP01', $html);
-        $this->assertStringContainsString('Budi S.', $html);
+        $this->assertStringContainsString('Budi Santoso', $html);
+        $this->assertStringContainsString('081234567890', $html);
         $this->assertStringContainsString('Buka booking', $html);
         $this->assertStringContainsString('/admin/bookings/'.$this->booking->id.'/edit', $html);
     }
@@ -147,7 +148,7 @@ class OccupancyCalendarPageTest extends TestCase
         $this->assertStringNotContainsString('Buka booking', $html);
     }
 
-    public function test_page_and_modal_never_expose_raw_guest_contact_or_full_name(): void
+    public function test_grid_masks_the_guest_and_the_modal_never_shows_the_email(): void
     {
         foreach ([User::ROLE_OWNER, User::ROLE_FRONT_OFFICE] as $role) {
             $html = $this->modalHtml($role, $this->unit->id, '2026-10-09');
@@ -158,8 +159,6 @@ class OccupancyCalendarPageTest extends TestCase
                 ->assertDontSee('081234567890')
                 ->assertDontSee('budi.rahasia@example.test');
 
-            $this->assertStringNotContainsString('Santoso', $html);
-            $this->assertStringNotContainsString('081234567890', $html);
             $this->assertStringNotContainsString('budi.rahasia@example.test', $html);
         }
     }
