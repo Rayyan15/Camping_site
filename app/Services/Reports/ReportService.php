@@ -3,6 +3,7 @@
 namespace App\Services\Reports;
 
 use App\Enums\BookingStatus;
+use App\Enums\OrderStatus;
 use App\Enums\PaymentDirection;
 use App\Enums\PaymentMethod;
 use App\Enums\RefundStatus;
@@ -34,6 +35,7 @@ class ReportService
             ReportType::TopMenu => $this->topMenu($period),
             ReportType::Refund => $this->refunds($period),
             ReportType::PaymentMethod => $this->paymentsByMethod($period),
+            ReportType::Revenue => $this->revenueByCategory($period),
         };
     }
 
@@ -251,6 +253,94 @@ class ReportService
             ],
             'Pembayaran berstatus berhasil dengan tanggal bayar pada periode. Uang masuk dan refund keluar dipisah per metode.',
         );
+    }
+
+    /**
+     * Same settled cash as the payment method report, split into tent rent, add-ons and food. A
+     * booking payment covers several things at once, so it is spread over that booking's tent,
+     * add-on and billed food lines in proportion to their amounts.
+     */
+    public function revenueByCategory(ReportPeriod $period): ReportTable
+    {
+        $categories = [
+            'tent' => 'Sewa tenda',
+            'addon' => 'Add-on (extra bed, kayu bakar, aktivitas)',
+            'food_booking' => 'F&B ditagih ke booking',
+            'food_direct' => 'F&B langsung (QR dan walk-in)',
+        ];
+        $in = array_fill_keys(array_keys($categories), 0);
+        $out = $in;
+
+        Payment::query()
+            ->settled()
+            ->paidBetween($period->from->toDateTimeString(), $period->untilExclusive()->toDateTimeString())
+            ->with(['payable' => fn ($morph) => $morph->morphWith([
+                Booking::class => ['bookingUnits', 'addons', 'orders'],
+            ])])
+            ->get()
+            ->each(function (Payment $payment) use (&$in, &$out): void {
+                $split = $this->splitPayment($payment);
+                foreach ($split as $category => $amount) {
+                    $payment->direction === PaymentDirection::In ? $in[$category] += $amount : $out[$category] += $amount;
+                }
+            });
+
+        $rows = [];
+        foreach ($categories as $key => $label) {
+            $rows[] = [$label, $in[$key], $out[$key], $in[$key] - $out[$key]];
+        }
+
+        $tentNet = $in['tent'] + $in['addon'] - $out['tent'] - $out['addon'];
+        $foodNet = $in['food_booking'] + $in['food_direct'] - $out['food_booking'] - $out['food_direct'];
+
+        return new ReportTable(
+            ReportType::Revenue,
+            $period,
+            [
+                $this->column('Kategori', Type::Text),
+                $this->column('Masuk (Rp)', Type::Money),
+                $this->column('Refund keluar (Rp)', Type::Money),
+                $this->column('Neto (Rp)', Type::Money),
+            ],
+            $rows,
+            [
+                ['label' => 'Tenda dan add-on, neto (Rp)', 'value' => $tentNet, 'type' => Type::Money],
+                ['label' => 'F&B, neto (Rp)', 'value' => $foodNet, 'type' => Type::Money],
+                ['label' => 'Total neto (Rp)', 'value' => $tentNet + $foodNet, 'type' => Type::Money],
+            ],
+            'Pembayaran berhasil dengan tanggal bayar pada periode, sama dengan laporan pembayaran per metode. Pembayaran booking dibagi ke tenda, add-on, dan makanan sesuai porsi rincian booking.',
+        );
+    }
+
+    /** @return array<string, int> category => rupiah, summing exactly to the payment amount */
+    private function splitPayment(Payment $payment): array
+    {
+        $payable = $payment->payable;
+
+        if ($payable instanceof Order) {
+            return ['food_direct' => (int) $payment->amount];
+        }
+
+        if (! $payable instanceof Booking) {
+            return ['tent' => (int) $payment->amount];
+        }
+
+        $parts = [
+            'addon' => (int) $payable->addons->sum('subtotal'),
+            'food_booking' => (int) $payable->orders
+                ->filter(fn (Order $order): bool => $order->bill_to_booking && $order->status !== OrderStatus::Dibatalkan->value)
+                ->sum(fn (Order $order): int => (int) $order->total + (int) $order->tax),
+        ];
+        $base = (int) $payable->bookingUnits->sum('subtotal') + array_sum($parts);
+
+        if ($base <= 0) {
+            return ['tent' => (int) $payment->amount];
+        }
+
+        $split = array_map(fn (int $part): int => intdiv((int) $payment->amount * $part, $base), $parts);
+
+        // Tent takes the remainder so rounding never loses or invents a rupiah.
+        return ['tent' => (int) $payment->amount - array_sum($split)] + $split;
     }
 
     /** @return array<int, int> sold nights per unit id inside the period, active units only */

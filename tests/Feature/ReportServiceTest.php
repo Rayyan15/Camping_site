@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\ReportPreset;
 use App\Enums\ReportType;
+use App\Models\Payment;
 use App\Services\Reports\InvalidReportPeriodException;
 use App\Services\Reports\ReportPeriod;
 use App\Services\Reports\ReportService;
@@ -142,6 +143,22 @@ class ReportServiceTest extends TestCase
             ['Total masuk (Rp)' => 3090000, 'Total refund keluar (Rp)' => 50000, 'Neto (Rp)' => 3040000],
             array_column($table->summary, 'value', 'label'),
         );
+    }
+
+    public function test_revenue_split_adds_up_to_the_payment_report_and_keeps_direct_food_apart(): void
+    {
+        $period = ReportPeriod::thisMonth();
+        $revenue = array_column($this->reports->build(ReportType::Revenue, $period)->summary, 'value', 'label');
+        $payments = array_column($this->reports->build(ReportType::PaymentMethod, $period)->summary, 'value', 'label');
+
+        $this->assertSame($payments['Neto (Rp)'], $revenue['Total neto (Rp)']);
+        $this->assertSame($revenue['Total neto (Rp)'], $revenue['Tenda dan add-on, neto (Rp)'] + $revenue['F&B, neto (Rp)']);
+
+        $directFood = (int) Payment::query()->settled()
+            ->paidBetween($period->from->toDateTimeString(), $period->untilExclusive()->toDateTimeString())
+            ->where('payable_type', 'order')->where('direction', 'in')->sum('amount');
+        $rows = collect($this->reports->build(ReportType::Revenue, $period)->rows)->keyBy(0);
+        $this->assertSame($directFood, $rows['F&B langsung (QR dan walk-in)'][1]);
     }
 
     public function test_empty_period_yields_empty_rows_and_zero_totals(): void

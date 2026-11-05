@@ -9,6 +9,7 @@ enum ReportType: string
     case TopMenu = 'menu-terlaris';
     case Refund = 'refund';
     case PaymentMethod = 'pembayaran';
+    case Revenue = 'pendapatan';
 
     public function label(): string
     {
@@ -18,6 +19,7 @@ enum ReportType: string
             self::TopMenu => 'Menu terlaris',
             self::Refund => 'Refund',
             self::PaymentMethod => 'Pembayaran per metode',
+            self::Revenue => 'Pendapatan tenda dan F&B',
         };
     }
 
@@ -30,6 +32,7 @@ enum ReportType: string
             self::TopMenu => 'Menu yang paling banyak terjual dan omzetnya.',
             self::Refund => 'Pengajuan pengembalian dana dan statusnya.',
             self::PaymentMethod => 'Uang masuk dan keluar, dikelompokkan per metode bayar.',
+            self::Revenue => 'Uang masuk dipisah antara sewa tenda dan makanan minuman.',
         };
     }
 
@@ -41,6 +44,7 @@ enum ReportType: string
             self::TopMenu => 'heroicon-o-shopping-bag',
             self::Refund => 'heroicon-o-arrow-uturn-left',
             self::PaymentMethod => 'heroicon-o-credit-card',
+            self::Revenue => 'heroicon-o-banknotes',
         };
     }
 
