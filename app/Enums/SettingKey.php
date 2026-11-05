@@ -18,6 +18,9 @@ enum SettingKey: string
     case PaymentTransferEnabled = 'payment_transfer_enabled';
     case PaymentQrisEnabled = 'payment_qris_enabled';
     case QrisImage = 'qris_image';
+    case QrPaymentCashierEnabled = 'qr_payment_cashier_enabled';
+    case QrPaymentTransferEnabled = 'qr_payment_transfer_enabled';
+    case QrPaymentBookingEnabled = 'qr_payment_booking_enabled';
 
     public const DEFAULT_CHECK_IN_TIME = '14:00';
 
@@ -39,6 +42,9 @@ enum SettingKey: string
             self::PaymentTransferEnabled => 'Transfer bank',
             self::PaymentQrisEnabled => 'QRIS',
             self::QrisImage => 'Gambar QRIS',
+            self::QrPaymentCashierEnabled => 'Pesanan QR: bayar ke kasir',
+            self::QrPaymentTransferEnabled => 'Pesanan QR: transfer bank',
+            self::QrPaymentBookingEnabled => 'Pesanan QR: tagihkan ke booking',
         };
     }
 }

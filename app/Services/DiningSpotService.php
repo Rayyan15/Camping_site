@@ -6,6 +6,7 @@ use App\Enums\BookingStatus;
 use App\Enums\QrPaymentChoice;
 use App\Models\Booking;
 use App\Models\DiningSpot;
+use App\Support\BankAccount;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
@@ -85,13 +86,17 @@ class DiningSpotService
      */
     public function paymentChoicesFor(DiningSpot $spot): array
     {
-        $choices = [QrPaymentChoice::Cashier];
+        $choices = array_values(array_filter(
+            app(SettingRepository::class)->qrPaymentChoices(),
+            fn (QrPaymentChoice $choice): bool => match ($choice) {
+                QrPaymentChoice::Booking => $this->activeBooking($spot) !== null,
+                QrPaymentChoice::Transfer => BankAccount::current()->isComplete(),
+                QrPaymentChoice::Cashier => true,
+            },
+        ));
 
-        if ($this->activeBooking($spot) !== null) {
-            $choices[] = QrPaymentChoice::Booking;
-        }
-
-        return $choices;
+        // ponytail: a guest must always be able to order, so a spot left with no usable choice falls back to the cashier.
+        return $choices === [] ? [QrPaymentChoice::Cashier] : $choices;
     }
 
     private function uniqueToken(): string

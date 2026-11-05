@@ -6,7 +6,24 @@ const IDLE_DOT = 'border-sand bg-cream text-ink-soft';
 const DOT_BASE = 'grid size-8 shrink-0 place-items-center rounded-full border-2 text-sm font-bold';
 const STATE_LABEL = { done: t('(selesai)'), current: t('(saat ini)'), todo: t('(belum)') };
 
+function initCopyButtons() {
+    document.querySelectorAll('[data-copy]').forEach((button) => {
+        const label = button.textContent;
+        button.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(button.dataset.copy);
+                button.textContent = t('Tersalin');
+            } catch {
+                button.textContent = t('Salin manual');
+            }
+            setTimeout(() => { button.textContent = label; }, 2000);
+        });
+    });
+}
+
 export function initQrTrack() {
+    initCopyButtons();
+
     const hint = document.getElementById('status-hint');
     const stepsRoot = document.querySelector('[data-steps]');
     if (!hint || !stepsRoot) return;
@@ -40,6 +57,11 @@ export function initQrTrack() {
             const response = await fetch(window.location.href, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
             if (!response.ok) return;
             const data = await response.json();
+            // While a transfer waits for the cashier the page shows the payment block; reload once it is confirmed.
+            if (stepsRoot.dataset.awaitingTransfer === '1') {
+                if (data.paid) window.location.reload();
+                return;
+            }
             paint(data);
             if (data.step >= finalStep) clearInterval(timer);
         } catch {

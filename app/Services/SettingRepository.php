@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\PaymentMethod;
+use App\Enums\QrPaymentChoice;
 use App\Enums\SettingKey;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
@@ -54,6 +55,21 @@ class SettingRepository
         ]));
     }
 
+    /**
+     * QR order payment choices the owner switched on. Cashier and bill-to-booking stay on until turned
+     * off so existing QR menus keep working; transfer starts off until the owner opts in.
+     *
+     * @return list<QrPaymentChoice>
+     */
+    public function qrPaymentChoices(): array
+    {
+        return array_values(array_filter([
+            $this->get(SettingKey::QrPaymentCashierEnabled) !== '0' ? QrPaymentChoice::Cashier : null,
+            $this->get(SettingKey::QrPaymentTransferEnabled) === '1' ? QrPaymentChoice::Transfer : null,
+            $this->get(SettingKey::QrPaymentBookingEnabled) !== '0' ? QrPaymentChoice::Booking : null,
+        ]));
+    }
+
     public function qrisImagePath(): ?string
     {
         return $this->get(SettingKey::QrisImage) ?: null;
@@ -75,6 +91,9 @@ class SettingRepository
             'payment_qris_enabled' => $this->get(SettingKey::PaymentQrisEnabled) === '1',
             'payment_cash_enabled' => $this->get(SettingKey::PaymentCashEnabled) === '1',
             'qris_image' => $this->qrisImagePath(),
+            'qr_payment_cashier_enabled' => $this->get(SettingKey::QrPaymentCashierEnabled) !== '0',
+            'qr_payment_transfer_enabled' => $this->get(SettingKey::QrPaymentTransferEnabled) === '1',
+            'qr_payment_booking_enabled' => $this->get(SettingKey::QrPaymentBookingEnabled) !== '0',
         ];
     }
 
@@ -90,7 +109,10 @@ class SettingRepository
             $this->put(SettingKey::BankName, trim((string) ($values['bank_name'] ?? '')));
             $this->put(SettingKey::BankAccountNumber, trim((string) ($values['bank_account_number'] ?? '')));
             $this->put(SettingKey::BankAccountHolder, trim((string) ($values['bank_account_holder'] ?? '')));
-            foreach ([SettingKey::PaymentTransferEnabled, SettingKey::PaymentQrisEnabled, SettingKey::PaymentCashEnabled] as $toggle) {
+            foreach ([
+                SettingKey::PaymentTransferEnabled, SettingKey::PaymentQrisEnabled, SettingKey::PaymentCashEnabled,
+                SettingKey::QrPaymentCashierEnabled, SettingKey::QrPaymentTransferEnabled, SettingKey::QrPaymentBookingEnabled,
+            ] as $toggle) {
                 $this->put($toggle, empty($values[$toggle->value]) ? '0' : '1');
             }
             $this->put(SettingKey::QrisImage, (string) ($values['qris_image'] ?? ''));

@@ -118,6 +118,28 @@ class ManageSettings extends Page
                         ->label('Atas nama')
                         ->maxLength(100),
                 ]),
+            Section::make('Metode bayar pesanan QR')
+                ->description('Pilihan cara bayar yang muncul saat tamu memesan makanan lewat QR meja atau tenda. Minimal satu harus aktif.')
+                ->columns(3)
+                ->schema([
+                    Toggle::make('qr_payment_transfer_enabled')
+                        ->label('Transfer bank')
+                        ->helperText('Tamu melihat rekening di atas lalu mengunggah bukti. Pesanan masuk dapur setelah kasir mengonfirmasi.')
+                        ->live(),
+                    Toggle::make('qr_payment_cashier_enabled')
+                        ->label('Bayar ke kasir')
+                        ->helperText('Pesanan langsung masuk dapur, tamu membayar di kasir.')
+                        ->live(),
+                    Toggle::make('qr_payment_booking_enabled')
+                        ->label('Tagihkan ke booking')
+                        ->helperText('Hanya muncul di QR tenda yang sedang ditempati tamu menginap.')
+                        ->live()
+                        ->rule(fn (Get $get) => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
+                            if (! $value && ! $get('qr_payment_transfer_enabled') && ! $get('qr_payment_cashier_enabled')) {
+                                $fail('Aktifkan minimal satu cara bayar pesanan QR.');
+                            }
+                        }),
+                ]),
         ]);
     }
 

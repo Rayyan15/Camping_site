@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\Payments\Actions;
 
 use App\Exceptions\PaymentException;
+use App\Models\Order;
 use App\Models\Payment;
+use App\Services\Payment\OrderTransferProofService;
 use App\Services\Payment\TransferProofService;
 use Closure;
 use Filament\Actions\Action;
@@ -39,7 +41,7 @@ class TransferProofActions
                 $payment = $resolvePayment($record);
 
                 self::run(
-                    fn () => app(TransferProofService::class)->confirm($payment, (int) Auth::id()),
+                    fn () => self::serviceFor($payment)->confirm($payment, (int) Auth::id()),
                     'Transfer dikonfirmasi',
                     $livewire,
                 );
@@ -58,7 +60,7 @@ class TransferProofActions
             ->authorize($ability)
             ->visible(fn ($record): bool => $resolvePayment($record) !== null)
             ->modalHeading('Tolak bukti transfer')
-            ->modalDescription('Tamu menerima alasan ini lewat email dan di halaman status, lalu bisa mengunggah ulang.')
+            ->modalDescription('Tamu melihat alasan ini di halaman status pesanannya, lalu bisa mengunggah ulang.')
             ->modalSubmitActionLabel('Tolak bukti')
             ->schema([
                 Textarea::make('reason')
@@ -71,11 +73,19 @@ class TransferProofActions
                 $payment = $resolvePayment($record);
 
                 self::run(
-                    fn () => app(TransferProofService::class)->reject($payment, trim($data['reason']), (int) Auth::id()),
+                    fn () => self::serviceFor($payment)->reject($payment, trim($data['reason']), (int) Auth::id()),
                     'Bukti ditolak',
                     $livewire,
                 );
             });
+    }
+
+    /** Food orders have no hold to manage, so their proofs go through the lighter order service. */
+    private static function serviceFor(Payment $payment): TransferProofService|OrderTransferProofService
+    {
+        return $payment->payable_type === (new Order)->getMorphClass()
+            ? app(OrderTransferProofService::class)
+            : app(TransferProofService::class);
     }
 
     private static function confirmationText(?Payment $payment): string

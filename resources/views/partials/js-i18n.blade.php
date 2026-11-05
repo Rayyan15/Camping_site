@@ -17,6 +17,8 @@
     ':date, sudah lewat.',
     ':units unit x :nights malam',
     'Belum dibayar. Bayar ke kasir.',
+    'Salin manual',
+    'Tersalin',
     'Check-in :date. Pilih tanggal check-out.',
     'Ditagihkan ke booking Anda.',
     'Estimasi belum bisa dimuat.',

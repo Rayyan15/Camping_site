@@ -80,7 +80,12 @@ class Order extends Model
     {
         $query->where(function (Builder $query) {
             $query->where(function (Builder $direct) {
-                $direct->whereIn('source', [self::SOURCE_QR, self::SOURCE_WALKIN]);
+                $direct->whereIn('source', [self::SOURCE_QR, self::SOURCE_WALKIN])
+                    // A transfer order waits for the cashier to confirm the money before the kitchen cooks.
+                    ->where(fn (Builder $paid) => $paid
+                        ->whereNull('payment_choice')
+                        ->orWhere('payment_choice', '!=', QrPaymentChoice::Transfer->value)
+                        ->orWhere('payment_status', self::PAYMENT_PAID));
             })
                 ->orWhere(function (Builder $preorder) {
                     $preorder->where('source', self::SOURCE_PREORDER)

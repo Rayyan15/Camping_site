@@ -114,7 +114,10 @@ class OrderService
 
             $order->update(['payment_choice' => $choice]);
 
-            OrderPlaced::dispatch($order);
+            // A transfer order reaches the kitchen only once the cashier confirms the proof.
+            if ($choice !== QrPaymentChoice::Transfer) {
+                OrderPlaced::dispatch($order);
+            }
 
             return $order;
         });

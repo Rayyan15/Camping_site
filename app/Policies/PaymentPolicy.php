@@ -48,13 +48,19 @@ class PaymentPolicy extends ResourcePolicy
         return $this->view($user, $payment);
     }
 
-    /** Confirming or rejecting a guest's transfer proof is a booking payment decision. */
+    /** Booking proofs are a front office decision; food order proofs belong to the cashier. */
     public function reviewProof(User $user, Payment $payment): bool
     {
+        $permission = match ($payment->payable_type) {
+            'booking' => 'record_manual_payment',
+            'order' => 'record_order_payment',
+            default => null,
+        };
+
         return $user->is_active
-            && $user->can('record_manual_payment')
-            && in_array('booking', self::visiblePayableTypes($user), true)
-            && $payment->payable_type === 'booking';
+            && $permission !== null
+            && $user->can($permission)
+            && in_array($payment->payable_type, self::visiblePayableTypes($user), true);
     }
 
     public function create(User $user): bool

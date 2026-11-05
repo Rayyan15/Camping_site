@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Filament\Resources\Payments\PaymentResource;
+use App\Models\Order;
 use App\Models\Payment;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification as FilamentNotification;
@@ -31,7 +32,7 @@ class TransferProofSubmittedNotification extends Notification
 
         return FilamentNotification::make()
             ->title('Bukti transfer menunggu')
-            ->body("Booking {$code} mengirim bukti transfer Rp {$amount}. Cocokkan dengan mutasi rekening, lalu konfirmasi atau tolak.")
+            ->body(($this->payment->payable instanceof Order ? 'Pesanan makanan' : 'Booking')." {$code} mengirim bukti transfer Rp {$amount}. Cocokkan dengan mutasi rekening, lalu konfirmasi atau tolak.")
             ->warning()
             ->actions([
                 Action::make('review')

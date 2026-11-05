@@ -33,10 +33,57 @@
         @if(session('error'))
             <p class="mb-5 rounded-2xl bg-ember-soft px-5 py-4 font-semibold text-ember-dark" role="alert">{{ __(session('error')) }}</p>
         @endif
+        @if(session('status'))
+            <p class="mb-5 rounded-2xl bg-forest-100 px-5 py-4 font-semibold text-forest-900" role="status">{{ __(session('status')) }}</p>
+        @endif
 
-        <p id="status-hint" role="status" aria-live="polite" class="text-lg font-semibold text-forest-900">{{ $stepHints[$progress['status']] }}</p>
+        @if($awaitingTransfer)
+            <section class="mb-8 rounded-3xl border-2 border-forest-800 bg-[#fffdf8] p-5" aria-labelledby="judul-transfer">
+                <h2 id="judul-transfer" class="font-display text-xl font-semibold text-forest-900">
+                    {{ $proof?->status === \App\Enums\PaymentStatus::Pending ? __('Bukti sedang dicek kasir') : __('Selesaikan pembayaran') }}
+                </h2>
 
-        <ol class="mt-5 grid gap-0" aria-label="{{ __('Tahapan pesanan') }}" data-steps data-hints="{{ json_encode($stepHints) }}">
+                @if($proof?->status === \App\Enums\PaymentStatus::Pending)
+                    <p class="mt-2 text-sm text-ink-soft">{{ __('Pesanan diteruskan ke dapur setelah kasir mencocokkan transfer Anda. Halaman ini diperbarui otomatis.') }}</p>
+                @else
+                    @if($proof?->status === \App\Enums\PaymentStatus::Failed)
+                        <p class="mt-3 rounded-2xl bg-ember-soft px-4 py-3 text-sm font-semibold text-ember-dark" role="alert">{{ __('Bukti ditolak: :reason. Silakan unggah ulang bukti yang benar.', ['reason' => $proof->rejection_reason]) }}</p>
+                    @endif
+                    <p class="mt-2 text-sm text-ink-soft">{{ __('Transfer tepat :amount, lalu unggah bukti. Dapur mulai memasak setelah kasir mengecek.', ['amount' => $rupiah($order->total)]) }}</p>
+                @endif
+
+                @if($bank->isComplete())
+                    <dl class="mt-4 rounded-xl border-[1.5px] border-sand p-4" aria-label="{{ __('Rekening tujuan') }}">
+                        <dt class="text-sm text-ink-soft">{{ __('Rekening tujuan') }}</dt>
+                        <dd class="mt-1 font-semibold">{{ $bank->bankName }}</dd>
+                        <dd class="flex flex-wrap items-center justify-between gap-2">
+                            <span class="font-mono text-xl font-bold tracking-wider text-forest-900">{{ $bank->accountNumber }}</span>
+                            <button type="button" class="btn btn-outline min-h-11 px-4 text-sm" data-copy="{{ preg_replace('/\D/', '', $bank->accountNumber) }}">{{ __('Salin') }}</button>
+                        </dd>
+                        <dd class="text-sm text-ink-soft">{{ __('a.n.') }} {{ $bank->accountHolder }}</dd>
+                        <dt class="mt-3 text-sm text-ink-soft">{{ __('Jumlah') }}</dt>
+                        <dd class="font-display text-2xl font-semibold tabular-nums text-forest-900">{{ $rupiah($order->total) }}</dd>
+                    </dl>
+
+                    <form action="{{ route('qr.proof', [$spot->qr_token, $order->code]) }}" method="POST" enctype="multipart/form-data" class="mt-4">
+                        @csrf
+                        <label for="proof" class="field-label">{{ $proof?->status === \App\Enums\PaymentStatus::Pending ? __('Kirim ulang bukti bayar') : __('Bukti bayar') }}</label>
+                        <input id="proof" name="proof" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf" required aria-describedby="proof-hint @error('proof') proof-error @enderror" class="field-input">
+                        <p id="proof-hint" class="mt-2 text-sm text-ink-soft">{{ __('JPG, PNG, WebP, atau PDF, maksimal 4 MB. Pastikan nominal dan tanggal terbaca.') }}</p>
+                        @error('proof')
+                            <p id="proof-error" class="mt-2 text-sm font-semibold text-ember-dark" role="alert">{{ __($message) }}</p>
+                        @enderror
+                        <button type="submit" class="btn btn-primary mt-4 w-full">{{ __('Kirim bukti bayar') }}</button>
+                    </form>
+                @else
+                    <p class="mt-4 font-semibold" role="status">{{ __('Rekening belum diatur. Silakan bayar ke kasir.') }}</p>
+                @endif
+            </section>
+        @endif
+
+        <p id="status-hint" role="status" aria-live="polite" class="text-lg font-semibold text-forest-900">{{ $awaitingTransfer ? __('Menunggu pembayaran dikonfirmasi kasir.') : $stepHints[$progress['status']] }}</p>
+
+        <ol class="mt-5 grid gap-0" aria-label="{{ __('Tahapan pesanan') }}" data-steps data-hints="{{ json_encode($stepHints) }}" data-awaiting-transfer="{{ $awaitingTransfer ? '1' : '0' }}">
             @foreach($steps as $index => $step)
                 @php $state = $index < $currentStep ? 'done' : ($index === $currentStep ? 'current' : 'todo'); @endphp
                 <li class="relative flex items-center gap-4 py-3" data-step-item data-state="{{ $state }}">
@@ -73,6 +120,8 @@
                     {{ __('Ditagihkan ke booking Anda.') }}
                 @elseif($order->isPaid())
                     {{ __('Sudah dibayar.') }}
+                @elseif($awaitingTransfer)
+                    {{ __('Belum dibayar. Transfer lalu unggah bukti di atas.') }}
                 @else
                     {{ __('Belum dibayar. Bayar ke kasir.') }}
                 @endif

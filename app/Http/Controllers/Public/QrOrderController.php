@@ -3,15 +3,20 @@
 namespace App\Http\Controllers\Public;
 
 use App\Enums\OrderStatus;
+use App\Enums\QrPaymentChoice;
 use App\Exceptions\MenuItemUnavailableException;
 use App\Exceptions\OrderBillingException;
+use App\Exceptions\TransferProofException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Public\StoreQrOrderRequest;
+use App\Http\Requests\Public\UploadTransferProofRequest;
 use App\Models\DiningSpot;
 use App\Models\MenuCategory;
 use App\Models\Order;
 use App\Services\DiningSpotService;
 use App\Services\OrderService;
+use App\Services\Payment\OrderTransferProofService;
+use App\Support\BankAccount;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -22,6 +27,7 @@ class QrOrderController extends Controller
     public function __construct(
         private readonly DiningSpotService $diningSpots,
         private readonly OrderService $orders,
+        private readonly OrderTransferProofService $proofs,
     ) {}
 
     public function show(string $token): View
@@ -74,7 +80,25 @@ class QrOrderController extends Controller
             'order' => $order,
             'steps' => OrderStatus::steps(),
             'progress' => $this->progress($order),
+            'awaitingTransfer' => $order->payment_choice === QrPaymentChoice::Transfer && ! $order->isPaid() && $order->statusEnum() !== OrderStatus::Dibatalkan,
+            'proof' => $this->proofs->latestProof($order),
+            'bank' => BankAccount::current(),
         ]);
+    }
+
+    public function uploadProof(UploadTransferProofRequest $request, string $token, string $code): RedirectResponse
+    {
+        $spot = $this->spotOrFail($token);
+        $order = $this->orderOrFail($spot, $code);
+
+        try {
+            $this->proofs->submit($order, $request->file('proof'));
+        } catch (TransferProofException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('qr.track', [$spot->qr_token, $order->code])
+            ->with('status', 'Bukti transfer terkirim. Kasir akan mengecek, lalu pesanan diteruskan ke dapur.');
     }
 
     private function spotOrFail(string $token): DiningSpot

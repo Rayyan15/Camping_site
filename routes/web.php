@@ -41,6 +41,7 @@ Route::get('/booking/{token}/invoice', [InvoiceController::class, 'download'])->
 Route::get('/order/{token}', [QrOrderController::class, 'show'])->middleware('throttle:booking-lookup')->name('qr.show');
 Route::post('/order/{token}', [QrOrderController::class, 'store'])->middleware('throttle:10,1')->name('qr.store');
 Route::get('/order/{token}/pesanan/{code}', [QrOrderController::class, 'track'])->middleware('throttle:booking-lookup')->name('qr.track');
+Route::post('/order/{token}/pesanan/{code}/bukti', [QrOrderController::class, 'uploadProof'])->middleware('throttle:10,1')->name('qr.proof');
 
 // CSRF exclusion for this route lives in bootstrap/app.php
 Route::post('/webhook/payment', [PaymentWebhookController::class, 'handle'])->name('webhook.payment');

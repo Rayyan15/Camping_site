@@ -32,6 +32,16 @@ class TransferProofException extends PaymentException
         return new self('Bukti transfer ini sudah diproses atau bukan bukti transfer booking.');
     }
 
+    public static function orderNotAwaitingTransfer(): self
+    {
+        return new self('Pesanan ini tidak menunggu bukti transfer.');
+    }
+
+    public static function orderClosed(): self
+    {
+        return new self('Pesanan sudah dibatalkan, bukti transfer tidak bisa dikonfirmasi. Kembalikan dananya secara manual.');
+    }
+
     public static function bookingClosed(string $statusLabel): self
     {
         return new self('Booking berstatus '.$statusLabel.', bukti transfer tidak bisa dikonfirmasi. Periksa dan kembalikan dananya secara manual.');
