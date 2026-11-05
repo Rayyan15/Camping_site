@@ -7,6 +7,7 @@ use App\Enums\PaymentMethod;
 use App\Exceptions\InvalidOrderTransitionException;
 use App\Exceptions\OrderBillingException;
 use App\Filament\Resources\MenuItems\MenuItemResource;
+use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Orders\Tables\OrdersTable;
 use App\Models\Order;
 use App\Services\KitchenQueueService;
@@ -40,7 +41,15 @@ class KitchenQueue extends Page
     /** @return array<int, Action> */
     protected function getHeaderActions(): array
     {
+        $awaitingProof = Order::query()->whereHas('payments', fn ($payments) => $payments->awaitingProofReview())->count();
+
         return [
+            Action::make('check_transfer')
+                ->label($awaitingProof > 0 ? "Cek transfer ({$awaitingProof})" : 'Cek transfer')
+                ->icon(Heroicon::OutlinedBanknotes)
+                ->color($awaitingProof > 0 ? 'warning' : 'gray')
+                ->url(OrderResource::getUrl('index', ['activeTab' => 'transfer']))
+                ->visible(fn (): bool => (bool) auth()->user()?->can('review_order_transfer')),
             Action::make('sold_out')
                 ->label('Atur menu habis')
                 ->icon(Heroicon::OutlinedNoSymbol)

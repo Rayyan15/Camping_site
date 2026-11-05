@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Payments\PaymentResource;
 use App\Models\Order;
 use App\Models\Payment;
@@ -37,7 +38,9 @@ class TransferProofSubmittedNotification extends Notification
             ->actions([
                 Action::make('review')
                     ->label('Periksa bukti')
-                    ->url(PaymentResource::getUrl('view', ['record' => $this->payment])),
+                    ->url($this->payment->payable instanceof Order
+                        ? OrderResource::getUrl('index', ['activeTab' => 'transfer'])
+                        : PaymentResource::getUrl('view', ['record' => $this->payment])),
             ])
             ->getDatabaseMessage();
     }

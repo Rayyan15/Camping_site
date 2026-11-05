@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\PaymentStatus;
 use App\Enums\SettingKey;
 use App\Events\OrderPlaced;
+use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Models\DiningSpot;
 use App\Models\MenuCategory;
 use App\Models\MenuItem;
@@ -15,11 +16,13 @@ use App\Services\DiningSpotService;
 use App\Services\Payment\OrderTransferProofService;
 use App\Services\SettingRepository;
 use Database\Seeders\RoleSeeder;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class QrTransferPaymentTest extends TestCase
@@ -119,13 +122,28 @@ class QrTransferPaymentTest extends TestCase
         $this->assertSame(PaymentStatus::Pending, Payment::latest('id')->firstOrFail()->status);
     }
 
-    public function test_only_the_cashier_reviews_food_order_proofs(): void
+    public function test_kitchen_checks_the_proof_and_confirms_from_the_order_list(): void
     {
+        Filament::setCurrentPanel(Filament::getDefaultPanel());
+        $kitchen = $this->staff(User::ROLE_KITCHEN);
         $order = $this->transferOrder();
         $this->upload($order);
         $payment = Payment::firstOrFail();
 
-        $this->assertTrue($this->staff(User::ROLE_CASHIER)->can('reviewProof', $payment));
+        $this->assertTrue($kitchen->can('reviewProof', $payment));
+        $this->assertFalse($this->staff(User::ROLE_CASHIER)->can('reviewProof', $payment));
         $this->assertFalse($this->staff(User::ROLE_FRONT_OFFICE)->can('reviewProof', $payment));
+        $this->assertSame(1, $kitchen->notifications()->count());
+
+        $this->actingAs($kitchen);
+        $this->get(route('admin.payments.proof', $payment))->assertOk();
+
+        Livewire::test(ListOrders::class)
+            ->set('activeTab', 'transfer')
+            ->assertCanSeeTableRecords([$order])
+            ->callTableAction('confirm_transfer', $order);
+
+        $this->assertTrue($order->fresh()->isPaid());
+        $this->assertTrue(Order::kitchenRelevant()->whereKey($order->id)->exists());
     }
 }

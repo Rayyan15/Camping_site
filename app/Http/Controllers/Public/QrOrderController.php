@@ -98,7 +98,7 @@ class QrOrderController extends Controller
         }
 
         return redirect()->route('qr.track', [$spot->qr_token, $order->code])
-            ->with('status', 'Bukti transfer terkirim. Kasir akan mengecek, lalu pesanan diteruskan ke dapur.');
+            ->with('status', 'Bukti transfer terkirim. Dapur mengecek, lalu pesanan mulai dimasak.');
     }
 
     private function spotOrFail(string $token): DiningSpot

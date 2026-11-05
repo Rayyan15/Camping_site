@@ -40,16 +40,16 @@
         @if($awaitingTransfer)
             <section class="mb-8 rounded-3xl border-2 border-forest-800 bg-[#fffdf8] p-5" aria-labelledby="judul-transfer">
                 <h2 id="judul-transfer" class="font-display text-xl font-semibold text-forest-900">
-                    {{ $proof?->status === \App\Enums\PaymentStatus::Pending ? __('Bukti sedang dicek kasir') : __('Selesaikan pembayaran') }}
+                    {{ $proof?->status === \App\Enums\PaymentStatus::Pending ? __('Bukti sedang dicek dapur') : __('Selesaikan pembayaran') }}
                 </h2>
 
                 @if($proof?->status === \App\Enums\PaymentStatus::Pending)
-                    <p class="mt-2 text-sm text-ink-soft">{{ __('Pesanan diteruskan ke dapur setelah kasir mencocokkan transfer Anda. Halaman ini diperbarui otomatis.') }}</p>
+                    <p class="mt-2 text-sm text-ink-soft">{{ __('Dapur mulai memasak setelah mencocokkan transfer Anda. Halaman ini diperbarui otomatis.') }}</p>
                 @else
                     @if($proof?->status === \App\Enums\PaymentStatus::Failed)
                         <p class="mt-3 rounded-2xl bg-ember-soft px-4 py-3 text-sm font-semibold text-ember-dark" role="alert">{{ __('Bukti ditolak: :reason. Silakan unggah ulang bukti yang benar.', ['reason' => $proof->rejection_reason]) }}</p>
                     @endif
-                    <p class="mt-2 text-sm text-ink-soft">{{ __('Transfer tepat :amount, lalu unggah bukti. Dapur mulai memasak setelah kasir mengecek.', ['amount' => $rupiah($order->total)]) }}</p>
+                    <p class="mt-2 text-sm text-ink-soft">{{ __('Transfer tepat :amount, lalu unggah bukti. Dapur mulai memasak setelah bukti dicek.', ['amount' => $rupiah($order->total)]) }}</p>
                 @endif
 
                 @if($bank->isComplete())
@@ -81,7 +81,7 @@
             </section>
         @endif
 
-        <p id="status-hint" role="status" aria-live="polite" class="text-lg font-semibold text-forest-900">{{ $awaitingTransfer ? __('Menunggu pembayaran dikonfirmasi kasir.') : $stepHints[$progress['status']] }}</p>
+        <p id="status-hint" role="status" aria-live="polite" class="text-lg font-semibold text-forest-900">{{ $awaitingTransfer ? __('Menunggu dapur mengecek pembayaran.') : $stepHints[$progress['status']] }}</p>
 
         <ol class="mt-5 grid gap-0" aria-label="{{ __('Tahapan pesanan') }}" data-steps data-hints="{{ json_encode($stepHints) }}" data-awaiting-transfer="{{ $awaitingTransfer ? '1' : '0' }}">
             @foreach($steps as $index => $step)

@@ -35,6 +35,7 @@ return [
         'check_in_booking',
         'check_out_booking',
         'record_order_payment',
+        'review_order_transfer',
         'view_customer_contact',
         'view_customer_spend',
         'manage_own_attendance',
@@ -104,7 +105,7 @@ return [
             ],
         ],
 
-        // Kitchen staff only see and finish food orders; the order list is read-only for them.
+        // Kitchen staff see and finish food orders and check QR transfer proofs before cooking.
         'operator_dapur' => [
             'resources' => [
                 'order' => ['view_any', 'view'],
@@ -116,6 +117,7 @@ return [
                 'view_kitchen_queue',
                 'process_orders',
                 'toggle_menu_availability',
+                'review_order_transfer',
             ],
         ],
     ],

@@ -25,7 +25,7 @@ enum QrPaymentChoice: string
         return match ($this) {
             self::Cashier => 'Bayar saat pesanan sampai atau di kasir',
             self::Booking => 'Masuk ke tagihan booking tenda ini',
-            self::Transfer => 'Transfer ke rekening lalu unggah bukti. Pesanan dimasak setelah kasir mengecek.',
+            self::Transfer => 'Transfer ke rekening lalu unggah bukti. Pesanan dimasak setelah dapur mengecek.',
         };
     }
 }

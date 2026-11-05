@@ -45,22 +45,17 @@ class PaymentPolicy extends ResourcePolicy
 
     public function viewProof(User $user, Payment $payment): bool
     {
-        return $this->view($user, $payment);
+        return $this->view($user, $payment) || $this->reviewProof($user, $payment);
     }
 
-    /** Booking proofs are a front office decision; food order proofs belong to the cashier. */
+    /** Booking proofs are a front office decision; food order proofs are checked by the kitchen before cooking. */
     public function reviewProof(User $user, Payment $payment): bool
     {
-        $permission = match ($payment->payable_type) {
-            'booking' => 'record_manual_payment',
-            'order' => 'record_order_payment',
-            default => null,
+        return $user->is_active && match ($payment->payable_type) {
+            'booking' => $user->can('record_manual_payment'),
+            'order' => $user->can('review_order_transfer'),
+            default => false,
         };
-
-        return $user->is_active
-            && $permission !== null
-            && $user->can($permission)
-            && in_array($payment->payable_type, self::visiblePayableTypes($user), true);
     }
 
     public function create(User $user): bool

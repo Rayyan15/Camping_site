@@ -4,8 +4,11 @@ namespace App\Filament\Resources\Orders\Tables;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Enums\QrPaymentChoice;
 use App\Exceptions\OrderBillingException;
+use App\Filament\Resources\Payments\Actions\TransferProofActions;
 use App\Models\Order;
+use App\Models\Payment;
 use App\Services\OrderService;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
@@ -99,6 +102,7 @@ class OrdersTable
                     ->icon('heroicon-o-banknotes')
                     ->visible(fn (Order $record) => ! $record->isPaid()
                         && ! $record->bill_to_booking
+                        && $record->payment_choice !== QrPaymentChoice::Transfer
                         && auth()->user()?->can('record_order_payment'))
                     ->schema([
                         Select::make('method')
@@ -120,11 +124,27 @@ class OrdersTable
                             Notification::make()->title($e->getMessage())->danger()->send();
                         }
                     }),
+                Action::make('view_proof')
+                    ->label('Lihat bukti')
+                    ->icon('heroicon-o-photo')
+                    ->color('gray')
+                    ->visible(fn (Order $record): bool => self::pendingProof($record) !== null
+                        && (bool) auth()->user()?->can('review_order_transfer'))
+                    ->url(fn (Order $record): string => route('admin.payments.proof', self::pendingProof($record)))
+                    ->openUrlInNewTab(),
+                TransferProofActions::confirm(self::pendingProof(...), 'reviewTransfer'),
+                TransferProofActions::reject(self::pendingProof(...), 'reviewTransfer'),
                 EditAction::make(),
             ])
             ->modifyQueryUsing(fn (Builder $query) => $query->with(['diningSpot', 'booking.units.unitType']))
             ->emptyStateHeading('Belum ada pesanan')
             ->striped()
             ->defaultSort('created_at', 'desc');
+    }
+
+    /** The guest's transfer proof still waiting for the kitchen to check it. */
+    public static function pendingProof(Order $order): ?Payment
+    {
+        return $order->payments()->awaitingProofReview()->latest('id')->first();
     }
 }

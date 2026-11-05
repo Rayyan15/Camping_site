@@ -26,7 +26,7 @@ use Throwable;
  */
 class OrderTransferProofService
 {
-    private const REVIEW_PERMISSION = 'record_order_payment';
+    private const REVIEW_PERMISSION = 'review_order_transfer';
 
     /**
      * @throws TransferProofException
@@ -60,8 +60,8 @@ class OrderTransferProofService
             throw $e;
         }
 
-        $cashiers = User::where('is_active', true)->get()->filter(fn (User $user) => $user->can(self::REVIEW_PERMISSION));
-        Notification::send($cashiers, new TransferProofSubmittedNotification($payment));
+        $reviewers = User::where('is_active', true)->get()->filter(fn (User $user) => $user->can(self::REVIEW_PERMISSION));
+        Notification::send($reviewers, new TransferProofSubmittedNotification($payment));
 
         return $payment;
     }
