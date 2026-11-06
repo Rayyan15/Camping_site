@@ -44,6 +44,7 @@ class QrOrderController extends Controller
             'spot' => $spot,
             'categories' => $categories,
             'choices' => $this->diningSpots->paymentChoicesFor($spot),
+            'bank' => BankAccount::current(),
         ]);
     }
 

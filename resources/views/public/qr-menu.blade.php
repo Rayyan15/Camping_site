@@ -5,7 +5,7 @@
 
     $rupiah = fn (int $amount) => 'Rp '.number_format($amount, 0, ',', '.');
     $previous = collect(old('items', []))->keyBy('menu_item_id');
-    $selectedChoice = old('payment_choice', QrPaymentChoice::Cashier->value);
+    $selectedChoice = old('payment_choice', $choices[0]->value);
 @endphp
 
 @section('title', __('Pesan makanan').' - '.$spot->name.' - '.config('site.name'))
@@ -125,6 +125,19 @@
                         @endforeach
                     </div>
                 </fieldset>
+
+                @if(in_array(QrPaymentChoice::Transfer, $choices, true))
+                    <dl class="mt-4 rounded-xl border-[1.5px] border-sand p-4" aria-label="{{ __('Rekening tujuan') }}">
+                        <dt class="text-sm text-ink-soft">{{ __('Rekening tujuan') }}</dt>
+                        <dd class="mt-1 font-semibold">{{ $bank->bankName }}</dd>
+                        <dd class="flex flex-wrap items-center justify-between gap-2">
+                            <span class="font-mono text-xl font-bold tracking-wider text-forest-900">{{ $bank->accountNumber }}</span>
+                            <button type="button" class="btn btn-outline min-h-11 px-4 text-sm" data-copy="{{ preg_replace('/\D/', '', $bank->accountNumber) }}">{{ __('Salin') }}</button>
+                        </dd>
+                        <dd class="text-sm text-ink-soft">{{ __('a.n.') }} {{ $bank->accountHolder }}</dd>
+                        <dd class="mt-2 text-sm text-ink-soft">{{ __('Setelah kirim pesanan, unggah bukti transfer di halaman berikutnya.') }}</dd>
+                    </dl>
+                @endif
             </section>
         </form>
 
