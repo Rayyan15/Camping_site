@@ -590,6 +590,7 @@
     "Dapur mulai memasak setelah mencocokkan transfer Anda. Halaman ini diperbarui otomatis.": "The kitchen starts cooking once it matches your transfer. This page updates on its own.",
     "Transfer tepat :amount, lalu unggah bukti. Dapur mulai memasak setelah bukti dicek.": "Transfer exactly :amount, then upload the receipt. The kitchen starts once the receipt is checked.",
     "Menunggu dapur mengecek pembayaran.": "Waiting for the kitchen to check your payment.",
-    "Bukti transfer terkirim. Dapur mengecek, lalu pesanan mulai dimasak.": "Receipt sent. The kitchen checks it, then starts cooking.",
-    "Setelah kirim pesanan, unggah bukti transfer di halaman berikutnya.": "After you send the order, upload the transfer receipt on the next page."
+    "Bukti transfer terkirim. Dapur mengecek, lalu pesanan mulai dimasak.": "Receipt sent. The kitchen checks it, then starts cooking.",
+    "Setelah kirim pesanan, unggah bukti transfer di halaman berikutnya.": "After you send the order, upload the transfer receipt on the next page.",
+    "Nomor WhatsApp minimal 8 angka, atau kosongkan saja.": "WhatsApp number needs at least 8 digits, or leave it empty."
 }

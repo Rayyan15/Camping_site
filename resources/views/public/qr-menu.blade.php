@@ -108,7 +108,10 @@
                 </div>
                 <div class="mt-4">
                     <label for="customer_phone" class="field-label">{{ __('Nomor WhatsApp (opsional)') }}</label>
-                    <input id="customer_phone" name="customer_phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" value="{{ old('customer_phone') }}" class="field-input">
+                    <input id="customer_phone" name="customer_phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" value="{{ old('customer_phone') }}" placeholder="08123456789" @error('customer_phone') aria-invalid="true" aria-describedby="phone-error" @enderror class="field-input">
+                    @error('customer_phone')
+                        <p id="phone-error" class="mt-2 text-sm font-semibold text-ember-dark" role="alert">{{ __('Nomor WhatsApp minimal 8 angka, atau kosongkan saja.') }}</p>
+                    @enderror
                 </div>
 
                 <fieldset class="mt-6">
