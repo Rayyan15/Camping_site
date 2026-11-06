@@ -99,6 +99,15 @@ class QrOrderTest extends TestCase
             ->assertDontSee('Teh Habis');
     }
 
+    public function test_a_rejected_order_keeps_the_cart(): void
+    {
+        $this->from(route('qr.show', $this->table->qr_token))
+            ->followingRedirects()
+            ->post(route('qr.store', $this->table->qr_token), $this->payload(['customer_phone' => '00000']))
+            ->assertSee('name="items['.$this->coffee->id.'][qty]" value="2"', false)
+            ->assertSee('Nomor WhatsApp minimal 8 angka');
+    }
+
     public function test_unknown_token_is_not_found(): void
     {
         $this->get(route('qr.show', 'does-not-exist'))->assertNotFound();

@@ -4,7 +4,8 @@
     use App\Enums\QrPaymentChoice;
 
     $rupiah = fn (int $amount) => 'Rp '.number_format($amount, 0, ',', '.');
-    $previous = collect(old('items', []))->keyBy('menu_item_id');
+    // Flashed input is keyed by menu item id; rows rebuilt by the request carry menu_item_id instead.
+    $previous = collect(old('items', []))->mapWithKeys(fn ($row, $key) => [($row['menu_item_id'] ?? $key) => $row]);
     $selectedChoice = old('payment_choice', $choices[0]->value);
 @endphp
 
