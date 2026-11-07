@@ -14,7 +14,7 @@ class ListOrders extends ListRecords
     /** @return array<string, Tab> */
     public function getTabs(): array
     {
-        $awaitingProof = fn (Builder $query) => $query->whereHas('payments', fn (Builder $payments) => $payments->awaitingProofReview());
+        $awaitingProof = fn (Builder $query) => $query->awaitingTransferCheck();
 
         return [
             'all' => Tab::make('Semua'),

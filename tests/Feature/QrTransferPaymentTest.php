@@ -110,6 +110,21 @@ class QrTransferPaymentTest extends TestCase
         Event::assertDispatched(OrderPlaced::class);
     }
 
+    public function test_kitchen_can_settle_a_transfer_order_that_has_no_uploaded_proof(): void
+    {
+        Filament::setCurrentPanel(Filament::getDefaultPanel());
+        $order = $this->transferOrder();
+        $this->actingAs($this->staff(User::ROLE_KITCHEN));
+
+        Livewire::test(ListOrders::class)
+            ->set('activeTab', 'transfer')
+            ->assertCanSeeTableRecords([$order])
+            ->callTableAction('mark_transfer_paid', $order);
+
+        $this->assertTrue($order->fresh()->isPaid());
+        $this->assertTrue(Order::kitchenRelevant()->whereKey($order->id)->exists());
+    }
+
     public function test_rejected_proof_can_be_uploaded_again(): void
     {
         $order = $this->transferOrder();

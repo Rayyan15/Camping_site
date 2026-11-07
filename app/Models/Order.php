@@ -109,6 +109,18 @@ class Order extends Model
                 ->where('hold_expires_at', '>', now()));
     }
 
+    /**
+     * QR transfer orders the kitchen still has to check: a proof is waiting, or the guest has not uploaded one yet.
+     *
+     * @param  Builder<Order>  $query
+     */
+    public function scopeAwaitingTransferCheck(Builder $query): void
+    {
+        $query->where('payment_choice', QrPaymentChoice::Transfer->value)
+            ->where('payment_status', '!=', self::PAYMENT_PAID)
+            ->where('status', '!=', OrderStatus::Dibatalkan->value);
+    }
+
     public function statusEnum(): OrderStatus
     {
         return OrderStatus::from($this->status);

@@ -132,6 +132,27 @@ class OrdersTable
                         && (bool) auth()->user()?->can('review_order_transfer'))
                     ->url(fn (Order $record): string => route('admin.payments.proof', self::pendingProof($record)))
                     ->openUrlInNewTab(),
+                Action::make('mark_transfer_paid')
+                    ->label('Tandai lunas')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->authorize('reviewTransfer')
+                    ->visible(fn (Order $record): bool => $record->payment_choice === QrPaymentChoice::Transfer
+                        && ! $record->isPaid()
+                        && self::pendingProof($record) === null)
+                    ->requiresConfirmation()
+                    ->modalHeading('Tandai transfer lunas')
+                    ->modalDescription(fn (Order $record): string => 'Tamu belum mengunggah bukti di sistem. Tandai lunas hanya jika Rp '
+                        .number_format($record->total, 0, ',', '.').' sudah terlihat di mutasi rekening atau bukti dari tamu.')
+                    ->modalSubmitActionLabel('Ya, sudah masuk')
+                    ->action(function (Order $record): void {
+                        try {
+                            app(OrderService::class)->markPaidAtCashier($record, PaymentMethod::Transfer, (int) auth()->id());
+                            Notification::make()->title('Transfer dicatat, pesanan masuk antrean dapur')->success()->send();
+                        } catch (OrderBillingException $e) {
+                            Notification::make()->title($e->getMessage())->danger()->send();
+                        }
+                    }),
                 TransferProofActions::confirm(self::pendingProof(...), 'reviewTransfer'),
                 TransferProofActions::reject(self::pendingProof(...), 'reviewTransfer'),
                 EditAction::make(),

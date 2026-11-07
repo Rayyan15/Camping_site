@@ -41,7 +41,7 @@ class KitchenQueue extends Page
     /** @return array<int, Action> */
     protected function getHeaderActions(): array
     {
-        $awaitingProof = Order::query()->whereHas('payments', fn ($payments) => $payments->awaitingProofReview())->count();
+        $awaitingProof = Order::query()->awaitingTransferCheck()->count();
 
         return [
             Action::make('check_transfer')
