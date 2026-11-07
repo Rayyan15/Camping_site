@@ -101,6 +101,12 @@ class BookingService
         return DB::transaction(function () use ($data) {
             $customer = $this->resolveCustomer($data['customer_name'], $data['customer_email'], $data['customer_phone']);
 
+            // A double tap or a back-and-resubmit must land on the first booking, not hold a second unit.
+            $existing = $this->pendingTwin($customer->id, $data);
+            if ($existing !== null) {
+                return $existing;
+            }
+
             $unitIds = $this->pickFreeUnitIds(
                 $data['unit_type_id'],
                 $this->dateString($data['check_in']),
@@ -119,6 +125,24 @@ class BookingService
                 $data['preorder'] ?? [],
             );
         }, (int) config('booking.db_transaction_attempts'));
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function pendingTwin(int $customerId, array $data): ?Booking
+    {
+        return Booking::query()
+            ->where('customer_id', $customerId)
+            ->where('status', BookingStatus::PendingPayment)
+            ->where('hold_expires_at', '>', now())
+            ->whereDate('check_in', $this->dateString($data['check_in']))
+            ->whereDate('check_out', $this->dateString($data['check_out']))
+            ->whereHas('units', fn ($units) => $units->where('unit_type_id', $data['unit_type_id']))
+            ->withCount('units')
+            ->latest('id')
+            ->get()
+            ->first(fn (Booking $booking) => $booking->units_count === (int) $data['quantity']);
     }
 
     /**

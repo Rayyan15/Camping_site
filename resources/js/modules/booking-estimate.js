@@ -6,6 +6,14 @@ export function initBookingEstimate() {
     const form = document.getElementById('booking-form');
     if (!form) return;
 
+    // A second tap while the first request is in flight would hold a second tent.
+    form.addEventListener('submit', () => {
+        const button = form.querySelector('button[type="submit"]');
+        if (!button) return;
+        button.disabled = true;
+        button.setAttribute('aria-busy', 'true');
+    });
+
     const nights = Number(form.dataset.nights);
     const unitPrice = Number(form.dataset.unitPrice);
     const field = (key) => form.querySelector(`[data-est="${key}"]`);

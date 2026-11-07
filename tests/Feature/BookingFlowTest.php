@@ -119,6 +119,19 @@ class BookingFlowTest extends TestCase
         $this->assertMatchesRegularExpression('/^RCM-261201-[A-HJ-NP-Z2-9]{6}$/', Booking::firstOrFail()->code);
     }
 
+    public function test_resubmitting_the_same_booking_reuses_the_pending_one(): void
+    {
+        $first = $this->post(route('booking.store'), $this->payload());
+        $second = $this->post(route('booking.store'), $this->payload());
+
+        $booking = Booking::sole();
+        $first->assertRedirect(route('checkout.show', $booking->access_token));
+        $second->assertRedirect(route('checkout.show', $booking->access_token));
+
+        $this->post(route('booking.store'), $this->payload(['check_out' => '2026-12-08']));
+        $this->assertSame(2, Booking::count());
+    }
+
     public function test_overlapping_booking_is_rejected(): void
     {
         $this->post(route('booking.store'), $this->payload(['quantity' => 2, 'guests' => 4]))->assertRedirect();
