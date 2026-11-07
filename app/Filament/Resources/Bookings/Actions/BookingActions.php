@@ -44,7 +44,7 @@ class BookingActions
 
     private const PROOF_DIRECTORY = 'payment-proofs';
 
-    private const PROOF_MAX_KILOBYTES = 2048;
+    private const PROOF_MAX_KILOBYTES = 10240;
 
     private const PROOF_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 
@@ -108,7 +108,7 @@ class BookingActions
                     ->required(),
                 FileUpload::make('proof_path')
                     ->label('Bukti pembayaran')
-                    ->helperText('Gambar JPG, PNG, WebP atau PDF, maksimal 2 MB. Wajib untuk transfer bank.')
+                    ->helperText('Gambar JPG, PNG, WebP atau PDF, maksimal 10 MB. Wajib untuk transfer bank.')
                     ->disk(self::PROOF_DISK)
                     ->directory(self::PROOF_DIRECTORY)
                     ->visibility('private')

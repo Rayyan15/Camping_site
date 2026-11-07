@@ -42,7 +42,7 @@ class CleaningLogForm
                                 ->disk('local')
                                 ->visibility('private')
                                 ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
-                                ->maxSize(5120)
+                                ->maxSize(10240)
                                 ->directory('cleaning_logs')
                                 ->required()
                                 ->columnSpanFull(),
