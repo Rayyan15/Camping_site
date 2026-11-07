@@ -96,6 +96,15 @@ class Booking extends Model
         ], true);
     }
 
+    /** A lapsed hold whose guest may still send the transfer proof they made too late. */
+    public function acceptsLateProof(): bool
+    {
+        return in_array($this->status, [BookingStatus::PendingPayment, BookingStatus::Expired], true)
+            && $this->hold_expires_at !== null
+            && $this->hold_expires_at->isPast()
+            && $this->hold_expires_at->greaterThan(now()->subHours((int) config('booking.late_proof_hours')));
+    }
+
     public function isHoldActive(): bool
     {
         return $this->status === BookingStatus::PendingPayment

@@ -4,7 +4,18 @@ return [
     /*
     | Minutes a pending_payment booking blocks its units before it expires. Default: 15 minutes.
     */
-    'hold_minutes' => (int) env('BOOKING_HOLD_MINUTES', 15),
+    'hold_minutes' => (int) env('BOOKING_HOLD_MINUTES', 60),
+
+    /*
+    | Hold lengths the owner may pick in Pengaturan. The saved choice overrides hold_minutes.
+    */
+    'hold_minute_options' => [30, 60, 120, 180],
+
+    /*
+    | How long after a hold lapses the guest may still upload a transfer proof. Their tent comes
+    | back if it is still free; otherwise the booking goes to staff review once the proof is confirmed.
+    */
+    'late_proof_hours' => (int) env('BOOKING_LATE_PROOF_HOURS', 24),
 
     /*
     | Hours staff get to check a transfer proof. The units stay held that long from the moment the guest

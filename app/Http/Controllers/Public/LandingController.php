@@ -8,6 +8,7 @@ use App\Models\MenuItem;
 use App\Models\UnitType;
 use App\Services\BookingService;
 use App\Services\RefundPolicySummary;
+use App\Services\SettingRepository;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
@@ -34,7 +35,7 @@ class LandingController extends Controller
             'unitTypes' => $unitTypes,
             'availability' => $availability,
             'totalUnits' => $unitTypes->sum('units_count'),
-            'holdMinutes' => config('booking.hold_minutes'),
+            'holdMinutes' => app(SettingRepository::class)->holdMinutes(),
             'search' => $request->safe()->only(['check_in', 'check_out', 'guests']),
             'menuByCategory' => $this->menuByCategory(),
             'refundSummary' => $this->refundPolicy->sentence(),

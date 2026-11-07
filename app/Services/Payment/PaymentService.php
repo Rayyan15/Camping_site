@@ -21,7 +21,9 @@ use App\Models\BookingUnit;
 use App\Models\Payment;
 use App\Models\Unit;
 use App\Services\BookingBilling;
+use App\Services\SettingRepository;
 use App\Services\UnitNightLedger;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use LogicException;
@@ -348,7 +350,7 @@ class PaymentService
             'gateway_ref' => $code.'-'.$attempt,
             'amount' => $amount,
             'status' => PaymentStatus::Pending,
-            'expires_at' => now()->addMinutes((int) config('booking.hold_minutes')),
+            'expires_at' => now()->addMinutes(app(SettingRepository::class)->holdMinutes()),
         ]);
     }
 
@@ -422,6 +424,26 @@ class PaymentService
         }
 
         return $amount - $applied;
+    }
+
+    /**
+     * Puts an expired booking back on hold when its tents are still free, so a guest who paid late or
+     * a staff member who found the money keeps the same tent. Call inside a transaction with the
+     * booking row locked. Returns false when a unit was taken meanwhile; the booking stays expired.
+     */
+    public function reviveLapsed(Booking $lockedBooking, CarbonInterface $holdUntil): bool
+    {
+        if ($lockedBooking->status !== BookingStatus::Expired) {
+            return $lockedBooking->status === BookingStatus::PendingPayment;
+        }
+
+        if (! $this->unitsStillFree($lockedBooking) || ! $this->reclaimUnits($lockedBooking)) {
+            return false;
+        }
+
+        $lockedBooking->update(['status' => BookingStatus::PendingPayment, 'hold_expires_at' => $holdUntil]);
+
+        return true;
     }
 
     private function statusForFullPayment(Booking $booking): BookingStatus

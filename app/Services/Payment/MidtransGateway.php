@@ -5,6 +5,7 @@ namespace App\Services\Payment;
 use App\Contracts\PaymentGateway;
 use App\Enums\PaymentStatus;
 use App\Exceptions\PaymentException;
+use App\Services\SettingRepository;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
@@ -80,7 +81,7 @@ class MidtransGateway implements PaymentGateway
                 'email' => $charge->customer['email'] ?? null,
             ]),
             'enabled_payments' => $charge->enabledPayments,
-            'expiry' => ['unit' => 'minutes', 'duration' => config('booking.hold_minutes')],
+            'expiry' => ['unit' => 'minutes', 'duration' => app(SettingRepository::class)->holdMinutes()],
             'callbacks' => ['finish' => $charge->finishUrl],
         ]);
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Public;
 
 use App\Enums\BookingStatus;
+use App\Enums\PaymentMethod;
 use App\Exceptions\PaymentException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Public\UploadTransferProofRequest;
@@ -29,10 +30,15 @@ class CheckoutController extends Controller
         return view('public.checkout', [
             'booking' => $booking,
             'holdActive' => $booking->isHoldActive(),
+            'lateProof' => $booking->acceptsLateProof(),
+            'lateProofUntil' => $booking->hold_expires_at?->copy()->addHours((int) config('booking.late_proof_hours')),
             'outstanding' => $billing->outstanding($booking),
             'bank' => BankAccount::current(),
             'proof' => $proofs->latestProof($booking),
-            'methods' => $settings->guestPaymentMethods(),
+            // Cash on arrival needs a held tent, so a lapsed booking only offers the proof upload.
+            'methods' => $booking->isHoldActive()
+                ? $settings->guestPaymentMethods()
+                : array_values(array_filter($settings->guestPaymentMethods(), fn (PaymentMethod $method) => $method !== PaymentMethod::Cash)),
             'qrisUrl' => ($path = $settings->qrisImagePath()) ? Storage::disk('public')->url($path) : null,
             'cashChosen' => $booking->payments()->cashOnArrival()->exists(),
         ]);

@@ -55,6 +55,14 @@ class SettingRepository
         ]));
     }
 
+    /** Minutes a checkout holds the tent: the owner's pick in Pengaturan, else the config default. */
+    public function holdMinutes(): int
+    {
+        $saved = (int) $this->get(SettingKey::BookingHoldMinutes);
+
+        return in_array($saved, config('booking.hold_minute_options'), true) ? $saved : (int) config('booking.hold_minutes');
+    }
+
     /**
      * QR order payment choices the owner switched on. Cashier and bill-to-booking stay on until turned
      * off so existing QR menus keep working; transfer starts off until the owner opts in.
@@ -94,6 +102,7 @@ class SettingRepository
             'qr_payment_cashier_enabled' => $this->get(SettingKey::QrPaymentCashierEnabled) !== '0',
             'qr_payment_transfer_enabled' => $this->get(SettingKey::QrPaymentTransferEnabled) === '1',
             'qr_payment_booking_enabled' => $this->get(SettingKey::QrPaymentBookingEnabled) !== '0',
+            'booking_hold_minutes' => $this->holdMinutes(),
         ];
     }
 
@@ -116,6 +125,9 @@ class SettingRepository
                 $this->put($toggle, empty($values[$toggle->value]) ? '0' : '1');
             }
             $this->put(SettingKey::QrisImage, (string) ($values['qris_image'] ?? ''));
+            if (isset($values['booking_hold_minutes'])) {
+                $this->put(SettingKey::BookingHoldMinutes, (string) (int) $values['booking_hold_minutes']);
+            }
 
             // The owner has now reviewed every placeholder the production seeder listed.
             Setting::where('key', SettingKey::PendingOwnerConfirmation->value)->get()->each->delete();

@@ -211,7 +211,13 @@ class TransferProofService
         $locked = Booking::whereKey($booking->getKey())->lockForUpdate()->firstOrFail();
 
         if (! $locked->isHoldActive()) {
-            throw TransferProofException::holdLapsed();
+            if (! $locked->acceptsLateProof()) {
+                throw TransferProofException::holdLapsed();
+            }
+
+            // A late transfer keeps the same tent when nobody took it; otherwise the proof is still
+            // recorded and confirming it sends the booking to review (move unit or refund).
+            $this->payments->reviveLapsed($locked, now()->addHours((int) config('booking.proof_review_hours')));
         }
 
         $outstanding = $this->billing->outstanding($locked);
@@ -234,7 +240,9 @@ class TransferProofService
             'proof_path' => $path,
         ]);
 
-        $this->extendHoldForReview($locked);
+        if ($locked->status === BookingStatus::PendingPayment) {
+            $this->extendHoldForReview($locked);
+        }
         TransferProofSubmitted::dispatch($payment);
 
         return $payment;
@@ -255,7 +263,7 @@ class TransferProofService
             return;
         }
 
-        $until = now()->addMinutes((int) config('booking.hold_minutes'));
+        $until = now()->addMinutes(app(SettingRepository::class)->holdMinutes());
 
         if ($until->lessThan($booking->hold_expires_at)) {
             $booking->update(['hold_expires_at' => $until]);

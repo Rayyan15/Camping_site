@@ -232,7 +232,7 @@ class BookingService
                 'check_out' => $checkOut,
                 'guests' => $guests,
                 'status' => BookingStatus::PendingPayment,
-                'hold_expires_at' => now()->addMinutes(config('booking.hold_minutes')),
+                'hold_expires_at' => now()->addMinutes(app(SettingRepository::class)->holdMinutes()),
                 'subtotal' => $subtotal,
                 'total' => $subtotal,
                 'notes' => $notes,

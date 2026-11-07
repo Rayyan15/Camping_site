@@ -29,7 +29,7 @@
             <p class="mt-6 rounded-2xl bg-ember-soft px-5 py-4 font-semibold text-ember-dark" role="alert">{{ __('Bukti transfer ditolak: :reason. Silakan unggah ulang bukti yang benar.', ['reason' => $proof->rejection_reason]) }}</p>
         @endif
 
-        @unless($holdActive)
+        @unless($holdActive || $lateProof || $proof?->status === \App\Enums\PaymentStatus::Pending)
             <div class="mx-auto mt-10 max-w-lg rounded-3xl border border-sand bg-[#fffdf8] p-10 text-center" role="status">
                 <h2 class="font-display text-2xl font-semibold text-forest-900">{{ __('Waktu pembayaran habis') }}</h2>
                 <p class="mt-3 text-ink-soft">{{ __('Tenda yang Anda pilih sudah dilepas agar bisa dipesan tamu lain. Cari tanggal lagi untuk membuat pesanan baru.') }}</p>
@@ -90,9 +90,15 @@
                 </section>
 
                 <aside class="h-fit rounded-3xl bg-forest-900 p-6 text-cream lg:sticky lg:top-24" aria-label="{{ __('Pembayaran') }}">
-                    @if($proof?->status === \App\Enums\PaymentStatus::Pending)
+                    @if($proof?->status === \App\Enums\PaymentStatus::Pending && $booking->status === \App\Enums\BookingStatus::Expired)
+                        <p class="font-display text-2xl font-semibold" role="status">{{ __('Bukti diterima, menunggu konfirmasi admin') }}</p>
+                        <p class="mt-2 text-sm text-forest-300">{{ __('Tenda pilihan Anda sudah dipesan tamu lain saat waktu bayar habis. Admin akan mencarikan tenda pengganti atau mengembalikan dana Anda.') }}</p>
+                    @elseif($proof?->status === \App\Enums\PaymentStatus::Pending)
                         <p class="font-display text-2xl font-semibold" role="status">{{ __('Bukti diterima, menunggu konfirmasi admin') }}</p>
                         <p class="mt-2 text-sm text-forest-300">{{ __('Tenda Anda dipegang sampai :time WIB. Kami mengirim email setelah pembayaran dikonfirmasi, jadi cek email Anda.', ['time' => $booking->hold_expires_at->locale(app()->getLocale())->translatedFormat('j F Y, H:i')]) }}</p>
+                    @elseif($lateProof)
+                        <p class="font-display text-2xl font-semibold" role="status">{{ __('Waktu pembayaran habis') }}</p>
+                        <p class="mt-2 text-sm text-forest-300">{{ __('Sudah terlanjur transfer? Unggah buktinya di bawah sebelum :time WIB. Bila tenda Anda masih kosong, pesanan langsung dipegang lagi.', ['time' => $lateProofUntil->locale(app()->getLocale())->translatedFormat('j F Y, H:i')]) }}</p>
                     @elseif($cashChosen)
                         <p class="font-display text-2xl font-semibold" role="status">{{ __('Bayar tunai saat tiba') }}</p>
                         <p class="mt-2 text-sm text-forest-300">{{ __('Tenda Anda dipegang sampai :time WIB. Siapkan uang pas dan tunjukkan kode booking di meja depan.', ['time' => $booking->hold_expires_at->locale(app()->getLocale())->translatedFormat('j F Y, H:i')]) }}</p>
@@ -102,8 +108,9 @@
                         <p class="mt-2 text-sm text-forest-300">{{ __('Tenda Anda dipegang sampai :time WIB. Lunasi sisanya sebelum itu, atau saat check-in.', ['time' => $booking->hold_expires_at->locale(app()->getLocale())->translatedFormat('j F Y, H:i')]) }}</p>
                     @else
                         <p class="text-sm text-forest-300">{{ __('Selesaikan pembayaran dalam') }}</p>
-                        <p id="countdown" class="font-display mt-1 text-5xl font-semibold tabular-nums" data-remaining="{{ $remaining }}" role="timer">--:--:--</p>
-                        <p class="mt-2 text-sm text-forest-300">{{ __('Setelah waktu habis, tenda dilepas otomatis.') }}</p>
+                        <p id="countdown" class="font-display mt-1 text-5xl font-semibold tabular-nums" data-remaining="{{ $remaining }}" data-urgent-after="{{ \App\Support\CheckoutTiming::URGENT_SECONDS }}" role="timer">--:--:--</p>
+                        <p data-countdown-urgent @if($remaining > \App\Support\CheckoutTiming::URGENT_SECONDS) hidden @endif class="mt-3 rounded-xl bg-ember px-4 py-3 font-semibold text-cream" role="alert">{{ __('Segera transfer dan unggah bukti. Waktu tinggal kurang dari 10 menit.') }}</p>
+                        <p class="mt-2 text-sm text-forest-300">{{ __('Setelah waktu habis, tenda dilepas otomatis. Bukti yang terlambat masih bisa diunggah sampai 24 jam.') }}</p>
                     @endif
 
                     <p class="mt-6 text-sm text-forest-300">{{ $downPaid ? __('Sisa tagihan') : __('Total dibayar') }}</p>

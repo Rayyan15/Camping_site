@@ -30,6 +30,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Livewire\Component;
@@ -74,6 +75,40 @@ class BookingActions
         return self::statusAction('check_out', 'Check-out', 'heroicon-o-arrow-left-start-on-rectangle', BookingStatus::CheckedOut, 'checkOut')
             ->modalHeading('Check-out tamu')
             ->modalDescription(fn (Booking $record): string => "Konfirmasi tamu booking {$record->code} sudah meninggalkan unit. Status tidak bisa dikembalikan.");
+    }
+
+    /** For a guest whose hold lapsed although they paid: put the same tents back on hold, then record the payment. */
+    public static function reactivate(): Action
+    {
+        return Action::make('reactivate')
+            ->label('Aktifkan lagi')
+            ->icon('heroicon-o-arrow-path')
+            ->color('warning')
+            ->authorize('recordPayment')
+            ->visible(fn (Booking $record): bool => $record->status === BookingStatus::Expired && $record->check_out->isAfter(today()))
+            ->requiresConfirmation()
+            ->modalHeading('Aktifkan lagi booking')
+            ->modalDescription(fn (Booking $record): string => "Booking {$record->code} dipegang lagi di unit yang sama selama 24 jam, bila unitnya masih kosong. Setelah itu catat pembayarannya dengan tombol Catat pembayaran.")
+            ->modalSubmitActionLabel('Ya, aktifkan')
+            ->action(function (Booking $record, Component $livewire): void {
+                $revived = DB::transaction(function () use ($record) {
+                    $locked = Booking::whereKey($record->getKey())->lockForUpdate()->firstOrFail();
+
+                    return app(PaymentService::class)->reviveLapsed($locked, now()->addHours((int) config('booking.proof_review_hours')));
+                });
+
+                if (! $revived) {
+                    Notification::make()->title('Unit sudah dipakai booking lain')->body('Buat booking baru di unit lain, atau hubungi tamu untuk refund.')->danger()->send();
+
+                    return;
+                }
+
+                Notification::make()->title('Booking aktif lagi, silakan catat pembayarannya')->success()->send();
+
+                if (method_exists($livewire, 'refreshFormData')) {
+                    $livewire->refreshFormData(['status', 'hold_expires_at']);
+                }
+            });
     }
 
     public static function recordPayment(): Action

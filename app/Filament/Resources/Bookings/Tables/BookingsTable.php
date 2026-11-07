@@ -101,6 +101,7 @@ class BookingsTable
                 BookingActions::checkOut(),
                 BookingActions::confirmTransfer(),
                 BookingActions::rejectTransferProof(),
+                BookingActions::reactivate(),
                 BookingActions::recordPayment(),
                 BookingActions::reschedule(),
                 BookingActions::resolveReview(),

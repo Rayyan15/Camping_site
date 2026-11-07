@@ -6,8 +6,10 @@ use App\Enums\BookingStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentReviewReason;
 use App\Enums\PaymentStatus;
+use App\Enums\SettingKey;
 use App\Events\TransferProofSubmitted;
 use App\Exceptions\TransferProofException;
+use App\Filament\Resources\Bookings\Pages\EditBooking;
 use App\Filament\Resources\Payments\Pages\ListPayments;
 use App\Filament\Resources\Payments\Pages\ViewPayment;
 use App\Filament\Resources\Payments\PaymentLabels;
@@ -28,8 +30,10 @@ use App\Services\BookingService;
 use App\Services\DashboardMetricsService;
 use App\Services\Payment\TransferProofService;
 use App\Services\RefundService;
+use App\Services\SettingRepository;
 use App\Services\WhatsAppShareLink;
 use Database\Seeders\RoleSeeder;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
@@ -103,9 +107,9 @@ class TransferProofFlowTest extends TestCase
 
     public function test_hold_is_configured_minutes_by_default(): void
     {
-        $this->assertSame(15, config('booking.hold_minutes'));
+        $this->assertSame(60, config('booking.hold_minutes'));
         $this->assertSame(24, config('booking.proof_review_hours'));
-        $this->assertTrue($this->booking->hold_expires_at->equalTo(now()->addMinutes(15)));
+        $this->assertTrue($this->booking->hold_expires_at->equalTo(now()->addMinutes(60)));
     }
 
     public function test_valid_upload_creates_a_pending_transfer_with_the_server_amount(): void
@@ -188,12 +192,71 @@ class TransferProofFlowTest extends TestCase
             ->assertDontSee('name="plan"', false);
     }
 
-    public function test_upload_after_the_hold_lapses_is_refused(): void
+    public function test_upload_more_than_a_day_after_the_hold_lapses_is_refused(): void
     {
-        $this->travel(121)->minutes();
+        $this->travel(25)->hours();
+        (new ReleaseExpiredHolds)->handle();
 
         $this->upload()->assertSessionHas('error');
         $this->assertSame(0, $this->booking->payments()->count());
+    }
+
+    public function test_late_upload_takes_the_same_tent_back_when_it_is_still_free(): void
+    {
+        $this->travel(2)->hours();
+        (new ReleaseExpiredHolds)->handle();
+        $this->assertSame(BookingStatus::Expired, $this->booking->fresh()->status);
+
+        $this->get(route('checkout.show', $this->booking->access_token))->assertOk()->assertSee('Sudah terlanjur transfer?');
+        $this->upload()->assertRedirect(route('booking.status', $this->booking->access_token));
+
+        $booking = $this->booking->fresh();
+        $this->assertSame(BookingStatus::PendingPayment, $booking->status);
+        $this->assertTrue($booking->isHoldActive());
+
+        $staff = $this->loginAs('operator_fo');
+        app(TransferProofService::class)->confirm($this->pendingProof(), $staff->id);
+        $this->assertSame(BookingStatus::Paid, $booking->fresh()->status);
+    }
+
+    public function test_late_upload_after_the_tent_was_taken_goes_to_review_once_confirmed(): void
+    {
+        $this->travel(2)->hours();
+        (new ReleaseExpiredHolds)->handle();
+        $other = Customer::create(['name' => 'Tamu Lain', 'phone' => '0822', 'email' => 'lain@example.com']);
+        app(BookingService::class)->createBooking($other->id, '2027-01-04', '2027-01-06', 2, [$this->booking->bookingUnits()->value('unit_id')]);
+
+        $this->upload()->assertRedirect(route('booking.status', $this->booking->access_token));
+        $this->assertSame(BookingStatus::Expired, $this->booking->fresh()->status);
+
+        $staff = $this->loginAs('operator_fo');
+        app(TransferProofService::class)->confirm($this->pendingProof(), $staff->id);
+        $this->assertSame(BookingStatus::NeedsReview, $this->booking->fresh()->status);
+    }
+
+    public function test_owner_can_change_the_hold_length(): void
+    {
+        app(SettingRepository::class)->put(SettingKey::BookingHoldMinutes, '120');
+        $customer = Customer::create(['name' => 'Tamu Dua', 'phone' => '0833', 'email' => 'dua@example.com']);
+        $unit = Unit::create(['unit_type_id' => UnitType::firstOrFail()->id, 'code' => 'D2', 'status' => 'active']);
+
+        $booking = app(BookingService::class)->createBooking($customer->id, '2027-01-04', '2027-01-06', 2, [$unit->id]);
+
+        $this->assertTrue($booking->hold_expires_at->equalTo(now()->addMinutes(120)));
+    }
+
+    public function test_front_office_reactivates_an_expired_booking(): void
+    {
+        $this->travel(2)->hours();
+        (new ReleaseExpiredHolds)->handle();
+        $this->loginAs('operator_fo');
+        Filament::setCurrentPanel(Filament::getDefaultPanel());
+
+        Livewire::test(EditBooking::class, ['record' => $this->booking->getRouteKey()])
+            ->callAction('reactivate');
+
+        $this->assertSame(BookingStatus::PendingPayment, $this->booking->fresh()->status);
+        $this->assertTrue($this->booking->fresh()->isHoldActive());
     }
 
     public function test_uploading_for_a_paid_booking_goes_to_the_status_page(): void

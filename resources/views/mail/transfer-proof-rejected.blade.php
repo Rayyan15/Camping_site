@@ -7,7 +7,7 @@
 
 @include('mail.partials.booking-summary')
 
-{{ __('Silakan unggah ulang bukti transfer yang benar di halaman pembayaran. Tenda ditahan :minutes menit sejak bukti ditolak.', ['minutes' => config('booking.hold_minutes')]) }}
+{{ __('Silakan unggah ulang bukti transfer yang benar di halaman pembayaran. Tenda ditahan :minutes menit sejak bukti ditolak.', ['minutes' => app(\App\Services\SettingRepository::class)->holdMinutes()]) }}
 
 <x-mail::button :url="$checkoutUrl">
 {{ __('Unggah ulang bukti') }}

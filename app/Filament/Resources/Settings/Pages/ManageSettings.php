@@ -8,6 +8,7 @@ use App\Services\SettingRepository;
 use Closure;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
@@ -118,13 +119,21 @@ class ManageSettings extends Page
                         ->label('Atas nama')
                         ->maxLength(100),
                 ]),
+            Section::make('Batas waktu bayar booking')
+                ->description('Berapa lama tenda ditahan setelah tamu checkout. Lewat dari itu tenda dilepas, tetapi tamu masih bisa mengunggah bukti sampai 24 jam kemudian.')
+                ->schema([
+                    Select::make('booking_hold_minutes')
+                        ->label('Tenda ditahan selama')
+                        ->options(collect(config('booking.hold_minute_options'))->mapWithKeys(fn (int $minutes) => [$minutes => $minutes < 60 ? "{$minutes} menit" : ($minutes / 60).' jam'])->all())
+                        ->required(),
+                ]),
             Section::make('Metode bayar pesanan QR')
                 ->description('Pilihan cara bayar yang muncul saat tamu memesan makanan lewat QR meja atau tenda. Minimal satu harus aktif.')
                 ->columns(3)
                 ->schema([
                     Toggle::make('qr_payment_transfer_enabled')
                         ->label('Transfer bank')
-                        ->helperText('Tamu melihat rekening di atas lalu mengunggah bukti. Pesanan masuk dapur setelah kasir mengonfirmasi.')
+                        ->helperText('Tamu melihat rekening di atas lalu mengunggah bukti. Pesanan masuk antrean setelah dapur mengonfirmasi.')
                         ->live(),
                     Toggle::make('qr_payment_cashier_enabled')
                         ->label('Bayar ke kasir')

@@ -43,6 +43,7 @@ class EditBooking extends EditRecord
             BookingActions::checkOut(),
             BookingActions::confirmTransfer(),
             BookingActions::rejectTransferProof(),
+            BookingActions::reactivate(),
             BookingActions::recordPayment(),
             BookingActions::reschedule(),
             BookingActions::changeAddons(),

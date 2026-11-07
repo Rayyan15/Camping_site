@@ -5,10 +5,13 @@ export function initCheckoutCountdown() {
     if (!el) return;
 
     const deadline = Date.now() + Number(el.dataset.remaining) * 1000;
+    const urgent = document.querySelector('[data-countdown-urgent]');
+    const urgentAfter = Number(el.dataset.urgentAfter);
 
     const tick = () => {
         const left = Math.max(0, Math.round((deadline - Date.now()) / 1000));
         el.textContent = `${pad(Math.floor(left / 3600))}:${pad(Math.floor((left % 3600) / 60))}:${pad(left % 60)}`;
+        if (urgent && left <= urgentAfter) urgent.hidden = false;
         if (left === 0) {
             window.location.reload();
             return;
