@@ -16,7 +16,7 @@ class UploadTransferProofRequest extends FormRequest
 
     public const PLAN_DOWN_PAYMENT = 'down_payment';
 
-    private const MAX_KILOBYTES = 4096;
+    private const MAX_KILOBYTES = 10240;
 
     public function authorize(): bool
     {
@@ -44,8 +44,8 @@ class UploadTransferProofRequest extends FormRequest
             'proof.required' => 'Pilih file bukti transfer terlebih dahulu.',
             'proof.file' => 'Bukti transfer harus berupa file.',
             'proof.mimes' => 'Bukti transfer harus berupa gambar JPG, PNG, WebP, atau PDF.',
-            'proof.max' => 'Ukuran bukti transfer maksimal 4 MB.',
-            'proof.uploaded' => 'File gagal diunggah. Periksa ukurannya (maksimal 4 MB) lalu coba lagi.',
+            'proof.max' => 'Ukuran bukti transfer maksimal 10 MB.',
+            'proof.uploaded' => 'File gagal diunggah. Periksa ukurannya (maksimal 10 MB) lalu coba lagi.',
         ];
     }
 

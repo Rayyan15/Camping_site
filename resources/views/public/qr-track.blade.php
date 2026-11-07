@@ -69,7 +69,7 @@
                         @csrf
                         <label for="proof" class="field-label">{{ $proof?->status === \App\Enums\PaymentStatus::Pending ? __('Kirim ulang bukti bayar') : __('Bukti bayar') }}</label>
                         <input id="proof" name="proof" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf" required aria-describedby="proof-hint @error('proof') proof-error @enderror" class="field-input">
-                        <p id="proof-hint" class="mt-2 text-sm text-ink-soft">{{ __('JPG, PNG, WebP, atau PDF, maksimal 4 MB. Pastikan nominal dan tanggal terbaca.') }}</p>
+                        <p id="proof-hint" class="mt-2 text-sm text-ink-soft">{{ __('JPG, PNG, WebP, atau PDF, maksimal 10 MB. Pastikan nominal dan tanggal terbaca.') }}</p>
                         @error('proof')
                             <p id="proof-error" class="mt-2 text-sm font-semibold text-ember-dark" role="alert">{{ __($message) }}</p>
                         @enderror

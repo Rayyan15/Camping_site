@@ -154,7 +154,7 @@
                                                         <input type="hidden" name="method" value="{{ $method->value }}">
                                                         <label for="{{ $fieldId }}" class="field-label">{{ $proof?->status === \App\Enums\PaymentStatus::Pending ? __('Kirim ulang bukti bayar') : __('Bukti bayar') }}</label>
                                                         <input id="{{ $fieldId }}" name="proof" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf" required aria-describedby="{{ $fieldId }}-hint @error('proof') proof-error @enderror" class="field-input">
-                                                        <p id="{{ $fieldId }}-hint" class="mt-2 text-sm text-ink-soft">{{ __('JPG, PNG, WebP, atau PDF, maksimal 4 MB. Pastikan nominal dan tanggal terbaca.') }}</p>
+                                                        <p id="{{ $fieldId }}-hint" class="mt-2 text-sm text-ink-soft">{{ __('JPG, PNG, WebP, atau PDF, maksimal 10 MB. Pastikan nominal dan tanggal terbaca.') }}</p>
                                                         @if(old('method', 'transfer') === $method->value)
                                                              @error('proof')
                                                                 <p id="proof-error" class="mt-2 text-sm font-semibold text-ember-dark" role="alert">{{ __($message) }}</p>

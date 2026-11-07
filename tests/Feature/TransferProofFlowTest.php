@@ -135,7 +135,7 @@ class TransferProofFlowTest extends TestCase
     public function test_wrong_or_oversized_files_are_refused(): void
     {
         $this->upload($this->proofFile('catatan.txt', 'text/plain'))->assertSessionHasErrors('proof');
-        $this->upload($this->proofFile('besar.png', 'image/png', 5000))->assertSessionHasErrors('proof');
+        $this->upload($this->proofFile('besar.png', 'image/png', 11000))->assertSessionHasErrors('proof');
         $this->post(route('checkout.proof', $this->booking->access_token))->assertSessionHasErrors('proof');
 
         $this->assertSame(0, $this->booking->payments()->count());
