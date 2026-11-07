@@ -172,7 +172,7 @@ class BookingActionsTest extends TestCase
             ['method' => PaymentMethod::Cash->value, 'amount' => 'abc'],
             ['method' => PaymentMethod::Transfer->value, 'amount' => 60000, 'proof_path' => null],
             ['method' => PaymentMethod::Transfer->value, 'amount' => 60000, 'proof_path' => UploadedFile::fake()->create('virus.exe', 10)],
-            ['method' => PaymentMethod::Transfer->value, 'amount' => 60000, 'proof_path' => UploadedFile::fake()->create('besar.pdf', 3000, 'application/pdf')],
+            ['method' => PaymentMethod::Transfer->value, 'amount' => 60000, 'proof_path' => UploadedFile::fake()->create('besar.pdf', 11000,'application/pdf')],
         ];
 
         foreach ($rejected as $data) {
