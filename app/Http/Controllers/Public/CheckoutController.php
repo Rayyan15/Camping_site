@@ -13,6 +13,7 @@ use App\Services\Payment\TransferProofService;
 use App\Services\SettingRepository;
 use App\Support\BankAccount;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -62,7 +63,12 @@ class CheckoutController extends Controller
             ->with('success', 'Siap, bayar tunai saat tiba. Tenda Anda dipegang sampai akhir hari check-in.');
     }
 
-    public function uploadProof(UploadTransferProofRequest $request, string $token, TransferProofService $proofs): RedirectResponse
+    public function uploadProof(UploadTransferProofRequest $request, string $token, TransferProofService $proofs): RedirectResponse|JsonResponse
+    {
+        return $this->redirectForUpload($request, $this->storeProof($request, $token, $proofs));
+    }
+
+    private function storeProof(UploadTransferProofRequest $request, string $token, TransferProofService $proofs): RedirectResponse
     {
         $booking = $this->findBooking($token);
 

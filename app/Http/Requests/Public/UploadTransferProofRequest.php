@@ -16,7 +16,7 @@ class UploadTransferProofRequest extends FormRequest
 
     public const PLAN_DOWN_PAYMENT = 'down_payment';
 
-    private const MAX_KILOBYTES = 10240;
+    public const MAX_KILOBYTES = 10240;
 
     public function authorize(): bool
     {

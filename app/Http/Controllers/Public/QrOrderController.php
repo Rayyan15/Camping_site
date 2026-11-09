@@ -87,7 +87,12 @@ class QrOrderController extends Controller
         ]);
     }
 
-    public function uploadProof(UploadTransferProofRequest $request, string $token, string $code): RedirectResponse
+    public function uploadProof(UploadTransferProofRequest $request, string $token, string $code): RedirectResponse|JsonResponse
+    {
+        return $this->redirectForUpload($request, $this->storeProof($request, $token, $code));
+    }
+
+    private function storeProof(UploadTransferProofRequest $request, string $token, string $code): RedirectResponse
     {
         $spot = $this->spotOrFail($token);
         $order = $this->orderOrFail($spot, $code);

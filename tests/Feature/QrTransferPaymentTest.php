@@ -125,6 +125,20 @@ class QrTransferPaymentTest extends TestCase
         $this->assertTrue(Order::kitchenRelevant()->whereKey($order->id)->exists());
     }
 
+    public function test_script_upload_gets_the_page_to_open_and_keeps_the_flash_message(): void
+    {
+        $order = $this->transferOrder();
+        $track = route('qr.track', [$this->table->qr_token, $order->code]);
+
+        $this->postJson(route('qr.proof', [$this->table->qr_token, $order->code]), [], [])->assertUnprocessable();
+
+        $this->post(route('qr.proof', [$this->table->qr_token, $order->code]), [
+            'proof' => UploadedFile::fake()->image('bukti.jpg'),
+        ], ['Accept' => 'application/json'])->assertOk()->assertExactJson(['redirect' => $track]);
+
+        $this->get($track)->assertSee('Bukti transfer terkirim');
+    }
+
     public function test_rejected_proof_can_be_uploaded_again(): void
     {
         $order = $this->transferOrder();

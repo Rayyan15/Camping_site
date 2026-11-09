@@ -65,7 +65,7 @@
                         <dd class="font-display text-2xl font-semibold tabular-nums text-forest-900">{{ $rupiah($order->total) }}</dd>
                     </dl>
 
-                    <form action="{{ route('qr.proof', [$spot->qr_token, $order->code]) }}" method="POST" enctype="multipart/form-data" class="mt-4">
+                    <form action="{{ route('qr.proof', [$spot->qr_token, $order->code]) }}" method="POST" enctype="multipart/form-data" class="mt-4" data-proof-form data-max-bytes="{{ \App\Http\Requests\Public\UploadTransferProofRequest::MAX_KILOBYTES * 1024 }}">
                         @csrf
                         <label for="proof" class="field-label">{{ $proof?->status === \App\Enums\PaymentStatus::Pending ? __('Kirim ulang bukti bayar') : __('Bukti bayar') }}</label>
                         <input id="proof" name="proof" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf" required aria-describedby="proof-hint @error('proof') proof-error @enderror" class="field-input">
@@ -73,6 +73,7 @@
                         @error('proof')
                             <p id="proof-error" class="mt-2 text-sm font-semibold text-ember-dark" role="alert">{{ __($message) }}</p>
                         @enderror
+                        <p data-proof-error hidden role="alert" class="mt-2 text-sm font-semibold text-ember-dark"></p>
                         <button type="submit" class="btn btn-primary mt-4 w-full">{{ __('Kirim bukti bayar') }}</button>
                     </form>
                 @else

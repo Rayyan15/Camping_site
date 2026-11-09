@@ -156,7 +156,7 @@
 
                                                 @if($method === \App\Enums\PaymentMethod::Qris || $bank->isComplete())
                                                     @php $fieldId = 'proof-'.$method->value; @endphp
-                                                    <form action="{{ route('checkout.proof', $booking->access_token) }}" method="POST" enctype="multipart/form-data" class="mt-4">
+                                                    <form action="{{ route('checkout.proof', $booking->access_token) }}" method="POST" enctype="multipart/form-data" class="mt-4" data-proof-form data-max-bytes="{{ \App\Http\Requests\Public\UploadTransferProofRequest::MAX_KILOBYTES * 1024 }}">
                                                         @csrf
                                                         <input type="hidden" name="method" value="{{ $method->value }}">
                                                         <label for="{{ $fieldId }}" class="field-label">{{ $proof?->status === \App\Enums\PaymentStatus::Pending ? __('Kirim ulang bukti bayar') : __('Bukti bayar') }}</label>
@@ -167,6 +167,7 @@
                                                                 <p id="proof-error" class="mt-2 text-sm font-semibold text-ember-dark" role="alert">{{ __($message) }}</p>
                                                             @enderror
                                                         @endif
+                                                        <p data-proof-error hidden role="alert" class="mt-2 text-sm font-semibold text-ember-dark"></p>
                                                         <button type="submit" class="btn btn-primary mt-4 w-full">{{ __('Kirim bukti bayar') }}</button>
                                                     </form>
                                                 @endif

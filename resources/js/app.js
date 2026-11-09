@@ -8,6 +8,7 @@ import { initQrCart } from './modules/qr-cart';
 import { initQrTrack } from './modules/qr-track';
 import { initAvailabilityCalendar } from './modules/availability-calendar';
 import { initPasswordToggle } from './modules/password-toggle';
+import { initProofUpload } from './modules/proof-upload';
 
 initStaySearch();
 initReveal();
@@ -19,3 +20,4 @@ initQrCart();
 initQrTrack();
 initAvailabilityCalendar();
 initPasswordToggle();
+initProofUpload();

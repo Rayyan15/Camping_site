@@ -596,5 +596,11 @@
     "Tenda pilihan Anda sudah dipesan tamu lain saat waktu bayar habis. Admin akan mencarikan tenda pengganti atau mengembalikan dana Anda.": "Your tent was booked by another guest after your payment time ran out. Our team will find you another tent or refund you.",
     "Sudah terlanjur transfer? Unggah buktinya di bawah sebelum :time WIB. Bila tenda Anda masih kosong, pesanan langsung dipegang lagi.": "Already transferred? Upload the receipt below before :time WIB. If your tent is still free, it is held for you again.",
     "Segera transfer dan unggah bukti. Waktu tinggal kurang dari 10 menit.": "Transfer and upload the receipt now. Less than 10 minutes left.",
-    "Setelah waktu habis, tenda dilepas otomatis. Bukti yang terlambat masih bisa diunggah sampai 24 jam.": "When time runs out the tent is released. A late receipt can still be uploaded for 24 hours."
+    "Setelah waktu habis, tenda dilepas otomatis. Bukti yang terlambat masih bisa diunggah sampai 24 jam.": "When time runs out the tent is released. A late receipt can still be uploaded for 24 hours.",
+    "Mengirim bukti...": "Sending receipt...",
+    "Bukti belum bisa dikirim. Coba lagi.": "The receipt could not be sent. Please try again.",
+    "File terlalu besar. Maksimal 10 MB.": "The file is too large. The limit is 10 MB.",
+    "Halaman sudah terlalu lama dibuka. Muat ulang halaman, lalu kirim lagi.": "This page has been open too long. Reload it, then send again.",
+    "Terlalu banyak percobaan. Tunggu satu menit, lalu kirim lagi.": "Too many attempts. Wait one minute, then send again.",
+    "Koneksi terputus saat mengirim. Periksa sinyal, lalu tekan kirim lagi.": "The connection dropped while sending. Check your signal, then send again."
 }
