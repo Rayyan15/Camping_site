@@ -18,7 +18,9 @@ use App\Models\DiningSpot;
 use App\Models\MenuCategory;
 use App\Models\MenuItem;
 use App\Models\Order;
+use App\Models\UnitType;
 use App\Models\User;
+use App\Services\BookingService;
 use App\Services\DiningSpotService;
 use App\Services\MenuStockService;
 use App\Services\OrderService;
@@ -125,6 +127,26 @@ class MenuStockTest extends TestCase
 
         $this->order(2);
         $this->get(route('qr.show', $this->table->qr_token))->assertDontSee('Sate Maranggi');
+    }
+
+    public function test_the_public_menu_used_by_the_booking_form_drops_sold_out_dishes(): void
+    {
+        $this->get('/')->assertSee('Sate Maranggi');
+
+        $this->stock->setRemaining($this->satay, 0);
+        $this->get('/')->assertDontSee('Sate Maranggi');
+    }
+
+    public function test_the_booking_form_drops_sold_out_dishes_and_caps_the_rest(): void
+    {
+        $type = app(BookingService::class)->formOptions(new UnitType(['max_extra_guests' => 0]));
+        $this->assertSame(['Sate Maranggi'], $type['menuCategories']->flatMap->items->pluck('name')->all());
+
+        $this->stock->setRemaining($this->satay, 2);
+        $this->assertSame(2, app(BookingService::class)->formOptions(new UnitType(['max_extra_guests' => 0]))['menuCategories']->first()->items->first()->stock_left);
+
+        $this->stock->setRemaining($this->satay, 0);
+        $this->assertTrue(app(BookingService::class)->formOptions(new UnitType(['max_extra_guests' => 0]))['menuCategories']->isEmpty());
     }
 
     public function test_unpaid_transfer_orders_are_cancelled_after_the_owner_setting(): void

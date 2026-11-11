@@ -49,6 +49,8 @@ class BookingService
      */
     public function formOptions(UnitType $unitType): array
     {
+        $stock = app(MenuStockService::class)->remaining();
+
         return [
             'addons' => Addon::where('is_active', true)
                 ->when($unitType->max_extra_guests === 0, fn ($q) => $q->where('extra_guests', 0))
@@ -57,6 +59,10 @@ class BookingService
             'menuCategories' => MenuCategory::with(['items' => fn ($q) => $q->where('is_available', true)->orderBy('name')])
                 ->orderBy('sort_order')
                 ->get()
+                // Sold-out dishes drop out; the rest carry what is left so the stepper stops there.
+                ->each(fn (MenuCategory $category) => $category->setRelation('items', $category->items
+                    ->reject(fn ($item) => ($stock[$item->id] ?? null) === 0)
+                    ->each(fn ($item) => $item->setAttribute('stock_left', $stock[$item->id] ?? null))))
                 ->filter(fn (MenuCategory $category) => $category->items->isNotEmpty())
                 ->values(),
         ];
