@@ -42,11 +42,12 @@ class ReportService
     public function bookings(ReportPeriod $period): ReportTable
     {
         // A refund filed this period puts its booking here too, so the refund report and this one always agree.
-        $query = Booking::query()
+        $query = Booking::query()->where(fn ($inPeriod) => $inPeriod
             ->whereBetween('check_in', [$period->from->toDateString(), $period->to->toDateString()])
-            ->orWhereHas('refunds', fn ($refunds) => $refunds->where('created_at', '>=', $period->from->toDateTimeString())->where('created_at', '<', $period->untilExclusive()->toDateTimeString()));
+            ->orWhereHas('refunds', fn ($refunds) => $refunds->where('created_at', '>=', $period->from->toDateTimeString())->where('created_at', '<', $period->untilExclusive()->toDateTimeString())));
 
-        $bookings = (clone $query)->with('customer:id,name')->orderBy('check_in')->orderBy('id')->limit(self::MAX_ROWS + 1)->get();
+        // Lapsed holds never took money, so they are only counted in the summary, never listed beside paid stays.
+        $bookings = (clone $query)->where('status', '!=', BookingStatus::Expired->value)->with('customer:id,name')->orderBy('check_in')->orderBy('id')->limit(self::MAX_ROWS + 1)->get();
         $truncated = $bookings->count() > self::MAX_ROWS;
 
         $rows = $bookings->take(self::MAX_ROWS)->map(fn (Booking $booking) => [
@@ -60,11 +61,16 @@ class ReportService
         ])->all();
 
         $perStatus = (clone $query)->toBase()->selectRaw('status, COUNT(*) as total')->groupBy('status')->pluck('total', 'status');
-        $summary = [['label' => 'Jumlah booking', 'value' => (int) $perStatus->sum(), 'type' => Type::Count]];
+        $expired = (int) ($perStatus[BookingStatus::Expired->value] ?? 0);
+        $summary = [['label' => 'Jumlah booking', 'value' => (int) $perStatus->sum() - $expired, 'type' => Type::Count]];
         foreach (BookingStatus::cases() as $status) {
-            if ($perStatus->has($status->value)) {
+            if ($status !== BookingStatus::Expired && $perStatus->has($status->value)) {
                 $summary[] = ['label' => $status->getLabel(), 'value' => (int) $perStatus[$status->value], 'type' => Type::Count];
             }
+        }
+        $summary[] = ['label' => 'Total dibayar (Rp)', 'value' => (int) (clone $query)->where('status', '!=', BookingStatus::Expired->value)->sum('paid_amount'), 'type' => Type::Money];
+        if ($expired > 0) {
+            $summary[] = ['label' => 'Kedaluwarsa, tidak ditampilkan', 'value' => $expired, 'type' => Type::Count];
         }
 
         return new ReportTable(
@@ -81,7 +87,7 @@ class ReportService
             ],
             $rows,
             $summary,
-            'Booking dengan tanggal check-in pada periode, ditambah booking yang refund-nya diajukan pada periode. Nomor telepon dan email pelanggan tidak dimuat.'.$this->truncationNote($truncated),
+            'Booking dengan tanggal check-in pada periode, ditambah booking yang refund-nya diajukan pada periode. Booking kedaluwarsa (tidak dibayar sampai batas waktu) tidak dimuat dan hanya dihitung jumlahnya. Nomor telepon dan email pelanggan tidak dimuat.'.$this->truncationNote($truncated),
             $truncated,
         );
     }
