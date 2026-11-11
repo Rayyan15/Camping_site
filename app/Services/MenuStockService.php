@@ -55,7 +55,7 @@ class MenuStockService
             $wanted[$line['menu_item_id']] = ($wanted[$line['menu_item_id']] ?? 0) + $line['qty'];
         }
 
-        // ponytail: SQLite serialises writers, so the read-then-insert window is tiny; on MySQL this lock makes it exact.
+        // Exact on MySQL through this row lock and on SQLite through IMMEDIATE transactions (config/database.php).
         MenuItem::whereIn('id', array_keys($wanted))->lockForUpdate()->get(['id']);
         $remaining = $this->remaining(array_keys($wanted));
 
