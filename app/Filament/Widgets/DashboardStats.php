@@ -3,6 +3,8 @@
 namespace App\Filament\Widgets;
 
 use App\Services\DashboardMetricsService;
+use App\Services\Reports\ReportPeriod;
+use App\Services\Reports\ReportService;
 use Filament\Widgets\Widget;
 
 /**
@@ -38,6 +40,14 @@ class DashboardStats extends Widget
             $revenue = $metrics->monthlyRevenue();
             $items[] = ['icon' => 'heroicon-o-banknotes', 'value' => $rupiah($revenue['camping']), 'label' => 'Uang masuk booking bulan ini (tenda, add-on, makanan booking)'];
             $items[] = ['icon' => 'heroicon-o-cake', 'value' => $rupiah($revenue['food']), 'label' => 'Uang masuk F&B QR dan walk-in bulan ini'];
+
+            // Same numbers as the Menu terlaris report, so the owner can tell booking food from QR scans at a glance.
+            $sold = array_column(app(ReportService::class)->topMenu(ReportPeriod::thisMonth())->summary, 'value', 'label');
+            $items[] = [
+                'icon' => 'heroicon-o-shopping-bag',
+                'value' => $sold['Total terjual'].' porsi',
+                'label' => "Terjual bulan ini: booking {$sold['Ikut booking']}, QR tenda {$sold['QR tenda']}, QR kafe {$sold['QR kafe']}, walk-in {$sold['Walk-in kasir']}",
+            ];
         }
 
         return ['items' => $items];

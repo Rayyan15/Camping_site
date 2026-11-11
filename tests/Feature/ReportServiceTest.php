@@ -119,11 +119,11 @@ class ReportServiceTest extends TestCase
         $table = $this->reports->build(ReportType::TopMenu, ReportPeriod::thisMonth());
 
         $this->assertSame([
-            ['Nasi Goreng', 4, 100000],
-            ['Mie Rebus', 3, 60000],
-            ['Kopi Hitam', 2, 30000],
+            ['Nasi Goreng', 0, 0, 0, 4, 4, 100000],
+            ['Mie Rebus', 0, 0, 0, 3, 3, 60000],
+            ['Kopi Hitam', 0, 0, 0, 2, 2, 30000],
         ], $table->rows);
-        $this->assertSame(['Total terjual' => 9, 'Total omzet (Rp)' => 190000], array_column($table->summary, 'value', 'label'));
+        $this->assertSame(['Total terjual' => 9, 'Ikut booking' => 0, 'QR tenda' => 0, 'QR kafe' => 0, 'Walk-in kasir' => 9, 'Total omzet (Rp)' => 190000], array_column($table->summary, 'value', 'label'));
     }
 
     public function test_refund_report_groups_by_status_and_totals_only_transferred_refunds(): void
