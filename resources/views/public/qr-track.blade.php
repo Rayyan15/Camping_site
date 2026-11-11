@@ -9,7 +9,7 @@
         'siap' => __('Pesanan sudah siap dan menunggu diantar.'),
         'diantar' => __('Pesanan sedang menuju lokasi Anda.'),
         'selesai' => __('Pesanan sudah sampai. Selamat menikmati.'),
-        'dibatalkan' => __('Pesanan ini dibatalkan kafe. Silakan tanyakan ke staf bila ada pertanyaan.'),
+        'dibatalkan' => __('Pesanan ini dibatalkan. Silakan tanyakan ke staf bila ada pertanyaan.'),
     ];
 @endphp
 
