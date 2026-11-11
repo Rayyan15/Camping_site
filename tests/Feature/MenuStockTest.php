@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\BookingStatus;
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Enums\QrPaymentChoice;
 use App\Enums\SettingKey;
@@ -192,13 +193,18 @@ class MenuStockTest extends TestCase
         $this->assertSame(10, $this->stock->remainingFor($this->satay));
     }
 
-    public function test_top_menu_counts_food_billed_to_a_paid_booking(): void
+    public function test_top_menu_splits_booking_food_from_qr_scans_in_tents_and_the_cafe(): void
     {
         $this->bookingWithFood(BookingStatus::Paid, 2);
+        $tent = app(DiningSpotService::class)->create('DOM-01', DiningSpot::TYPE_TENT);
+        foreach ([[$this->table, 3], [$tent, 1]] as [$spot, $qty]) {
+            $order = app(OrderService::class)->createQrOrder($spot, [['menu_item_id' => $this->satay->id, 'qty' => $qty]], 'Sari', null, QrPaymentChoice::Cashier);
+            app(OrderService::class)->markPaidAtCashier($order, PaymentMethod::Cash, $this->staff(User::ROLE_CASHIER)->id);
+        }
         $this->bookingWithFood(BookingStatus::Expired, 5);
 
         $report = app(ReportService::class)->topMenu(ReportPeriod::thisMonth());
 
-        $this->assertSame([['Sate Maranggi', 2, 70000, 'Tidak dibatasi']], $report->rows);
+        $this->assertSame([['Sate Maranggi', 2, 1, 3, 0, 6, 210000, 'Tidak dibatasi']], $report->rows);
     }
 }

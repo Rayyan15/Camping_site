@@ -139,7 +139,7 @@
                                                                 @if($item->description)<p class="text-sm text-ink-soft">{{ $item->description }}</p>@endif
                                                                 <p class="mt-1 text-sm font-bold text-ember-dark">{{ $rupiah($item->price) }}</p>
                                                             </div>
-                                                            <x-stepper :name="'preorder['.$item->id.'][qty]'" :label="$item->name" :value="$chosen" :min="0" :max="$maxFood" :price="$item->price" role="food" />
+                                                            <x-stepper :name="'preorder['.$item->id.'][qty]'" :label="$item->name" :value="$chosen" :min="0" :max="min($maxFood, $item->stock_left ?? PHP_INT_MAX)" :price="$item->price" role="food" />
                                                         </div>
                                                     </div>
                                                     <div class="mt-3 grid max-w-md grid-cols-2 gap-3 rounded-2xl bg-forest-50 p-3 sm:ml-24" data-serve @if($chosen < 1) hidden @endif>

@@ -10,6 +10,7 @@ use App\Enums\RefundStatus;
 use App\Enums\ReportType;
 use App\Enums\ReportValueType as Type;
 use App\Models\Booking;
+use App\Models\DiningSpot;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Refund;
@@ -138,6 +139,7 @@ class ReportService
         $items = DB::table('order_items')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->join('menu_items', 'menu_items.id', '=', 'order_items.menu_item_id')
+            ->leftJoin('dining_spots', 'dining_spots.id', '=', 'orders.dining_spot_id')
             // Food billed to a booking counts once that booking is paid; the order itself stays unpaid.
             ->where(fn ($sold) => $sold
                 ->where('orders.payment_status', Order::PAYMENT_PAID)
@@ -149,7 +151,15 @@ class ReportService
             ->where('orders.created_at', '>=', $period->from->toDateTimeString())
             ->where('orders.created_at', '<', $period->untilExclusive()->toDateTimeString())
             ->groupBy('menu_items.id', 'menu_items.name')
-            ->selectRaw('menu_items.id as id, menu_items.name as name, SUM(order_items.qty) as sold, SUM(order_items.qty * order_items.price) as revenue')
+            // The owner reads booking food apart from QR scans in a tent or at the cafe, and the cashier's walk-ins.
+            ->selectRaw(
+                'menu_items.id as id, menu_items.name as name, SUM(order_items.qty) as sold, SUM(order_items.qty * order_items.price) as revenue,'
+                .' SUM(CASE WHEN orders.source = ? THEN order_items.qty ELSE 0 END) as via_booking,'
+                .' SUM(CASE WHEN orders.source = ? AND dining_spots.type = ? THEN order_items.qty ELSE 0 END) as via_tent,'
+                .' SUM(CASE WHEN orders.source = ? AND dining_spots.type = ? THEN order_items.qty ELSE 0 END) as via_cafe,'
+                .' SUM(CASE WHEN orders.source = ? THEN order_items.qty ELSE 0 END) as via_walkin',
+                [Order::SOURCE_PREORDER, Order::SOURCE_QR, DiningSpot::TYPE_TENT, Order::SOURCE_QR, DiningSpot::TYPE_TABLE, Order::SOURCE_WALKIN],
+            )
             ->orderByDesc('sold')
             ->orderBy('menu_items.name')
             ->limit(self::TOP_MENU_LIMIT)
@@ -161,16 +171,27 @@ class ReportService
             $period,
             [
                 $this->column('Menu', Type::Text),
-                $this->column('Terjual', Type::Count),
+                $this->column('Ikut booking', Type::Count),
+                $this->column('QR tenda', Type::Count),
+                $this->column('QR kafe', Type::Count),
+                $this->column('Walk-in kasir', Type::Count),
+                $this->column('Total terjual', Type::Count),
                 $this->column('Omzet (Rp)', Type::Money),
                 $this->column('Sisa stok', Type::Text),
             ],
-            $items->map(fn ($item) => [$item->name, (int) $item->sold, (int) $item->revenue, isset($stock[$item->id]) ? (string) $stock[$item->id] : 'Tidak dibatasi'])->all(),
+            $items->map(fn ($item) => [
+                $item->name, (int) $item->via_booking, (int) $item->via_tent, (int) $item->via_cafe, (int) $item->via_walkin,
+                (int) $item->sold, (int) $item->revenue, isset($stock[$item->id]) ? (string) $stock[$item->id] : 'Tidak dibatasi',
+            ])->all(),
             [
                 ['label' => 'Total terjual', 'value' => (int) $items->sum('sold'), 'type' => Type::Count],
+                ['label' => 'Ikut booking', 'value' => (int) $items->sum('via_booking'), 'type' => Type::Count],
+                ['label' => 'QR tenda', 'value' => (int) $items->sum('via_tent'), 'type' => Type::Count],
+                ['label' => 'QR kafe', 'value' => (int) $items->sum('via_cafe'), 'type' => Type::Count],
+                ['label' => 'Walk-in kasir', 'value' => (int) $items->sum('via_walkin'), 'type' => Type::Count],
                 ['label' => 'Total omzet (Rp)', 'value' => (int) $items->sum('revenue'), 'type' => Type::Money],
             ],
-            'Item pada pesanan yang sudah dibayar, termasuk makanan yang ikut booking lunas, dengan tanggal pesanan pada periode. Sisa stok adalah sisa saat ini. Diurutkan dari yang paling banyak terjual, '.self::TOP_MENU_LIMIT.' teratas.',
+            'Item pada pesanan yang sudah dibayar, termasuk makanan yang ikut booking lunas, dipisah menurut asal pesanan: dipesan bersama booking, scan QR di tenda, scan QR di meja kafe, atau dicatat kasir, dengan tanggal pesanan pada periode. Sisa stok adalah sisa saat ini. Diurutkan dari yang paling banyak terjual, '.self::TOP_MENU_LIMIT.' teratas.',
         );
     }
 
