@@ -61,6 +61,18 @@ class ReportServiceTest extends TestCase
         $this->assertContains(['B-9', 'Siti Rahmawati', '20/11/2026', '22/11/2026', 'Dikembalikan', 500000, 500000], $table->rows);
     }
 
+    public function test_booking_report_counts_expired_holds_without_listing_them(): void
+    {
+        $this->booking($this->customer('Tamu Hangus'), 'B-X', 'expired', '2026-10-15', '2026-10-16', 300000);
+
+        $table = $this->reports->build(ReportType::Booking, ReportPeriod::thisMonth());
+
+        $this->assertNotContains('B-X', array_column($table->rows, 0));
+        $summary = array_column($table->summary, 'value', 'label');
+        $this->assertSame(5, $summary['Jumlah booking']);
+        $this->assertSame(1, $summary['Kedaluwarsa, tidak ditampilkan']);
+    }
+
     public function test_booking_report_lists_bookings_by_check_in_with_status_counts(): void
     {
         $table = $this->reports->build(ReportType::Booking, ReportPeriod::thisMonth());
@@ -74,7 +86,7 @@ class ReportServiceTest extends TestCase
             ['B-2', 'Sari Utami', '28/10/2026', '03/11/2026', 'Check-out', 1800000, 1800000],
         ], $table->rows);
         $this->assertSame(
-            ['Jumlah booking' => 5, 'Menunggu Bayar' => 1, 'Lunas' => 2, 'Check-out' => 1, 'Dibatalkan' => 1],
+            ['Jumlah booking' => 5, 'Menunggu Bayar' => 1, 'Lunas' => 2, 'Check-out' => 1, 'Dibatalkan' => 1, 'Total dibayar (Rp)' => 2900000],
             array_column($table->summary, 'value', 'label'),
         );
         $this->assertStringNotContainsString('081200000001', json_encode($table->rows));
