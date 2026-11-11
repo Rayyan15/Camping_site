@@ -14,6 +14,7 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Refund;
 use App\Models\Unit;
+use App\Services\BookingBilling;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
@@ -51,9 +52,14 @@ class ReportService
         $truncated = $bookings->count() > self::MAX_ROWS;
 
         // The owner reads the tent apart from extras (ATV, firewood) and food ordered with the booking.
-        $rows = $bookings->take(self::MAX_ROWS)->map(function (Booking $booking) {
+        // booking.total holds the tent, add-ons and pre-orders; QR food billed to the stay is added on top.
+        $billing = app(BookingBilling::class);
+        $rows = $bookings->take(self::MAX_ROWS)->map(function (Booking $booking) use ($billing) {
             $addons = (int) $booking->addons->sum('subtotal');
-            $food = $this->bookingFoodTotal($booking);
+            $preorders = (int) $booking->orders
+                ->filter(fn (Order $order): bool => $order->source === Order::SOURCE_PREORDER && $order->status !== OrderStatus::Dibatalkan->value)
+                ->sum(fn (Order $order): int => (int) $order->total + (int) $order->tax);
+            $grandTotal = $billing->grandTotal($booking);
 
             return [
                 $booking->code,
@@ -61,10 +67,10 @@ class ReportService
                 $booking->check_in->format('d/m/Y'),
                 $booking->check_out->format('d/m/Y'),
                 $booking->status->getLabel(),
-                $booking->total - $addons - $food,
+                $booking->total - $addons - $preorders,
                 $addons,
-                $food,
-                $booking->total,
+                $preorders + $grandTotal - $booking->total,
+                $grandTotal,
                 $booking->paid_amount,
             ];
         })->all();
