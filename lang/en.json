@@ -602,5 +602,8 @@
     "File terlalu besar. Maksimal 10 MB.": "The file is too large. The limit is 10 MB.",
     "Halaman sudah terlalu lama dibuka. Muat ulang halaman, lalu kirim lagi.": "This page has been open too long. Reload it, then send again.",
     "Terlalu banyak percobaan. Tunggu satu menit, lalu kirim lagi.": "Too many attempts. Wait one minute, then send again.",
-    "Koneksi terputus saat mengirim. Periksa sinyal, lalu tekan kirim lagi.": "The connection dropped while sending. Check your signal, then send again."
+    "Koneksi terputus saat mengirim. Periksa sinyal, lalu tekan kirim lagi.": "The connection dropped while sending. Check your signal, then send again.",
+    "Menu :name sudah habis.": ":name is sold out.",
+    "Sisa :name tinggal :left porsi.": "Only :left portions of :name are left.",
+    "Sisa :count": ":count left"
 }
