@@ -31,12 +31,13 @@ class Order extends Model
     protected $fillable = [
         'code', 'source', 'booking_id', 'customer_name', 'customer_phone', 'dining_spot_id',
         'scheduled_at', 'status', 'total', 'tax', 'payment_status', 'payment_choice',
-        'bill_to_booking',
+        'bill_to_booking', 'auto_cancelled_at',
     ];
 
     protected function casts(): array
     {
         return [
+            'auto_cancelled_at' => 'datetime',
             'scheduled_at' => 'datetime',
             'total' => 'integer',
             'tax' => 'integer',
@@ -142,7 +143,7 @@ class Order extends Model
     }
 
     /**
-     * Unpaid transfer orders take a proof, including ones cancelled for lack of payment in the last
+     * Unpaid transfer orders take a proof, including ones the system cancelled for lack of payment in the last
      * late_proof_hours: the guest may have paid just before the cut-off.
      */
     public function acceptsTransferProof(): bool
@@ -152,7 +153,7 @@ class Order extends Model
         }
 
         return $this->statusEnum() !== OrderStatus::Dibatalkan
-            || $this->updated_at->gt(now()->subHours((int) config('booking.late_proof_hours')));
+            || $this->auto_cancelled_at?->gt(now()->subHours((int) config('booking.late_proof_hours')));
     }
 
     public function isPaid(): bool

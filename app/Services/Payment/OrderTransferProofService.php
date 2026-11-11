@@ -12,6 +12,7 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
 use App\Notifications\TransferProofSubmittedNotification;
+use App\Services\MenuStockService;
 use App\Support\BankAccount;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +27,8 @@ use Throwable;
 class OrderTransferProofService
 {
     private const REVIEW_PERMISSION = 'review_order_transfer';
+
+    public function __construct(private readonly MenuStockService $stock) {}
 
     /**
      * @throws TransferProofException
@@ -144,7 +147,11 @@ class OrderTransferProofService
 
         // A proof for an order cancelled for lack of payment reopens it so the kitchen can check it.
         if ($locked->statusEnum() === OrderStatus::Dibatalkan) {
-            $locked->update(['status' => OrderStatus::Baru->value]);
+            // Its portions went back to stock at the cancel; another guest may have taken them since.
+            $this->stock->assertEnough($locked->items->map(fn ($line) => [
+                'menu_item_id' => $line->menu_item_id, 'name' => $line->menuItem->name, 'qty' => $line->qty,
+            ])->all());
+            $locked->update(['status' => OrderStatus::Baru->value, 'auto_cancelled_at' => null]);
         }
 
         return $locked;

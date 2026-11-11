@@ -42,7 +42,7 @@ class MenuItemsTable
                     ->disabled(fn () => ! (auth()->user()?->can('manage_menu') || auth()->user()?->can('toggle_menu_availability'))),
                 TextColumn::make('stock_left')
                     ->label('Sisa stok')
-                    ->state(fn (MenuItem $record): string => self::stockLabel(app(MenuStockService::class)->remainingFor($record)))
+                    ->state(fn (MenuItem $record): string => self::stockLabel(once(fn () => app(MenuStockService::class)->remaining())[$record->id] ?? null))
                     ->badge()
                     ->tooltip('Habis berarti menu tidak muncul di QR, form booking, dan walk-in.')
                     ->color(fn (string $state): string => match ($state) {

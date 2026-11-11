@@ -191,8 +191,10 @@ class ReportService
             )
             ->orderByDesc('sold')
             ->orderBy('menu_items.name')
-            ->limit(self::TOP_MENU_LIMIT)
             ->get();
+        // Totals count every dish sold; only the table is cut to the top rows.
+        $all = $items;
+        $items = $items->take(self::TOP_MENU_LIMIT);
         $stock = app(MenuStockService::class)->remaining($items->pluck('id')->all());
 
         return new ReportTable(
@@ -213,12 +215,12 @@ class ReportService
                 (int) $item->sold, (int) $item->revenue, isset($stock[$item->id]) ? (string) $stock[$item->id] : 'Tidak dibatasi',
             ])->all(),
             [
-                ['label' => 'Total terjual', 'value' => (int) $items->sum('sold'), 'type' => Type::Count],
-                ['label' => 'Ikut booking', 'value' => (int) $items->sum('via_booking'), 'type' => Type::Count],
-                ['label' => 'QR tenda', 'value' => (int) $items->sum('via_tent'), 'type' => Type::Count],
-                ['label' => 'QR kafe', 'value' => (int) $items->sum('via_cafe'), 'type' => Type::Count],
-                ['label' => 'Walk-in kasir', 'value' => (int) $items->sum('via_walkin'), 'type' => Type::Count],
-                ['label' => 'Total omzet (Rp)', 'value' => (int) $items->sum('revenue'), 'type' => Type::Money],
+                ['label' => 'Total terjual', 'value' => (int) $all->sum('sold'), 'type' => Type::Count],
+                ['label' => 'Ikut booking', 'value' => (int) $all->sum('via_booking'), 'type' => Type::Count],
+                ['label' => 'QR tenda', 'value' => (int) $all->sum('via_tent'), 'type' => Type::Count],
+                ['label' => 'QR kafe', 'value' => (int) $all->sum('via_cafe'), 'type' => Type::Count],
+                ['label' => 'Walk-in kasir', 'value' => (int) $all->sum('via_walkin'), 'type' => Type::Count],
+                ['label' => 'Total omzet (Rp)', 'value' => (int) $all->sum('revenue'), 'type' => Type::Money],
             ],
             'Item pada pesanan yang sudah dibayar, termasuk makanan yang ikut booking lunas, dipisah menurut asal pesanan: dipesan bersama booking, scan QR di tenda, scan QR di meja kafe, atau dicatat kasir, dengan tanggal pesanan pada periode. Sisa stok adalah sisa saat ini. Diurutkan dari yang paling banyak terjual, '.self::TOP_MENU_LIMIT.' teratas.',
         );

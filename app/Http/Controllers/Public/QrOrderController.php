@@ -104,7 +104,7 @@ class QrOrderController extends Controller
 
         try {
             $this->proofs->submit($order, $request->file('proof'));
-        } catch (TransferProofException $e) {
+        } catch (TransferProofException|MenuItemUnavailableException $e) {
             return back()->with('error', $e->getMessage());
         }
 

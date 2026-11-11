@@ -26,12 +26,16 @@ class CancelUnpaidTransferOrders implements ShouldQueue
             return;
         }
 
-        $cancelled = Order::where('payment_choice', QrPaymentChoice::Transfer)
+        $orders = Order::where('payment_choice', QrPaymentChoice::Transfer)
             ->where('payment_status', Order::PAYMENT_UNPAID)
             ->where('status', OrderStatus::Baru->value)
             ->where('created_at', '<=', now()->subMinutes($minutes))
             ->whereDoesntHave('payments', fn ($payments) => $payments->where('status', PaymentStatus::Pending))
-            ->update(['status' => OrderStatus::Dibatalkan->value]);
+            ->get();
+
+        // One by one through the model, so the activity log shows who cancelled: the system.
+        $orders->each->update(['status' => OrderStatus::Dibatalkan->value, 'auto_cancelled_at' => now()]);
+        $cancelled = $orders->count();
 
         if ($cancelled > 0) {
             Log::info('Cancelled unpaid QR transfer orders', ['count' => $cancelled, 'after_minutes' => $minutes]);
