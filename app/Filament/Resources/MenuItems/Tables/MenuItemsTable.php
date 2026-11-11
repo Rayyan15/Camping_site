@@ -54,6 +54,7 @@ class MenuItemsTable
                     ->label('Tambah stok')
                     ->icon('heroicon-o-plus-circle')
                     ->visible(fn (): bool => (bool) auth()->user()?->can('manage_menu_stock'))
+                    ->modalSubmitActionLabel('Tambah')
                     ->modalDescription(fn (MenuItem $record): string => 'Sisa sekarang: '.self::stockLabel(app(MenuStockService::class)->remainingFor($record)).'. Isi jumlah porsi yang baru disiapkan.')
                     ->schema([
                         TextInput::make('portions')->label('Tambah berapa porsi')->integer()->minValue(1)->maxValue(self::MAX_PORTIONS)->required(),
@@ -67,6 +68,7 @@ class MenuItemsTable
                     ->icon('heroicon-o-adjustments-horizontal')
                     ->color('gray')
                     ->visible(fn (): bool => (bool) auth()->user()?->can('manage_menu_stock'))
+                    ->modalSubmitActionLabel('Simpan stok')
                     ->fillForm(fn (MenuItem $record): array => ['portions' => app(MenuStockService::class)->remainingFor($record)])
                     ->schema([
                         TextInput::make('portions')
