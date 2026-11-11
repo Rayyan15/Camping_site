@@ -47,18 +47,27 @@ class ReportService
             ->orWhereHas('refunds', fn ($refunds) => $refunds->where('created_at', '>=', $period->from->toDateTimeString())->where('created_at', '<', $period->untilExclusive()->toDateTimeString())));
 
         // Lapsed holds never took money, so they are only counted in the summary, never listed beside paid stays.
-        $bookings = (clone $query)->where('status', '!=', BookingStatus::Expired->value)->with('customer:id,name')->orderBy('check_in')->orderBy('id')->limit(self::MAX_ROWS + 1)->get();
+        $bookings = (clone $query)->where('status', '!=', BookingStatus::Expired->value)->with(['customer:id,name', 'addons', 'orders'])->orderBy('check_in')->orderBy('id')->limit(self::MAX_ROWS + 1)->get();
         $truncated = $bookings->count() > self::MAX_ROWS;
 
-        $rows = $bookings->take(self::MAX_ROWS)->map(fn (Booking $booking) => [
-            $booking->code,
-            $booking->customer->name ?? '-',
-            $booking->check_in->format('d/m/Y'),
-            $booking->check_out->format('d/m/Y'),
-            $booking->status->getLabel(),
-            $booking->total,
-            $booking->paid_amount,
-        ])->all();
+        // The owner reads the tent apart from extras (ATV, firewood) and food ordered with the booking.
+        $rows = $bookings->take(self::MAX_ROWS)->map(function (Booking $booking) {
+            $addons = (int) $booking->addons->sum('subtotal');
+            $food = $this->bookingFoodTotal($booking);
+
+            return [
+                $booking->code,
+                $booking->customer->name ?? '-',
+                $booking->check_in->format('d/m/Y'),
+                $booking->check_out->format('d/m/Y'),
+                $booking->status->getLabel(),
+                $booking->total - $addons - $food,
+                $addons,
+                $food,
+                $booking->total,
+                $booking->paid_amount,
+            ];
+        })->all();
 
         $perStatus = (clone $query)->toBase()->selectRaw('status, COUNT(*) as total')->groupBy('status')->pluck('total', 'status');
         $expired = (int) ($perStatus[BookingStatus::Expired->value] ?? 0);
@@ -67,6 +76,11 @@ class ReportService
             if ($status !== BookingStatus::Expired && $perStatus->has($status->value)) {
                 $summary[] = ['label' => $status->getLabel(), 'value' => (int) $perStatus[$status->value], 'type' => Type::Count];
             }
+        }
+        // Totals cover sold stays only, so a cancelled or unpaid booking never inflates the tent figure.
+        $soldRows = array_values(array_filter($rows, fn (array $row, int $index) => in_array($bookings[$index]->status, self::SOLD_STATUSES, true), ARRAY_FILTER_USE_BOTH));
+        foreach ([5 => 'Sewa tenda, lunas (Rp)', 6 => 'Tambahan, lunas (Rp)', 7 => 'Makanan, lunas (Rp)'] as $index => $label) {
+            $summary[] = ['label' => $label, 'value' => (int) array_sum(array_column($soldRows, $index)), 'type' => Type::Money];
         }
         $summary[] = ['label' => 'Total dibayar (Rp)', 'value' => (int) (clone $query)->where('status', '!=', BookingStatus::Expired->value)->sum('paid_amount'), 'type' => Type::Money];
         if ($expired > 0) {
@@ -82,6 +96,9 @@ class ReportService
                 $this->column('Check-in', Type::Text),
                 $this->column('Check-out', Type::Text),
                 $this->column('Status', Type::Text),
+                $this->column('Sewa tenda (Rp)', Type::Money),
+                $this->column('Tambahan (Rp)', Type::Money),
+                $this->column('Makanan (Rp)', Type::Money),
                 $this->column('Total (Rp)', Type::Money),
                 $this->column('Dibayar (Rp)', Type::Money),
             ],
@@ -318,6 +335,14 @@ class ReportService
         );
     }
 
+    /** Food billed to the booking, the same figure the revenue split and the booking report use. */
+    private function bookingFoodTotal(Booking $booking): int
+    {
+        return (int) $booking->orders
+            ->filter(fn (Order $order): bool => $order->bill_to_booking && $order->status !== OrderStatus::Dibatalkan->value)
+            ->sum(fn (Order $order): int => (int) $order->total + (int) $order->tax);
+    }
+
     /** @return array<string, int> category => rupiah, summing exactly to the payment amount */
     private function splitPayment(Payment $payment): array
     {
@@ -333,9 +358,7 @@ class ReportService
 
         $parts = [
             'addon' => (int) $payable->addons->sum('subtotal'),
-            'food_booking' => (int) $payable->orders
-                ->filter(fn (Order $order): bool => $order->bill_to_booking && $order->status !== OrderStatus::Dibatalkan->value)
-                ->sum(fn (Order $order): int => (int) $order->total + (int) $order->tax),
+            'food_booking' => $this->bookingFoodTotal($payable),
         ];
         $base = (int) $payable->bookingUnits->sum('subtotal') + array_sum($parts);
 
