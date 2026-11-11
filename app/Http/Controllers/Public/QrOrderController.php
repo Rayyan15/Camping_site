@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Public;
 
 use App\Enums\OrderStatus;
-use App\Enums\QrPaymentChoice;
 use App\Exceptions\MenuItemUnavailableException;
 use App\Exceptions\OrderBillingException;
 use App\Exceptions\TransferProofException;
@@ -87,7 +86,7 @@ class QrOrderController extends Controller
             'order' => $order,
             'steps' => OrderStatus::steps(),
             'progress' => $this->progress($order),
-            'awaitingTransfer' => $order->payment_choice === QrPaymentChoice::Transfer && ! $order->isPaid() && $order->statusEnum() !== OrderStatus::Dibatalkan,
+            'awaitingTransfer' => $order->acceptsTransferProof(),
             'proof' => $this->proofs->latestProof($order),
             'bank' => BankAccount::current(),
         ]);

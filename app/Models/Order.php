@@ -126,6 +126,20 @@ class Order extends Model
         return OrderStatus::from($this->status);
     }
 
+    /**
+     * Unpaid transfer orders take a proof, including ones cancelled for lack of payment in the last
+     * late_proof_hours: the guest may have paid just before the cut-off.
+     */
+    public function acceptsTransferProof(): bool
+    {
+        if ($this->payment_choice !== QrPaymentChoice::Transfer || $this->isPaid()) {
+            return false;
+        }
+
+        return $this->statusEnum() !== OrderStatus::Dibatalkan
+            || $this->updated_at->gt(now()->subHours((int) config('booking.late_proof_hours')));
+    }
+
     public function isPaid(): bool
     {
         return $this->payment_status === self::PAYMENT_PAID;

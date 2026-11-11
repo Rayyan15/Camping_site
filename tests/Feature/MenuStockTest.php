@@ -27,6 +27,8 @@ use Carbon\CarbonImmutable;
 use Database\Seeders\RoleSeeder;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -151,6 +153,26 @@ class MenuStockTest extends TestCase
         $this->travelTo(CarbonImmutable::parse('2026-12-02 10:31'));
         (new CancelUnpaidTransferOrders)->handle($settings);
         $this->assertSame(1, Order::where('status', OrderStatus::Dibatalkan->value)->count());
+    }
+
+    public function test_a_proof_sent_after_the_auto_cancel_reopens_the_order(): void
+    {
+        Storage::fake('local');
+        $settings = app(SettingRepository::class);
+        foreach ([SettingKey::BankName->value => 'BCA', SettingKey::BankAccountNumber->value => '123', SettingKey::BankAccountHolder->value => 'Halimun', SettingKey::QrPaymentTransferEnabled->value => '1'] as $key => $value) {
+            $settings->put(SettingKey::from($key), $value);
+        }
+        $this->travelTo(CarbonImmutable::parse('2026-12-01 10:00'));
+        $order = $this->order(1, QrPaymentChoice::Transfer);
+        $this->travelTo(CarbonImmutable::parse('2026-12-01 11:01'));
+        (new CancelUnpaidTransferOrders)->handle($settings);
+        $this->assertSame(OrderStatus::Dibatalkan->value, $order->fresh()->status);
+
+        $this->get(route('qr.track', [$this->table->qr_token, $order->code]))->assertSee('Kirim bukti bayar');
+        $this->post(route('qr.proof', [$this->table->qr_token, $order->code]), ['proof' => UploadedFile::fake()->image('bukti.jpg')])->assertRedirect();
+
+        $this->assertSame(OrderStatus::Baru->value, $order->fresh()->status);
+        $this->assertSame(PaymentStatus::Pending, $order->payments()->firstOrFail()->status);
     }
 
     public function test_only_the_owner_changes_stock_and_the_kitchen_sees_it(): void

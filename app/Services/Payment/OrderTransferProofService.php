@@ -6,7 +6,6 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentDirection;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
-use App\Enums\QrPaymentChoice;
 use App\Events\OrderPlaced;
 use App\Exceptions\TransferProofException;
 use App\Models\Order;
@@ -139,11 +138,16 @@ class OrderTransferProofService
     {
         $locked = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
 
-        $awaiting = $locked->payment_choice === QrPaymentChoice::Transfer
-            && ! $locked->isPaid()
-            && $locked->statusEnum() !== OrderStatus::Dibatalkan;
+        if (! $locked->acceptsTransferProof()) {
+            throw TransferProofException::orderNotAwaitingTransfer();
+        }
 
-        return $awaiting ? $locked : throw TransferProofException::orderNotAwaitingTransfer();
+        // A proof for an order cancelled for lack of payment reopens it so the kitchen can check it.
+        if ($locked->statusEnum() === OrderStatus::Dibatalkan) {
+            $locked->update(['status' => OrderStatus::Baru->value]);
+        }
+
+        return $locked;
     }
 
     /**
