@@ -81,7 +81,7 @@ class RevenueTrendChart extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => 'Camping',
+                    'label' => 'Booking (termasuk makanan booking)',
                     'data' => $series['camping'],
                     'borderColor' => config('brand.forest.600'),
                     'backgroundColor' => 'rgba(60, 102, 73, 0.12)',
@@ -94,7 +94,7 @@ class RevenueTrendChart extends ChartWidget
                     'cubicInterpolationMode' => 'monotone',
                 ],
                 [
-                    'label' => 'F&B',
+                    'label' => 'F&B QR dan walk-in',
                     'data' => $series['food'],
                     'borderColor' => config('brand.sand_dark'),
                     'backgroundColor' => config('brand.sand_dark'),
