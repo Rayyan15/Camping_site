@@ -11,7 +11,7 @@ class MenuItem extends Model
 {
     protected $fillable = [
         'category_id', 'name', 'description',
-        'price', 'photo', 'is_available', 'sort_order',
+        'price', 'photo', 'is_available', 'stock', 'stock_counted_at', 'sort_order',
     ];
 
     protected function casts(): array
@@ -19,6 +19,8 @@ class MenuItem extends Model
         return [
             'price' => 'integer',
             'is_available' => 'boolean',
+            'stock' => 'integer',
+            'stock_counted_at' => 'datetime',
             'sort_order' => 'integer',
         ];
     }

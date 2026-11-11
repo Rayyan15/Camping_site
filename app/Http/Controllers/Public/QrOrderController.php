@@ -14,6 +14,7 @@ use App\Models\DiningSpot;
 use App\Models\MenuCategory;
 use App\Models\Order;
 use App\Services\DiningSpotService;
+use App\Services\MenuStockService;
 use App\Services\OrderService;
 use App\Services\Payment\OrderTransferProofService;
 use App\Support\BankAccount;
@@ -28,6 +29,7 @@ class QrOrderController extends Controller
         private readonly DiningSpotService $diningSpots,
         private readonly OrderService $orders,
         private readonly OrderTransferProofService $proofs,
+        private readonly MenuStockService $stock,
     ) {}
 
     public function show(string $token): View
@@ -37,8 +39,12 @@ class QrOrderController extends Controller
         $categories = MenuCategory::query()
             ->with(['items' => fn ($items) => $items->available()->orderBy('sort_order')->orderBy('name')])
             ->orderBy('sort_order')
-            ->get()
-            ->filter(fn (MenuCategory $category) => $category->items->isNotEmpty());
+            ->get();
+        $stock = $this->stock->remaining();
+        $categories->each(fn (MenuCategory $category) => $category->setRelation('items', $category->items
+            ->reject(fn ($item) => ($stock[$item->id] ?? null) === 0)
+            ->each(fn ($item) => $item->setAttribute('stock_left', $stock[$item->id] ?? null))));
+        $categories = $categories->filter(fn (MenuCategory $category) => $category->items->isNotEmpty());
 
         return view('public.qr-menu', [
             'spot' => $spot,

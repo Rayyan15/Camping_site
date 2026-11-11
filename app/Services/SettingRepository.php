@@ -63,6 +63,15 @@ class SettingRepository
         return in_array($saved, config('booking.hold_minute_options'), true) ? $saved : (int) config('booking.hold_minutes');
     }
 
+    /** Minutes before an unpaid QR transfer order is cancelled; 0 means never. */
+    public function qrTransferCancelMinutes(): int
+    {
+        $saved = $this->get(SettingKey::QrTransferCancelMinutes);
+        $options = config('booking.qr_transfer_cancel_minute_options');
+
+        return $saved !== null && in_array((int) $saved, $options, true) ? (int) $saved : (int) config('booking.qr_transfer_cancel_minutes');
+    }
+
     /**
      * QR order payment choices the owner switched on. Cashier and bill-to-booking stay on until turned
      * off so existing QR menus keep working; transfer starts off until the owner opts in.
@@ -103,6 +112,7 @@ class SettingRepository
             'qr_payment_transfer_enabled' => $this->get(SettingKey::QrPaymentTransferEnabled) === '1',
             'qr_payment_booking_enabled' => $this->get(SettingKey::QrPaymentBookingEnabled) !== '0',
             'booking_hold_minutes' => $this->holdMinutes(),
+            'qr_transfer_cancel_minutes' => $this->qrTransferCancelMinutes(),
         ];
     }
 
@@ -125,6 +135,9 @@ class SettingRepository
                 $this->put($toggle, empty($values[$toggle->value]) ? '0' : '1');
             }
             $this->put(SettingKey::QrisImage, (string) ($values['qris_image'] ?? ''));
+            if (isset($values['qr_transfer_cancel_minutes'])) {
+                $this->put(SettingKey::QrTransferCancelMinutes, (string) (int) $values['qr_transfer_cancel_minutes']);
+            }
             if (isset($values['booking_hold_minutes'])) {
                 $this->put(SettingKey::BookingHoldMinutes, (string) (int) $values['booking_hold_minutes']);
             }

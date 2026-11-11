@@ -14,6 +14,7 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Refund;
 use App\Models\Unit;
+use App\Services\MenuStockService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
@@ -137,15 +138,23 @@ class ReportService
         $items = DB::table('order_items')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->join('menu_items', 'menu_items.id', '=', 'order_items.menu_item_id')
-            ->where('orders.payment_status', Order::PAYMENT_PAID)
+            // Food billed to a booking counts once that booking is paid; the order itself stays unpaid.
+            ->where(fn ($sold) => $sold
+                ->where('orders.payment_status', Order::PAYMENT_PAID)
+                ->orWhere(fn ($billed) => $billed
+                    ->where('orders.bill_to_booking', true)
+                    ->where('orders.status', '!=', OrderStatus::Dibatalkan->value)
+                    ->whereIn('orders.booking_id', fn ($paid) => $paid->select('id')->from('bookings')
+                        ->whereIn('status', array_map(fn (BookingStatus $status) => $status->value, [...BookingStatus::occupying(), BookingStatus::CheckedOut])))))
             ->where('orders.created_at', '>=', $period->from->toDateTimeString())
             ->where('orders.created_at', '<', $period->untilExclusive()->toDateTimeString())
             ->groupBy('menu_items.id', 'menu_items.name')
-            ->selectRaw('menu_items.name as name, SUM(order_items.qty) as sold, SUM(order_items.qty * order_items.price) as revenue')
+            ->selectRaw('menu_items.id as id, menu_items.name as name, SUM(order_items.qty) as sold, SUM(order_items.qty * order_items.price) as revenue')
             ->orderByDesc('sold')
             ->orderBy('menu_items.name')
             ->limit(self::TOP_MENU_LIMIT)
             ->get();
+        $stock = app(MenuStockService::class)->remaining($items->pluck('id')->all());
 
         return new ReportTable(
             ReportType::TopMenu,
@@ -154,13 +163,14 @@ class ReportService
                 $this->column('Menu', Type::Text),
                 $this->column('Terjual', Type::Count),
                 $this->column('Omzet (Rp)', Type::Money),
+                $this->column('Sisa stok', Type::Text),
             ],
-            $items->map(fn ($item) => [$item->name, (int) $item->sold, (int) $item->revenue])->all(),
+            $items->map(fn ($item) => [$item->name, (int) $item->sold, (int) $item->revenue, isset($stock[$item->id]) ? (string) $stock[$item->id] : 'Tidak dibatasi'])->all(),
             [
                 ['label' => 'Total terjual', 'value' => (int) $items->sum('sold'), 'type' => Type::Count],
                 ['label' => 'Total omzet (Rp)', 'value' => (int) $items->sum('revenue'), 'type' => Type::Money],
             ],
-            'Item pada pesanan yang sudah dibayar, dengan tanggal pesanan pada periode. Diurutkan dari yang paling banyak terjual, '.self::TOP_MENU_LIMIT.' teratas.',
+            'Item pada pesanan yang sudah dibayar, termasuk makanan yang ikut booking lunas, dengan tanggal pesanan pada periode. Sisa stok adalah sisa saat ini. Diurutkan dari yang paling banyak terjual, '.self::TOP_MENU_LIMIT.' teratas.',
         );
     }
 

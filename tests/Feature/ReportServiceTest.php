@@ -107,9 +107,9 @@ class ReportServiceTest extends TestCase
         $table = $this->reports->build(ReportType::TopMenu, ReportPeriod::thisMonth());
 
         $this->assertSame([
-            ['Nasi Goreng', 4, 100000],
-            ['Mie Rebus', 3, 60000],
-            ['Kopi Hitam', 2, 30000],
+            ['Nasi Goreng', 4, 100000, 'Tidak dibatasi'],
+            ['Mie Rebus', 3, 60000, 'Tidak dibatasi'],
+            ['Kopi Hitam', 2, 30000, 'Tidak dibatasi'],
         ], $table->rows);
         $this->assertSame(['Total terjual' => 9, 'Total omzet (Rp)' => 190000], array_column($table->summary, 'value', 'label'));
     }

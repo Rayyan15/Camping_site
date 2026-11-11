@@ -26,6 +26,7 @@ class OrderService
     public function __construct(
         private readonly PricingService $pricing,
         private readonly DiningSpotService $diningSpots,
+        private readonly MenuStockService $stock,
     ) {}
 
     /**
@@ -52,6 +53,8 @@ class OrderService
         $total = array_sum(array_column($lines, 'subtotal'));
 
         return DB::transaction(function () use ($source, $lines, $bookingId, $diningSpotId, $scheduledAt, $customerName, $customerPhone, $billToBooking, $total) {
+            $this->stock->assertEnough($lines);
+
             $order = Order::create([
                 'code' => $this->generateCode(),
                 'source' => $source,

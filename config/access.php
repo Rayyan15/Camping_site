@@ -25,6 +25,7 @@ return [
         'create_walkin_orders',
         'manage_menu',
         'toggle_menu_availability',
+        'manage_menu_stock',
         'approve_refund',
         'request_refund',
         'view_reports',

@@ -148,6 +148,16 @@ class ManageSettings extends Page
                                 $fail('Aktifkan minimal satu cara bayar pesanan QR.');
                             }
                         }),
+                    Select::make('qr_transfer_cancel_minutes')
+                        ->label('Batalkan pesanan transfer yang belum dibayar setelah')
+                        ->helperText('Berlaku untuk pesanan QR transfer yang belum mengirim bukti. Porsinya kembali ke stok.')
+                        ->options(collect(config('booking.qr_transfer_cancel_minute_options'))->mapWithKeys(fn (int $minutes) => [$minutes => match (true) {
+                            $minutes === 0 => 'Jangan dibatalkan otomatis',
+                            $minutes < 60 => "{$minutes} menit",
+                            default => ($minutes / 60).' jam',
+                        }])->all())
+                        ->required()
+                        ->columnSpanFull(),
                 ]),
         ]);
     }
