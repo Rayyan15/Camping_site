@@ -204,13 +204,15 @@ class MenuStockTest extends TestCase
         $this->travelTo(CarbonImmutable::parse('2026-12-01 09:00'));
         $booking = $this->bookingWithFood(BookingStatus::Paid, 2);
         $booking->update(['paid_amount' => 100000]);
+        // QR food billed to the stay sits outside booking.total and must not shrink the tent figure.
+        app(OrderService::class)->createOrder(Order::SOURCE_QR, [['menu_item_id' => $this->satay->id, 'qty' => 1]], $booking->id, $this->table->id, null, 'Tamu', null, true);
 
         $report = app(ReportService::class)->bookings(ReportPeriod::thisMonth());
 
-        $this->assertSame([$booking->code, 'Tamu', '01/12/2026', '02/12/2026', 'Lunas', 30000, 0, 70000, 100000, 100000], $report->rows[0]);
+        $this->assertSame([$booking->code, 'Tamu', '01/12/2026', '02/12/2026', 'Lunas', 30000, 0, 105000, 135000, 100000], $report->rows[0]);
         $summary = array_column($report->summary, 'value', 'label');
         $this->assertSame(30000, $summary['Sewa tenda, lunas (Rp)']);
-        $this->assertSame(70000, $summary['Makanan, lunas (Rp)']);
+        $this->assertSame(105000, $summary['Makanan, lunas (Rp)']);
     }
 
     public function test_served_orders_nobody_paid_for_show_in_the_unpaid_tab(): void
