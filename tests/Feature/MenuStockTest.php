@@ -10,6 +10,7 @@ use App\Enums\QrPaymentChoice;
 use App\Enums\SettingKey;
 use App\Exceptions\MenuItemUnavailableException;
 use App\Filament\Resources\MenuItems\Pages\ListMenuItems;
+use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Jobs\CancelUnpaidTransferOrders;
 use App\Models\Booking;
 use App\Models\Customer;
@@ -174,6 +175,23 @@ class MenuStockTest extends TestCase
 
         $this->assertSame(OrderStatus::Baru->value, $order->fresh()->status);
         $this->assertSame(PaymentStatus::Pending, $order->payments()->firstOrFail()->status);
+    }
+
+    public function test_served_orders_nobody_paid_for_show_in_the_unpaid_tab(): void
+    {
+        Filament::setCurrentPanel(Filament::getDefaultPanel());
+        $served = $this->order(1);
+        foreach ([OrderStatus::Diproses, OrderStatus::Siap, OrderStatus::Diantar, OrderStatus::Selesai] as $step) {
+            app(OrderService::class)->updateStatus($served, $step);
+        }
+        $paid = $this->order(1);
+        app(OrderService::class)->markPaidAtCashier($paid, PaymentMethod::Cash, $this->staff(User::ROLE_CASHIER)->id);
+
+        $this->actingAs($this->staff('owner'));
+        Livewire::test(ListOrders::class)
+            ->set('activeTab', 'unpaid')
+            ->assertCanSeeTableRecords([$served])
+            ->assertCanNotSeeTableRecords([$paid]);
     }
 
     public function test_only_the_owner_changes_stock_and_the_kitchen_sees_it(): void

@@ -18,6 +18,7 @@ class ListOrders extends ListRecords
     public function getTabs(): array
     {
         $awaitingProof = fn (Builder $query) => $query->awaitingTransferCheck();
+        $owed = fn (Builder $query) => $query->owedAtCashier();
 
         return [
             // Open orders only; a pre-order whose booking expired or was cancelled will never be served.
@@ -33,6 +34,11 @@ class ListOrders extends ListRecords
                 ->modifyQueryUsing($awaitingProof)
                 ->badge(fn (): ?int => $this->getModel()::query()->tap($awaitingProof)->count() ?: null)
                 ->badgeColor('warning'),
+            'unpaid' => Tab::make('Belum dibayar')
+                ->icon('heroicon-o-exclamation-circle')
+                ->modifyQueryUsing($owed)
+                ->badge(fn (): ?int => $this->getModel()::query()->tap($owed)->count() ?: null)
+                ->badgeColor('danger'),
         ];
     }
 }

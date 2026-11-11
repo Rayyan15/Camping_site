@@ -121,6 +121,21 @@ class Order extends Model
             ->where('status', '!=', OrderStatus::Dibatalkan->value);
     }
 
+    /**
+     * Food the guest owes the cashier: not billed to a booking, not paid, not cancelled. Served orders
+     * stay here until the money is recorded, so nothing leaves the cafe unpaid unnoticed.
+     *
+     * @param  Builder<Order>  $query
+     */
+    public function scopeOwedAtCashier(Builder $query): void
+    {
+        $query->where('bill_to_booking', false)
+            // Transfer orders are chased in the Cek transfer tab instead.
+            ->where(fn (Builder $cashier) => $cashier->whereNull('payment_choice')->orWhere('payment_choice', '!=', QrPaymentChoice::Transfer->value))
+            ->where('payment_status', '!=', self::PAYMENT_PAID)
+            ->where('status', '!=', OrderStatus::Dibatalkan->value);
+    }
+
     public function statusEnum(): OrderStatus
     {
         return OrderStatus::from($this->status);
