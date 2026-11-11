@@ -18,6 +18,8 @@ class MenuItemsTable
 {
     private const MAX_PORTIONS = 10000;
 
+    private const PREORDER_NOTE = 'Pesanan saat booking ikut memotong stok sejak dipesan, walau disajikan hari lain. Untuk paket BBQ yang dipesan jauh hari, kosongkan stoknya.';
+
     public static function stockLabel(?int $left): string
     {
         return match (true) {
@@ -42,6 +44,7 @@ class MenuItemsTable
                     ->label('Sisa stok')
                     ->state(fn (MenuItem $record): string => self::stockLabel(app(MenuStockService::class)->remainingFor($record)))
                     ->badge()
+                    ->tooltip('Habis berarti menu tidak muncul di QR, form booking, dan walk-in.')
                     ->color(fn (string $state): string => match ($state) {
                         'Habis' => 'danger',
                         'Tidak dibatasi' => 'gray',
@@ -55,7 +58,7 @@ class MenuItemsTable
                     ->icon('heroicon-o-plus-circle')
                     ->visible(fn (): bool => (bool) auth()->user()?->can('manage_menu_stock'))
                     ->modalSubmitActionLabel('Tambah')
-                    ->modalDescription(fn (MenuItem $record): string => 'Sisa sekarang: '.self::stockLabel(app(MenuStockService::class)->remainingFor($record)).'. Isi jumlah porsi yang baru disiapkan.')
+                    ->modalDescription(fn (MenuItem $record): string => 'Sisa sekarang: '.self::stockLabel(app(MenuStockService::class)->remainingFor($record)).'. Isi jumlah porsi yang baru disiapkan. '.self::PREORDER_NOTE)
                     ->schema([
                         TextInput::make('portions')->label('Tambah berapa porsi')->integer()->minValue(1)->maxValue(self::MAX_PORTIONS)->required(),
                     ])
@@ -69,6 +72,7 @@ class MenuItemsTable
                     ->color('gray')
                     ->visible(fn (): bool => (bool) auth()->user()?->can('manage_menu_stock'))
                     ->modalSubmitActionLabel('Simpan stok')
+                    ->modalDescription('Angka berarti stok dihitung dan menu hilang dari pesanan saat 0. Kosong berarti tidak dibatasi. '.self::PREORDER_NOTE)
                     ->fillForm(fn (MenuItem $record): array => ['portions' => app(MenuStockService::class)->remainingFor($record)])
                     ->schema([
                         TextInput::make('portions')
