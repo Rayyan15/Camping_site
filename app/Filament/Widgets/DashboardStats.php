@@ -36,8 +36,8 @@ class DashboardStats extends Widget
 
         if (auth()->user()?->can('view_financials')) {
             $revenue = $metrics->monthlyRevenue();
-            $items[] = ['icon' => 'heroicon-o-banknotes', 'value' => $rupiah($revenue['camping']), 'label' => 'Pendapatan camping bulan ini'];
-            $items[] = ['icon' => 'heroicon-o-cake', 'value' => $rupiah($revenue['food']), 'label' => 'Pendapatan F&B bulan ini'];
+            $items[] = ['icon' => 'heroicon-o-banknotes', 'value' => $rupiah($revenue['camping']), 'label' => 'Uang masuk booking bulan ini (tenda, add-on, makanan booking)'];
+            $items[] = ['icon' => 'heroicon-o-cake', 'value' => $rupiah($revenue['food']), 'label' => 'Uang masuk F&B QR dan walk-in bulan ini'];
         }
 
         return ['items' => $items];
