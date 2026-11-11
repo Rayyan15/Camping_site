@@ -177,6 +177,20 @@ class MenuStockTest extends TestCase
         $this->assertSame(PaymentStatus::Pending, $order->payments()->firstOrFail()->status);
     }
 
+    public function test_booking_report_keeps_the_tent_apart_from_food_ordered_with_it(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-12-01 09:00'));
+        $booking = $this->bookingWithFood(BookingStatus::Paid, 2);
+        $booking->update(['paid_amount' => 100000]);
+
+        $report = app(ReportService::class)->bookings(ReportPeriod::thisMonth());
+
+        $this->assertSame([$booking->code, 'Tamu', '01/12/2026', '02/12/2026', 'Lunas', 30000, 0, 70000, 100000, 100000], $report->rows[0]);
+        $summary = array_column($report->summary, 'value', 'label');
+        $this->assertSame(30000, $summary['Sewa tenda, lunas (Rp)']);
+        $this->assertSame(70000, $summary['Makanan, lunas (Rp)']);
+    }
+
     public function test_served_orders_nobody_paid_for_show_in_the_unpaid_tab(): void
     {
         Filament::setCurrentPanel(Filament::getDefaultPanel());
