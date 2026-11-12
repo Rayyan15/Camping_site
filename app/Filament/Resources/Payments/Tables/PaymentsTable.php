@@ -6,6 +6,7 @@ use App\Enums\PaymentStatus;
 use App\Filament\Resources\Payments\Actions\TransferProofActions;
 use App\Filament\Resources\Payments\PaymentLabels;
 use App\Models\Booking;
+use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
 use Filament\Actions\ViewAction;
@@ -32,7 +33,15 @@ class PaymentsTable
                     ->label('Kode')
                     ->state(fn (Payment $record): string => PaymentLabels::payableCode($record))
                     ->description(fn (Payment $record): string => PaymentLabels::payableType($record))
-                    ->weight('bold'),
+                    ->weight('bold')
+                    // One search box finds a payment by booking or order code, or by the guest's name.
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->where(fn (Builder $match) => $match
+                        ->whereHasMorph('payable', [Booking::class], fn (Builder $booking) => $booking
+                            ->where('code', 'like', "%{$search}%")
+                            ->orWhereHas('customer', fn (Builder $customer) => $customer->where('name', 'like', "%{$search}%")))
+                        ->orWhereHasMorph('payable', [Order::class], fn (Builder $order) => $order
+                            ->where('code', 'like', "%{$search}%")
+                            ->orWhere('customer_name', 'like', "%{$search}%")))),
                 TextColumn::make('tents')
                     ->label('Tenda')
                     ->state(fn (Payment $record): array => $record->payable instanceof Booking ? $record->payable->tentLabels() : [])

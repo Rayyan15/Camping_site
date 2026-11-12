@@ -9,6 +9,7 @@ use App\Enums\QrPaymentChoice;
 use App\Exceptions\InvalidBookingTransitionException;
 use App\Filament\Resources\Bookings\Actions\BookingActions;
 use App\Filament\Resources\Orders\Pages\ListOrders;
+use App\Filament\Resources\Payments\Pages\ListPayments;
 use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\DiningSpot;
@@ -118,6 +119,22 @@ class FoodReportingTest extends TestCase
             ->set('activeTab', 'unpaid')
             ->assertCanSeeTableRecords([$served])
             ->assertCanNotSeeTableRecords([$paid]);
+    }
+
+    public function test_payments_list_finds_a_payment_by_order_code_or_guest_name(): void
+    {
+        Filament::setCurrentPanel(Filament::getDefaultPanel());
+        $mine = $this->order(1);
+        $other = app(OrderService::class)->createQrOrder($this->table, [['menu_item_id' => $this->satay->id, 'qty' => 3]], 'Budi', null, QrPaymentChoice::Cashier);
+        $cashier = $this->staff(User::ROLE_CASHIER)->id;
+        app(OrderService::class)->markPaidAtCashier($mine, PaymentMethod::Cash, $cashier);
+        app(OrderService::class)->markPaidAtCashier($other, PaymentMethod::Cash, $cashier);
+        [$minePayment, $otherPayment] = [$mine->payments()->first(), $other->payments()->first()];
+
+        $this->actingAs($this->staff('owner'));
+        Livewire::test(ListPayments::class)
+            ->searchTable($mine->code)->assertCanSeeTableRecords([$minePayment])->assertCanNotSeeTableRecords([$otherPayment])
+            ->searchTable('Budi')->assertCanSeeTableRecords([$otherPayment])->assertCanNotSeeTableRecords([$minePayment]);
     }
 
     public function test_a_double_tap_on_the_qr_menu_places_one_order(): void
