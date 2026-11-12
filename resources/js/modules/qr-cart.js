@@ -8,6 +8,7 @@ export function initQrCart() {
     const countEl = document.querySelector('[data-cart-count]');
     const totalEl = document.querySelector('[data-cart-total]');
     const submit = document.querySelector('[data-cart-submit]');
+    const submitLabel = submit.textContent;
 
     const clamp = (input) => {
         let value = parseInt(input.value, 10);
@@ -42,6 +43,27 @@ export function initQrCart() {
         if (!button) return;
         const input = button.closest('[data-line]').querySelector('[data-qty]');
         input.value = (parseInt(input.value, 10) || 0) + Number(button.dataset.step);
+        refresh();
+    });
+
+    // A second tap while the first request is on its way would place the same order twice.
+    form.addEventListener('submit', (event) => {
+        if (form.dataset.sending) {
+            event.preventDefault();
+            return;
+        }
+        form.dataset.sending = '1';
+        submit.disabled = true;
+        submit.setAttribute('aria-busy', 'true');
+        submit.textContent = t('Mengirim pesanan...');
+    });
+
+    // Coming back with the browser's back button restores this page from cache, still locked.
+    window.addEventListener('pageshow', (event) => {
+        if (!event.persisted) return;
+        delete form.dataset.sending;
+        submit.removeAttribute('aria-busy');
+        submit.textContent = submitLabel;
         refresh();
     });
 

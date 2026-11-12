@@ -40,7 +40,8 @@ class PaymentsTable
                     ->placeholder('-'),
                 TextColumn::make('extras')
                     ->label('Tambahan')
-                    ->state(fn (Payment $record): array => $record->payable instanceof Booking ? [...$record->payable->addonLabels(), ...$record->payable->foodLabels()] : [])
+                    // Only food already ordered when this money came in; later QR food is still owed.
+                    ->state(fn (Payment $record): array => $record->payable instanceof Booking ? [...$record->payable->addonLabels(), ...$record->payable->foodLabels($record->paid_at ?? $record->created_at)] : [])
                     ->listWithLineBreaks()
                     ->placeholder('-'),
                 TextColumn::make('payer')

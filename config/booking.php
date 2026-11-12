@@ -87,4 +87,7 @@ return [
         'max_times' => (int) env('BOOKING_RESCHEDULE_MAX_TIMES', 1),
         'min_days_before_check_in' => (int) env('BOOKING_RESCHEDULE_MIN_DAYS', 7),
     ],
+
+    // The same QR order from the same spot and guest inside this window is a double tap, not a reorder.
+    'qr_duplicate_window_seconds' => (int) env('QR_DUPLICATE_WINDOW_SECONDS', 30),
 ];

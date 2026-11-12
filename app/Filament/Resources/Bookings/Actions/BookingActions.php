@@ -15,6 +15,7 @@ use App\Models\Addon;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Services\BookingAddonService;
+use App\Services\BookingBilling;
 use App\Services\BookingRescheduleService;
 use App\Services\BookingReviewService;
 use App\Services\BookingStatusTransition;
@@ -53,11 +54,13 @@ class BookingActions
 
     private const REVIEW_REFUND = 'refund';
 
-    private const PAYABLE_STATUSES = [BookingStatus::PendingPayment, BookingStatus::Paid, BookingStatus::CheckedIn];
+    // Checked out stays payable: food billed to the stay is often settled on the way out.
+    private const PAYABLE_STATUSES = [BookingStatus::PendingPayment, BookingStatus::Paid, BookingStatus::CheckedIn, BookingStatus::CheckedOut];
 
     public static function remainingBalance(Booking $booking): int
     {
-        return max(0, $booking->total - $booking->paid_amount);
+        // Includes food the guest billed to the stay after booking; booking.total holds pre-orders only.
+        return app(BookingBilling::class)->outstanding($booking);
     }
 
     public static function checkIn(): Action

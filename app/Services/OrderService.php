@@ -101,6 +101,11 @@ class OrderService
         }
 
         return DB::transaction(function () use ($spot, $items, $customerName, $customerPhone, $billToBooking, $booking, $choice) {
+            $repeat = $this->recentIdenticalQrOrder($spot, $items, $customerName);
+            if ($repeat !== null) {
+                return $repeat;
+            }
+
             $order = $this->createOrder(
                 Order::SOURCE_QR,
                 $items,
@@ -121,6 +126,30 @@ class OrderService
 
             return $order;
         });
+    }
+
+    /**
+     * A double tap or a resend on a slow connection reaches us as a second identical request.
+     * Live data had two identical orders two seconds apart, both billed to the stay, so the same
+     * order from the same spot and guest within the window is answered with the first one.
+     *
+     * @param  array<int, array{menu_item_id: int, qty: int, notes?: string|null}>  $items
+     */
+    private function recentIdenticalQrOrder(DiningSpot $spot, array $items, string $customerName): ?Order
+    {
+        $signature = fn (iterable $lines): array => collect($lines)
+            ->map(fn ($line) => data_get($line, 'menu_item_id').'x'.data_get($line, 'qty'))
+            ->sort()->values()->all();
+        $wanted = $signature($items);
+
+        return Order::with('items')
+            ->where('source', Order::SOURCE_QR)
+            ->where('dining_spot_id', $spot->id)
+            ->where('customer_name', $customerName)
+            ->where('status', '!=', OrderStatus::Dibatalkan->value)
+            ->where('created_at', '>=', now()->subSeconds((int) config('booking.qr_duplicate_window_seconds')))
+            ->get()
+            ->first(fn (Order $order) => $signature($order->items) === $wanted);
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Bookings\Tables;
 use App\Enums\BookingStatus;
 use App\Filament\Resources\Bookings\Actions\BookingActions;
 use App\Models\Booking;
+use App\Services\BookingBilling;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -72,7 +73,9 @@ class BookingsTable
                     ->placeholder('-')
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('total')
-                    ->label('Total Harga')
+                    ->label('Total Tagihan')
+                    // Adds food the guest billed to the stay by QR, which booking.total leaves out.
+                    ->state(fn (Booking $record): int => app(BookingBilling::class)->grandTotal($record))
                     ->money('IDR', locale: 'id', decimalPlaces: 0)
                     ->sortable(),
                 TextColumn::make('paid_amount')

@@ -6,6 +6,7 @@ use App\Enums\BookingStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentDirection;
 use App\Enums\PaymentMethod;
+use App\Enums\PaymentStatus;
 use App\Enums\RefundStatus;
 use App\Enums\ReportType;
 use App\Enums\ReportValueType as Type;
@@ -334,7 +335,7 @@ class ReportService
             ->settled()
             ->paidBetween($period->from->toDateTimeString(), $period->untilExclusive()->toDateTimeString())
             ->with(['payable' => fn ($morph) => $morph->morphWith([
-                Booking::class => ['bookingUnits', 'addons', 'orders'],
+                Booking::class => ['addons', 'orders', 'payments'],
             ])])
             ->get()
             ->each(function (Payment $payment) use (&$in, &$out): void {
@@ -395,22 +396,46 @@ class ReportService
             return ['tent' => (int) $payment->amount];
         }
 
+        // Money on a booking pays the tent first, then add-ons, then food billed to the stay, so
+        // anything still owed shows up as unpaid food: the owner can match the gap to the bill.
+        $addon = (int) $payable->addons->sum('subtotal');
+        $food = $this->bookingFoodTotal($payable);
         $parts = [
-            'addon' => (int) $payable->addons->sum('subtotal'),
-            'food_booking' => $this->bookingFoodTotal($payable),
+            'tent' => max(0, app(BookingBilling::class)->grandTotal($payable) - $addon - $food),
+            'addon' => $addon,
+            'food_booking' => $food,
         ];
-        // The bill the guest actually owes, so a promo or special price lowers the tent share only and
-        // a fully paid booking credits food and add-ons at face value, like the menu and booking reports.
-        $base = app(BookingBilling::class)->grandTotal($payable);
 
-        if ($base <= 0) {
-            return ['tent' => (int) $payment->amount];
+        $signed = fn (Payment $p): int => $p->direction === PaymentDirection::In ? (int) $p->amount : -(int) $p->amount;
+        $before = (int) $payable->payments
+            ->filter(fn (Payment $p): bool => $p->status === PaymentStatus::Paid
+                && ($p->paid_at < $payment->paid_at || ($p->paid_at == $payment->paid_at && $p->id < $payment->id)))
+            ->sum($signed);
+        $after = $before + $signed($payment);
+
+        $from = $this->fill($parts, min($before, $after));
+        $to = $this->fill($parts, max($before, $after));
+        $split = array_map(fn (string $key): int => $to[$key] - $from[$key], array_combine(array_keys($parts), array_keys($parts)));
+
+        // Money beyond the bill (an overpayment) has no line to fill, so it stays with the tent.
+        $split['tent'] += (int) $payment->amount - array_sum($split);
+
+        return $split;
+    }
+
+    /**
+     * @param  array<string, int>  $parts  in payment order
+     * @return array<string, int> how much of each part a running total covers
+     */
+    private function fill(array $parts, int $paid): array
+    {
+        $covered = [];
+        foreach ($parts as $key => $amount) {
+            $covered[$key] = min($amount, max(0, $paid));
+            $paid -= $covered[$key];
         }
 
-        $split = array_map(fn (int $part): int => intdiv((int) $payment->amount * $part, $base), $parts);
-
-        // Tent takes the remainder so rounding never loses or invents a rupiah.
-        return ['tent' => (int) $payment->amount - array_sum($split)] + $split;
+        return $covered;
     }
 
     /** @return array<int, int> sold nights per unit id inside the period, active units only */

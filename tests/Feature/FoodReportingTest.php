@@ -6,6 +6,8 @@ use App\Enums\BookingStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\QrPaymentChoice;
+use App\Exceptions\InvalidBookingTransitionException;
+use App\Filament\Resources\Bookings\Actions\BookingActions;
 use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Models\Booking;
 use App\Models\Customer;
@@ -14,8 +16,10 @@ use App\Models\MenuCategory;
 use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\BookingStatusTransition;
 use App\Services\DiningSpotService;
 use App\Services\OrderService;
+use App\Services\Payment\PaymentService;
 use App\Services\Reports\ReportPeriod;
 use App\Services\Reports\ReportService;
 use Carbon\CarbonImmutable;
@@ -106,7 +110,7 @@ class FoodReportingTest extends TestCase
         foreach ([OrderStatus::Diproses, OrderStatus::Siap, OrderStatus::Diantar, OrderStatus::Selesai] as $step) {
             app(OrderService::class)->updateStatus($served, $step);
         }
-        $paid = $this->order(1);
+        $paid = $this->order(2);
         app(OrderService::class)->markPaidAtCashier($paid, PaymentMethod::Cash, $this->staff(User::ROLE_CASHIER)->id);
 
         $this->actingAs($this->staff('owner'));
@@ -114,5 +118,60 @@ class FoodReportingTest extends TestCase
             ->set('activeTab', 'unpaid')
             ->assertCanSeeTableRecords([$served])
             ->assertCanNotSeeTableRecords([$paid]);
+    }
+
+    public function test_a_double_tap_on_the_qr_menu_places_one_order(): void
+    {
+        $first = $this->order(1);
+        $second = $this->order(1);
+
+        $this->assertTrue($first->is($second));
+        $this->assertSame(1, Order::count());
+
+        $this->travel(31)->seconds();
+        $this->assertFalse($first->is($this->order(1)), 'A real reorder after the window must go through.');
+    }
+
+    public function test_food_billed_to_a_stay_is_owed_until_the_booking_pays_it_and_blocks_check_out(): void
+    {
+        Filament::setCurrentPanel(Filament::getDefaultPanel());
+        $booking = Booking::create([
+            'code' => 'BK-D8', 'customer_id' => Customer::create(['name' => 'Tamu', 'phone' => '081233334444'])->id,
+            'check_in' => today(), 'check_out' => today()->addDay(), 'guests' => 2,
+            'status' => BookingStatus::CheckedIn, 'subtotal' => 720000, 'total' => 720000, 'paid_amount' => 720000,
+        ]);
+        $billed = app(OrderService::class)->createOrder(Order::SOURCE_QR, [['menu_item_id' => $this->satay->id, 'qty' => 2]], $booking->id, $this->table->id, null, 'Tamu', null, true);
+
+        $this->assertSame(70000, BookingActions::remainingBalance($booking));
+        $this->assertTrue(Order::owedAtCashier()->whereKey($billed->id)->exists());
+
+        try {
+            app(BookingStatusTransition::class)->apply($booking, BookingStatus::CheckedOut);
+            $this->fail('Check-out with unpaid billed food must be refused.');
+        } catch (InvalidBookingTransitionException $e) {
+            $this->assertStringContainsString('70.000', $e->getMessage());
+        }
+
+        app(PaymentService::class)->recordManual($booking, 70000, PaymentMethod::Cash->value, null, $this->staff(User::ROLE_CASHIER)->id);
+
+        $this->assertFalse(Order::owedAtCashier()->whereKey($billed->id)->exists());
+        $this->assertSame(BookingStatus::CheckedOut, app(BookingStatusTransition::class)->apply($booking->fresh(), BookingStatus::CheckedOut)->status);
+    }
+
+    public function test_revenue_report_leaves_unpaid_billed_food_as_the_gap(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-12-01 09:00'));
+        $booking = Booking::create([
+            'code' => 'BK-GAP', 'customer_id' => Customer::create(['name' => 'Tamu', 'phone' => '081255556666'])->id,
+            'check_in' => '2026-12-01', 'check_out' => '2026-12-02', 'guests' => 2,
+            'status' => BookingStatus::CheckedIn, 'subtotal' => 720000, 'total' => 720000, 'paid_amount' => 0,
+        ]);
+        app(PaymentService::class)->recordManual($booking, 720000, PaymentMethod::Cash->value, null, $this->staff(User::ROLE_CASHIER)->id);
+        app(OrderService::class)->createOrder(Order::SOURCE_QR, [['menu_item_id' => $this->satay->id, 'qty' => 2]], $booking->id, $this->table->id, null, 'Tamu', null, true);
+
+        $rows = array_column(app(ReportService::class)->revenueByCategory(ReportPeriod::thisMonth())->rows, 1, 0);
+
+        $this->assertSame(720000, $rows['Sewa tenda']);
+        $this->assertSame(0, $rows['F&B ditagih ke booking'], 'Unpaid billed food is the whole gap, not a share of it.');
     }
 }

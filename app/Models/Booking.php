@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\BookingStatus;
 use App\Enums\OrderStatus;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -147,10 +148,11 @@ class Booking extends Model
     }
 
     /** @return array<int, string> e.g. "Sab 2/11 08:00: 2x Kopi, 1x Nasi goreng" */
-    public function foodLabels(): array
+    public function foodLabels(?CarbonInterface $orderedBy = null): array
     {
         return $this->orders
             ->reject(fn (Order $order): bool => $order->statusEnum() === OrderStatus::Dibatalkan)
+            ->reject(fn (Order $order): bool => $orderedBy !== null && $order->created_at->gt($orderedBy))
             ->map(fn (Order $order): string => ($order->scheduled_at ? $order->scheduled_at->locale('id')->translatedFormat('D j/n H:i').': ' : '')
                 .$order->items->map(fn (OrderItem $item): string => $item->qty.'x '.$item->menuItem->name)->implode(', '))
             ->values()

@@ -73,6 +73,12 @@ class BookingStatusTransition
                 throw InvalidBookingTransitionException::unpaidBalance($locked->total - $locked->paid_amount);
             }
 
+            // Food billed to the stay is collected before the guest leaves, or nobody chases it later.
+            $owed = app(BookingBilling::class)->outstanding($locked);
+            if ($target === BookingStatus::CheckedOut && $owed > 0) {
+                throw InvalidBookingTransitionException::unpaidBalance($owed, 'check-out. Termasuk makanan yang ditagih ke booking');
+            }
+
             // Money already received must leave through a refund, never vanish with a plain cancel.
             if ($target === BookingStatus::Cancelled && $locked->paid_amount > 0) {
                 throw InvalidBookingTransitionException::holdsPayment();
