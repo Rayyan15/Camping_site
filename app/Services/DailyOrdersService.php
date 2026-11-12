@@ -61,6 +61,7 @@ class DailyOrdersService
                 $owed = $this->billing->outstanding($booking);
 
                 return [
+                    'id' => $booking->id,
                     'kind' => 'booking',
                     'code' => $booking->code,
                     'name' => $booking->customer?->name ?? '-',
@@ -92,6 +93,7 @@ class DailyOrdersService
             ->orderBy('created_at')
             ->get()
             ->map(fn (Order $order): array => [
+                'id' => $order->id,
                 'kind' => 'order',
                 'code' => $order->code,
                 'name' => $order->customer_name ?? '-',

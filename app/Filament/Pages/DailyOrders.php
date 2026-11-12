@@ -57,6 +57,8 @@ class DailyOrders extends Page
             'counts' => $counts,
             'total' => $rows->count(),
             'labels' => DailyOrdersService::LABELS,
+            'billTotal' => $rows->sum('bill'),
+            'paidTotal' => $rows->sum('paid'),
             'owedTotal' => $rows->sum('owed'),
             'owedCount' => $rows->where('owed', '>', 0)->count(),
             'dayLabel' => $this->selectedDate()->locale('id')->translatedFormat('l, j F Y'),
