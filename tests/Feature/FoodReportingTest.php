@@ -108,7 +108,7 @@ class FoodReportingTest extends TestCase
     {
         Filament::setCurrentPanel(Filament::getDefaultPanel());
         $served = $this->order(1);
-        foreach ([OrderStatus::Diproses, OrderStatus::Siap, OrderStatus::Diantar, OrderStatus::Selesai] as $step) {
+        foreach ([OrderStatus::Diproses, OrderStatus::Siap, OrderStatus::Diantar] as $step) {
             app(OrderService::class)->updateStatus($served, $step);
         }
         $paid = $this->order(2);

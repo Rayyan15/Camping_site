@@ -144,12 +144,20 @@ class KitchenQueueTest extends TestCase
         $service->updateStatus($order, OrderStatus::Baru);
     }
 
-    public function test_new_order_can_be_closed_in_one_step(): void
+    public function test_new_order_can_be_closed_in_one_step_once_paid(): void
     {
         $service = app(OrderService::class);
         $order = $service->createOrder(Order::SOURCE_QR, [['menu_item_id' => $this->coffee->id, 'qty' => 1]]);
 
-        $service->updateStatus($order, OrderStatus::Selesai);
+        try {
+            $service->updateStatus($order, OrderStatus::Selesai);
+            $this->fail('An unpaid cashier order must not be closed.');
+        } catch (InvalidOrderTransitionException $e) {
+            $this->assertStringContainsString('Tagih dulu', $e->getMessage());
+        }
+
+        $service->markPaidAtCashier($order, PaymentMethod::Cash, $this->staff('record_order_payment')->id);
+        $service->updateStatus($order->fresh(), OrderStatus::Selesai);
 
         $this->assertSame('selesai', $order->fresh()->status);
     }

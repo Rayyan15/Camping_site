@@ -209,6 +209,11 @@ class OrderService
                 throw InvalidOrderTransitionException::paidCannotBeCancelled();
             }
 
+            // Closing an unpaid cashier order is how served food left without being paid (owner audit, Nov 2026).
+            if ($newStatus === OrderStatus::Selesai && ! $locked->isPaid() && ! $locked->bill_to_booking) {
+                throw InvalidOrderTransitionException::unpaidCannotBeClosed($locked->total);
+            }
+
             $locked->update(['status' => $newStatus->value]);
             $order->refresh();
 
