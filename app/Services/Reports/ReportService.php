@@ -349,8 +349,10 @@ class ReportService
             $rows[] = [$label, $in[$key], $out[$key], $in[$key] - $out[$key]];
         }
 
-        $tentNet = $in['tent'] + $in['addon'] - $out['tent'] - $out['addon'];
-        $foodNet = $in['food_booking'] + $in['food_direct'] - $out['food_booking'] - $out['food_direct'];
+        $net = fn (string $key): int => $in[$key] - $out[$key];
+        $tentNet = $net('tent');
+        $addonNet = $net('addon');
+        $foodNet = $net('food_booking') + $net('food_direct');
 
         return new ReportTable(
             ReportType::Revenue,
@@ -363,9 +365,10 @@ class ReportService
             ],
             $rows,
             [
-                ['label' => 'Tenda dan add-on, neto (Rp)', 'value' => $tentNet, 'type' => Type::Money],
+                ['label' => 'Sewa tenda, neto (Rp)', 'value' => $tentNet, 'type' => Type::Money],
+                ['label' => 'Tambahan (add-on), neto (Rp)', 'value' => $addonNet, 'type' => Type::Money],
                 ['label' => 'F&B, neto (Rp)', 'value' => $foodNet, 'type' => Type::Money],
-                ['label' => 'Total neto (Rp)', 'value' => $tentNet + $foodNet, 'type' => Type::Money],
+                ['label' => 'Total neto (Rp)', 'value' => $tentNet + $addonNet + $foodNet, 'type' => Type::Money],
             ],
             'Pembayaran berhasil dengan tanggal bayar pada periode, sama dengan laporan pembayaran per metode. Pembayaran booking dibagi ke tenda, add-on, dan makanan sesuai porsi rincian booking.',
         );
@@ -396,7 +399,9 @@ class ReportService
             'addon' => (int) $payable->addons->sum('subtotal'),
             'food_booking' => $this->bookingFoodTotal($payable),
         ];
-        $base = (int) $payable->bookingUnits->sum('subtotal') + array_sum($parts);
+        // The bill the guest actually owes, so a promo or special price lowers the tent share only and
+        // a fully paid booking credits food and add-ons at face value, like the menu and booking reports.
+        $base = app(BookingBilling::class)->grandTotal($payable);
 
         if ($base <= 0) {
             return ['tent' => (int) $payment->amount];

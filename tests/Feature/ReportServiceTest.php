@@ -164,7 +164,7 @@ class ReportServiceTest extends TestCase
         $payments = array_column($this->reports->build(ReportType::PaymentMethod, $period)->summary, 'value', 'label');
 
         $this->assertSame($payments['Neto (Rp)'], $revenue['Total neto (Rp)']);
-        $this->assertSame($revenue['Total neto (Rp)'], $revenue['Tenda dan add-on, neto (Rp)'] + $revenue['F&B, neto (Rp)']);
+        $this->assertSame($revenue['Total neto (Rp)'], $revenue['Sewa tenda, neto (Rp)'] + $revenue['Tambahan (add-on), neto (Rp)'] + $revenue['F&B, neto (Rp)']);
 
         $directFood = (int) Payment::query()->settled()
             ->paidBetween($period->from->toDateTimeString(), $period->untilExclusive()->toDateTimeString())
