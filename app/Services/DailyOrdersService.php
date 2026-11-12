@@ -58,6 +58,7 @@ class DailyOrdersService
                 $addons = $booking->addonLabels();
                 $food = $booking->foodLabels();
                 $bill = $this->billing->grandTotal($booking);
+                $owed = $this->billing->outstanding($booking);
 
                 return [
                     'kind' => 'booking',
@@ -73,8 +74,9 @@ class DailyOrdersService
                     },
                     'bill' => $bill,
                     'paid' => (int) $booking->paid_amount,
-                    'owed' => $this->billing->outstanding($booking),
-                    'status' => $booking->status->getLabel(),
+                    'owed' => $owed,
+                    // "Lunas" covers the tent payment only; food billed later can still be owed.
+                    'status' => $owed > 0 && $booking->status === BookingStatus::Paid ? 'Belum lunas' : $booking->status->getLabel(),
                 ];
             })
             ->all();
