@@ -10,10 +10,10 @@
         .do-owed { margin-top: 1rem; padding: 0.75rem 1rem; border-radius: 0.5rem; background: var(--danger-50); color: var(--danger-800); font-size: 0.875rem; font-weight: 600; }
         .do-scroll { overflow-x: auto; border: 1px solid var(--gray-200); border-radius: 0.75rem; }
         .do-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.875rem; font-variant-numeric: tabular-nums; }
-        .do-table th, .do-table td { padding: 0.75rem 0.875rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--gray-200); }
+        .do-table th, .do-table td { padding: 0.75rem 0.875rem; text-align: center; vertical-align: middle; border-bottom: 1px solid var(--gray-200); }
         .do-table tbody tr:last-child > * { border-bottom: 0; }
         .do-table thead th { background: var(--gray-50); font-size: 0.75rem; font-weight: 700; color: var(--gray-700); white-space: nowrap; }
-        .do-table .do-num { text-align: right; white-space: nowrap; }
+        .do-table .do-num { white-space: nowrap; }
         .do-table .do-code { font-weight: 700; color: var(--gray-950); white-space: nowrap; }
         .do-table .do-sub { display: block; font-size: 0.8125rem; color: var(--gray-600); }
         .do-table .do-details { min-width: 14rem; max-width: 26rem; color: var(--gray-800); }
