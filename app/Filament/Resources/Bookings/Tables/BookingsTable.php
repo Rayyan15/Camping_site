@@ -66,6 +66,11 @@ class BookingsTable
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
+                    // A paid stay can owe again once food is billed to it; FO must see that next to the status.
+                    ->color(fn (Booking $record) => BookingActions::remainingBalance($record) > 0 && $record->status !== BookingStatus::PendingPayment ? 'danger' : $record->status->getColor())
+                    ->description(fn (Booking $record): ?string => BookingActions::remainingBalance($record) > 0 && $record->status !== BookingStatus::PendingPayment
+                        ? 'Belum lunas, sisa Rp '.number_format(BookingActions::remainingBalance($record), 0, ',', '.')
+                        : null)
                     ->searchable(),
                 TextColumn::make('review_age')
                     ->label('Umur review')
