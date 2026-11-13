@@ -19,7 +19,7 @@ function write(value) {
 }
 
 // Guests who closed or refreshed checkout re-booked and found their own held tent "full"; this points them back.
-export function initResumeBooking() {
+export async function initResumeBooking() {
     const save = document.querySelector('[data-resume-save]');
     const clear = document.querySelector('[data-resume-clear]');
 
@@ -32,6 +32,17 @@ export function initResumeBooking() {
     const pending = read();
     const banner = document.querySelector('[data-resume-banner]');
     if (!pending || !banner) return;
+
+    // The booking may have been paid, cancelled or expired since it was saved; the checkout page knows.
+    try {
+        const page = await fetch(pending.url, { credentials: 'same-origin' }).then((response) => response.text());
+        if (!page.includes('data-resume-save')) {
+            write(null);
+            return;
+        }
+    } catch {
+        return;
+    }
 
     banner.querySelector('[data-resume-code]').textContent = pending.code;
     banner.querySelector('[data-resume-link]').href = pending.url;

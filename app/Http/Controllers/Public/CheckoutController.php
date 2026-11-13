@@ -9,6 +9,7 @@ use App\Exceptions\PaymentException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Public\UploadTransferProofRequest;
 use App\Models\Booking;
+use App\Models\User;
 use App\Services\BookingBilling;
 use App\Services\Payment\TransferProofService;
 use App\Services\SettingRepository;
@@ -40,8 +41,10 @@ class CheckoutController extends Controller
             'outstanding' => $billing->outstanding($booking),
             'bank' => BankAccount::current(),
             'proof' => $proof,
-            // Drives the "continue your booking" reminder kept in the guest's browser.
-            'awaitingProof' => ($booking->isHoldActive() || $booking->acceptsLateProof())
+            // Drives the "continue your booking" reminder kept in the guest's browser. Staff open guests'
+            // links from the panel, so their browser must not pick the reminder up.
+            'awaitingProof' => ! auth()->user()?->hasAnyRole(User::PANEL_ROLES)
+                && ($booking->isHoldActive() || $booking->acceptsLateProof())
                 && $proof?->status !== PaymentStatus::Pending && ! $cashChosen,
             // Cash on arrival needs a held tent, so a lapsed booking only offers the proof upload.
             'methods' => $booking->isHoldActive()
