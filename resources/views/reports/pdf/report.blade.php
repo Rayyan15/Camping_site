@@ -3,9 +3,10 @@
     $forest = $brand['forest']['700'];
     $ember = $brand['ember'];
     $ink = $brand['ink'];
-    $muted = $brand['neutral']['600'];
-    $rule = $brand['neutral']['300'];
-    // Labels carry the unit ("(Rp)", "(%)"), so figures print bare and line up like a financial table.
+    // Print-safe greys: muted text stays dark enough for office laser printers, rules dark enough not to vanish.
+    $muted = $brand['neutral']['700'];
+    $rule = $brand['neutral']['500'];
+    // Labels carry the unit ("(Rp)", "(%)"), so figures print bare like a financial table.
     $figure = fn ($type, $value) => $type->format($value);
     $lead = $table->summary[0] ?? null;
     $stats = array_slice($table->summary, 1);
@@ -18,50 +19,47 @@
     <title>{{ $table->title() }}</title>
     <style>
         /*
-         * Financial print layout: a heavy ink masthead rule, a serif headline over sans data,
-         * one lead figure, a ruled key-stats strip, and a table with right-aligned monospaced figures
-         * so columns of rupiah line up digit for digit. Ember marks section labels only.
+         * Page 1 is the summary the owner reads first; the detail rows start on page 2 with the
+         * header repeated on every page. Sizes and greys are chosen to survive a black and white print.
          */
-        @page { margin: 28px 32px 46px; }
-        body { font-family: 'DejaVu Sans', sans-serif; font-size: 8.5px; color: {{ $ink }}; line-height: 1.35; }
-        .footer { position: fixed; bottom: -26px; left: 0; right: 0; border-top: 0.75px solid {{ $rule }}; padding-top: 5px; font-size: 7px; color: {{ $muted }}; }
+        @page { margin: 30px 34px 50px; }
+        body { font-family: 'DejaVu Sans', sans-serif; font-size: 10px; color: {{ $ink }}; line-height: 1.4; }
+        .footer { position: fixed; bottom: -30px; left: 0; right: 0; border-top: 1px solid {{ $rule }}; padding-top: 5px; font-size: 8px; color: {{ $muted }}; }
         .footer table { width: 100%; border-collapse: collapse; }
         .footer td { padding: 0; border: 0; }
         .pagenum:before { content: counter(page); }
 
-        .masthead { width: 100%; border-collapse: collapse; border-top: 4px solid {{ $ink }}; }
+        .masthead { width: 100%; border-collapse: collapse; border-top: 5px solid {{ $ink }}; }
         .masthead td { padding: 6px 0 0; vertical-align: top; border: 0; }
-        .brand { font-size: 8px; font-weight: bold; color: {{ $forest }}; letter-spacing: 0.4px; }
-        .stamp { text-align: right; font-size: 7.5px; color: {{ $muted }}; }
-        h1 { font-family: 'DejaVu Serif', serif; font-size: 22px; line-height: 1.1; margin: 8px 0 3px; }
-        .dek { font-size: 9px; color: {{ $muted }}; margin: 0 0 10px; }
-        .period { border-top: 0.75px solid {{ $ink }}; border-bottom: 0.75px solid {{ $ink }}; padding: 4px 0; margin-bottom: 14px; font-size: 8px; }
-        .period strong { color: {{ $ink }}; }
+        .brand { font-size: 9px; font-weight: bold; color: {{ $forest }}; }
+        .stamp { text-align: right; font-size: 8.5px; color: {{ $muted }}; }
+        h1 { font-family: 'DejaVu Serif', serif; font-size: 26px; line-height: 1.1; margin: 10px 0 4px; }
+        .dek { font-size: 11px; color: {{ $muted }}; margin: 0 0 12px; }
+        .period { border-top: 1px solid {{ $ink }}; border-bottom: 1px solid {{ $ink }}; padding: 5px 0; margin-bottom: 20px; font-size: 10px; }
 
-        .label { font-size: 7px; font-weight: bold; color: {{ $ember }}; letter-spacing: 0.3px; }
-        .overview { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-        .overview > tbody > tr > td, .overview > tr > td { border: 0; padding: 0; vertical-align: top; }
-        .lead { width: 24%; padding-right: 14px !important; border-top: 4px solid {{ $forest }} !important; padding-top: 5px !important; }
-        .lead .figure { font-size: 30px; color: {{ $forest }}; font-weight: bold; line-height: 1; margin-top: 3px; }
+        .label { font-size: 9px; font-weight: bold; color: {{ $ember }}; }
+        .lead { border-top: 5px solid {{ $forest }}; padding-top: 6px; margin-bottom: 22px; }
+        .lead .figure { font-size: 42px; font-weight: bold; line-height: 1.05; color: {{ $forest }}; margin-top: 4px; }
 
-        .stats { width: 100%; border-collapse: collapse; border-top: 1.5px solid {{ $ink }}; }
-        .stats td { width: 33%; padding: 5px 10px 6px 0; border-bottom: 0.75px solid {{ $rule }}; vertical-align: top; }
-        .stats .name { font-size: 7.5px; color: {{ $muted }}; }
-        .stats .value { font-family: 'DejaVu Sans Mono', monospace; font-size: 11px; font-weight: bold; margin-top: 2px; }
+        .stats { width: 100%; border-collapse: collapse; border-top: 2px solid {{ $ink }}; margin-top: 4px; }
+        .stats td { padding: 7px 0; border-bottom: 1px solid {{ $rule }}; font-size: 11px; }
+        .stats td.value { text-align: right; font-family: 'DejaVu Sans Mono', monospace; font-weight: bold; font-size: 12px; white-space: nowrap; }
 
-        .section { margin-bottom: 4px; }
+        .note { margin-top: 24px; border-top: 2px solid {{ $ink }}; padding-top: 6px; }
+        .note p { margin: 4px 0 0; font-size: 10px; }
+
+        .detail { page-break-before: always; }
+        .detail-head { border-top: 5px solid {{ $ink }}; padding-top: 6px; margin-bottom: 10px; }
+        .detail-head h2 { font-family: 'DejaVu Serif', serif; font-size: 16px; margin: 4px 0 0; }
         .data { width: 100%; border-collapse: collapse; }
-        .data th { font-size: 7px; text-align: left; padding: 5px 6px 4px; border-top: 1.5px solid {{ $ink }}; border-bottom: 0.75px solid {{ $ink }}; vertical-align: bottom; }
-        .data td { padding: 4px 6px; border-bottom: 0.5px solid {{ $rule }}; vertical-align: top; }
-        .data th:first-child, .data td:first-child { padding-left: 0; }
-        .data th.num, .data td.num { text-align: right; white-space: nowrap; }
-        .data td.num { font-family: 'DejaVu Sans Mono', monospace; }
+        .data thead { display: table-header-group; }
+        .data tr { page-break-inside: avoid; }
+        .data th { font-size: 9px; text-align: center; padding: 6px 5px; border-top: 2px solid {{ $ink }}; border-bottom: 1.5px solid {{ $ink }}; vertical-align: middle; }
+        .data td { font-size: 9.5px; text-align: center; padding: 6px 5px; border-bottom: 1px solid {{ $rule }}; vertical-align: middle; }
+        .data td.num { font-family: 'DejaVu Sans Mono', monospace; white-space: nowrap; }
         .data td:first-child { font-weight: bold; }
-        .empty { padding: 14px 0; color: {{ $muted }}; }
-        .count { margin-top: 5px; font-size: 7.5px; color: {{ $muted }}; }
-
-        .note { margin-top: 14px; border-top: 1.5px solid {{ $ink }}; padding-top: 5px; width: 75%; }
-        .note p { margin: 3px 0 0; color: {{ $ink }}; }
+        .empty { padding: 16px 0; }
+        .count { margin-top: 6px; font-size: 9px; color: {{ $muted }}; }
     </style>
 </head>
 <body>
@@ -85,58 +83,22 @@
     <div class="period">Periode <strong>{{ $table->period->label() }}</strong></div>
 
     @if ($lead)
-        <table class="overview">
-            <tr>
-                <td class="lead">
-                    <div class="label">{{ $lead['label'] }}</div>
-                    <div class="figure">{{ $figure($lead['type'], $lead['value']) }}</div>
-                </td>
-                <td>
-                    @if ($stats !== [])
-                        <table class="stats">
-                            @foreach (array_chunk($stats, 3) as $chunk)
-                                <tr>
-                                    @foreach ($chunk as $line)
-                                        <td>
-                                            <div class="name">{{ $line['label'] }}</div>
-                                            <div class="value">{{ $figure($line['type'], $line['value']) }}</div>
-                                        </td>
-                                    @endforeach
-                                    @for ($i = count($chunk); $i < 3; $i++)
-                                        <td></td>
-                                    @endfor
-                                </tr>
-                            @endforeach
-                        </table>
-                    @endif
-                </td>
-            </tr>
-        </table>
+        <div class="lead">
+            <div class="label">{{ $lead['label'] }}</div>
+            <div class="figure">{{ $figure($lead['type'], $lead['value']) }}</div>
+        </div>
     @endif
 
-    <div class="label section">Rincian</div>
-    <table class="data">
-        <thead>
-            <tr>
-                @foreach ($table->columns as $column)
-                    <th @class(['num' => $column['type']->isNumeric()])>{{ $column['label'] }}</th>
-                @endforeach
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($table->rows as $row)
+    @if ($stats !== [])
+        <div class="label">Ringkasan</div>
+        <table class="stats">
+            @foreach ($stats as $line)
                 <tr>
-                    @foreach ($row as $index => $value)
-                        <td @class(['num' => $table->columns[$index]['type']->isNumeric()])>{{ $figure($table->columns[$index]['type'], $value) }}</td>
-                    @endforeach
+                    <td>{{ $line['label'] }}</td>
+                    <td class="value">{{ $figure($line['type'], $line['value']) }}</td>
                 </tr>
-            @empty
-                <tr><td class="empty" colspan="{{ count($table->columns) }}">Tidak ada data pada periode ini.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
-    @if ($table->rows !== [])
-        <p class="count">{{ count($table->rows) }} baris{{ $table->truncated ? ', dipotong. Unduh Excel untuk data lengkap.' : '' }}</p>
+            @endforeach
+        </table>
     @endif
 
     @if ($table->definition !== '')
@@ -145,5 +107,35 @@
             <p>{{ $table->definition }}</p>
         </div>
     @endif
+
+    <div class="detail">
+        <div class="detail-head">
+            <div class="label">Rincian</div>
+            <h2>{{ $table->type->label() }}, {{ $table->period->label() }}</h2>
+        </div>
+        <table class="data">
+            <thead>
+                <tr>
+                    @foreach ($table->columns as $column)
+                        <th>{{ $column['label'] }}</th>
+                    @endforeach
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($table->rows as $row)
+                    <tr>
+                        @foreach ($row as $index => $value)
+                            <td @class(['num' => $table->columns[$index]['type']->isNumeric()])>{{ $figure($table->columns[$index]['type'], $value) }}</td>
+                        @endforeach
+                    </tr>
+                @empty
+                    <tr><td class="empty" colspan="{{ count($table->columns) }}">Tidak ada data pada periode ini.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+        @if ($table->rows !== [])
+            <p class="count">{{ count($table->rows) }} baris{{ $table->truncated ? ', dipotong. Unduh Excel untuk data lengkap.' : '' }}</p>
+        @endif
+    </div>
 </body>
 </html>
