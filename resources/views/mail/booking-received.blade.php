@@ -10,7 +10,7 @@
 @endif
 
 @if($bank->isComplete())
-{{ __('Transfer sebesar :amount ke rekening :bank :number atas nama :holder, lalu unggah bukti transfernya di halaman pembayaran.', ['amount' => 'Rp '.number_format($booking->total - $booking->paid_amount, 0, ',', '.'), 'bank' => $bank->bankName, 'number' => $bank->accountNumber, 'holder' => $bank->accountHolder]) }}
+{{ __('Transfer sebesar :amount ke rekening :bank :number atas nama :holder, lalu unggah bukti transfernya di halaman pembayaran.', ['amount' => 'Rp '.number_format(app(\App\Services\BookingBilling::class)->outstanding($booking), 0, ',', '.'), 'bank' => $bank->bankName, 'number' => $bank->accountNumber, 'holder' => $bank->accountHolder]) }}
 @else
 {{ __('Nomor rekening belum diatur. Hubungi admin lewat halaman pembayaran untuk mendapat nomor rekening.') }}
 @endif

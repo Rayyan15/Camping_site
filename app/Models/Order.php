@@ -31,13 +31,14 @@ class Order extends Model
     protected $fillable = [
         'code', 'source', 'booking_id', 'customer_name', 'customer_phone', 'dining_spot_id',
         'scheduled_at', 'status', 'total', 'tax', 'payment_status', 'payment_choice',
-        'bill_to_booking',
+        'bill_to_booking', 'auto_cancelled_at',
     ];
 
     protected function casts(): array
     {
         return [
             'scheduled_at' => 'datetime',
+            'auto_cancelled_at' => 'datetime',
             'total' => 'integer',
             'tax' => 'integer',
             'bill_to_booking' => 'boolean',

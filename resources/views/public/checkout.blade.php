@@ -10,6 +10,7 @@
     $checkOut = $booking->check_out->locale(app()->getLocale());
     $remaining = $holdActive ? max(0, (int) now()->diffInSeconds($booking->hold_expires_at, false)) : 0;
     $downPaid = $booking->paid_amount > 0;
+    $bill = app(\App\Services\BookingBilling::class)->breakdown($booking);
 @endphp
 
 @section('content')
@@ -78,7 +79,7 @@
                                 </tr>
                             @endforeach
 
-                            @foreach($booking->orders as $order)
+                            @foreach($booking->billedOrders() as $order)
                                 @foreach($order->items as $line)
                                     <tr>
                                         <td class="py-3 pr-4">
@@ -93,8 +94,8 @@
                             @endforeach
                         </tbody>
                         <tfoot class="border-t-2 border-forest-800">
-                            <tr><td class="pt-4 text-ink-soft">{{ __('Subtotal') }}</td><td class="pt-4 text-right">{{ $rupiah($booking->subtotal) }}</td></tr>
-                            <tr class="text-base"><td class="pt-2 font-bold text-forest-900">{{ __('Total') }}</td><td class="pt-2 text-right font-bold text-forest-900">{{ $rupiah($booking->total) }}</td></tr>
+                            <tr><td class="pt-4 text-ink-soft">{{ __('Subtotal') }}</td><td class="pt-4 text-right">{{ $rupiah($bill['subtotal']) }}</td></tr>
+                            <tr class="text-base"><td class="pt-2 font-bold text-forest-900">{{ __('Total') }}</td><td class="pt-2 text-right font-bold text-forest-900">{{ $rupiah($bill['total']) }}</td></tr>
                         </tfoot>
                     </table>
                 </section>

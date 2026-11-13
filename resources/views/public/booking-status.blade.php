@@ -27,6 +27,7 @@
     $isPending = $booking->status === BookingStatus::PendingPayment;
     $holdActive = $isPending && $booking->hold_expires_at?->isFuture();
     $money = fn (int $amount) => 'Rp '.number_format($amount, 0, ',', '.');
+    $bill = app(\App\Services\BookingBilling::class)->breakdown($booking);
 @endphp
 
 @section('title', __('Status booking').' '.$booking->code.' - '.config('site.name'))
@@ -128,7 +129,7 @@
                         <span class="font-semibold">{{ $money($line->subtotal) }}</span>
                     </li>
                 @endforeach
-                @foreach($booking->orders as $order)
+                @foreach($booking->billedOrders() as $order)
                     <li class="flex items-baseline justify-between gap-4 py-3">
                         <span>{{ __('Pesan makanan') }} <span class="text-ink-soft">{{ $order->code }}</span></span>
                         <span class="font-semibold">{{ $money($order->total) }}</span>
@@ -137,8 +138,8 @@
             </ul>
 
             <dl class="mt-4 space-y-2 border-t-2 border-forest-900 pt-4">
-                <div class="flex justify-between"><dt class="text-ink-soft">{{ __('Subtotal') }}</dt><dd>{{ $money($booking->subtotal) }}</dd></div>
-                <div class="flex justify-between text-lg"><dt class="font-bold text-forest-900">{{ __('Total') }}</dt><dd class="font-bold text-forest-900">{{ $money($booking->total) }}</dd></div>
+                <div class="flex justify-between"><dt class="text-ink-soft">{{ __('Subtotal') }}</dt><dd>{{ $money($bill['subtotal']) }}</dd></div>
+                <div class="flex justify-between text-lg"><dt class="font-bold text-forest-900">{{ __('Total') }}</dt><dd class="font-bold text-forest-900">{{ $money($bill['total']) }}</dd></div>
                 <div class="flex justify-between"><dt class="text-ink-soft">{{ __('Sudah dibayar') }}</dt><dd class="font-semibold">{{ $money($booking->paid_amount) }}</dd></div>
             </dl>
         </section>

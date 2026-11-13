@@ -6,6 +6,7 @@ use App\Enums\BookingStatus;
 use App\Enums\OrderStatus;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -181,5 +182,17 @@ class Booking extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    /**
+     * Orders that make up the bill, matching BookingBilling: pre-orders (priced into booking.total)
+     * and food billed to the stay that was not cancelled. Food paid at the cashier is left out.
+     *
+     * @return Collection<int, Order>
+     */
+    public function billedOrders(): Collection
+    {
+        return $this->orders->filter(fn (Order $order): bool => $order->source === Order::SOURCE_PREORDER
+            || ($order->bill_to_booking && $order->status !== OrderStatus::Dibatalkan->value));
     }
 }

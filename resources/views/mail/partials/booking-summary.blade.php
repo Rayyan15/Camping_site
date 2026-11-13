@@ -11,4 +11,4 @@
 @if($units !== '')
 - {{ __('Tenda') }}: {{ $units }}
 @endif
-- {{ __('Total') }}: {{ $money($booking->total) }}
+- {{ __('Total') }}: {{ $money(app(\App\Services\BookingBilling::class)->grandTotal($booking)) }}

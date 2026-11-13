@@ -20,6 +20,8 @@ class BookingReviewService
     public function __construct(
         private readonly UnitNightLedger $ledger,
         private readonly BookingAuditTrail $audit,
+        private readonly BookingBilling $billing,
+        private readonly OrderService $orders,
     ) {}
 
     /**
@@ -61,6 +63,7 @@ class BookingReviewService
             $moves = $this->reassignConflictedLines($locked, $lines);
 
             $this->ledger->claim($lines);
+            $this->orders->restorePreorders($locked);
 
             $locked->update(['status' => BookingStatus::Paid, 'review_started_at' => null]);
             $this->audit->record($locked, BookingAuditTrail::ACTION_REVIEW_MOVED_UNIT, $actor->id, ['moves' => $moves]);
@@ -118,8 +121,11 @@ class BookingReviewService
             throw BookingReviewException::proofAwaitingReview();
         }
 
-        if ($booking->paid_amount < $booking->total) {
-            throw BookingReviewException::notFullyPaid($booking->total - $booking->paid_amount);
+        // Food billed to the stay counts too; booking.total alone let a guest leave owing it (12 Nov 2026).
+        $outstanding = $this->billing->outstanding($booking);
+
+        if ($outstanding > 0) {
+            throw BookingReviewException::notFullyPaid($outstanding);
         }
     }
 

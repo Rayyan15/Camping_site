@@ -11,6 +11,7 @@ use App\Events\OrderPlaced;
 use App\Exceptions\InvalidOrderTransitionException;
 use App\Exceptions\MenuItemUnavailableException;
 use App\Exceptions\OrderBillingException;
+use App\Models\Booking;
 use App\Models\DiningSpot;
 use App\Models\Order;
 use App\Models\Payment;
@@ -194,6 +195,28 @@ class OrderService
      *
      * @throws InvalidOrderTransitionException
      */
+    /**
+     * Pre-orders of a booking whose hold lapsed would sit in "Baru" forever. They are cancelled and
+     * flagged, so a revived booking gets them back while orders staff cancelled stay cancelled.
+     */
+    public function releasePreorders(Booking $booking): void
+    {
+        $booking->orders()
+            ->where('source', Order::SOURCE_PREORDER)
+            ->whereNotIn('status', [OrderStatus::Selesai->value, OrderStatus::Dibatalkan->value])
+            ->get()
+            ->each(fn (Order $order) => $order->update(['status' => OrderStatus::Dibatalkan->value, 'auto_cancelled_at' => now()]));
+    }
+
+    public function restorePreorders(Booking $booking): void
+    {
+        $booking->orders()
+            ->where('source', Order::SOURCE_PREORDER)
+            ->whereNotNull('auto_cancelled_at')
+            ->get()
+            ->each(fn (Order $order) => $order->update(['status' => OrderStatus::Baru->value, 'auto_cancelled_at' => null]));
+    }
+
     public function updateStatus(Order $order, OrderStatus $newStatus): Order
     {
         return DB::transaction(function () use ($order, $newStatus) {

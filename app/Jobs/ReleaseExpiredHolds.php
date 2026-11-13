@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Enums\BookingStatus;
 use App\Events\BookingNeedsReview;
 use App\Models\Booking;
+use App\Services\OrderService;
 use App\Services\UnitNightLedger;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -45,6 +46,7 @@ class ReleaseExpiredHolds implements ShouldQueue
     {
         if ($booking->paid_amount === 0 && ! $booking->payments()->awaitingProofReview()->exists()) {
             $booking->update(['status' => BookingStatus::Expired]);
+            app(OrderService::class)->releasePreorders($booking);
 
             return;
         }
