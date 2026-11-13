@@ -9,6 +9,7 @@ import { initQrTrack } from './modules/qr-track';
 import { initAvailabilityCalendar } from './modules/availability-calendar';
 import { initPasswordToggle } from './modules/password-toggle';
 import { initProofUpload } from './modules/proof-upload';
+import { initResumeBooking } from './modules/resume-booking';
 
 initStaySearch();
 initReveal();
@@ -21,3 +22,4 @@ initQrTrack();
 initAvailabilityCalendar();
 initPasswordToggle();
 initProofUpload();
+initResumeBooking();

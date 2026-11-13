@@ -43,6 +43,14 @@
 
     @include('partials.public-nav')
 
+    {{-- Filled from the guest's browser by resume-booking.js when a checkout still waits for its transfer proof. --}}
+    <div data-resume-banner hidden class="bg-ember-soft text-ink">
+        <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-6" role="status">
+            <p class="font-semibold">{{ __('Anda masih punya pesanan yang belum dibayar') }} <span data-resume-code class="font-mono"></span>.</p>
+            <a data-resume-link href="{{ route('booking.find') }}" class="btn btn-primary min-h-11 px-4 text-sm">{{ __('Lanjutkan pembayaran') }}</a>
+        </div>
+    </div>
+
     <main id="konten" class="flex-1">
         @yield('content')
     </main>

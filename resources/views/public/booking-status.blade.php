@@ -63,7 +63,7 @@
         @if($proof?->status === \App\Enums\PaymentStatus::Failed)
             <section class="mt-8 rounded-2xl bg-ember-soft p-6" role="alert">
                 <h2 class="font-bold text-ember-dark">{{ __('Bukti ditolak: :reason', ['reason' => $proof->rejection_reason]) }}</h2>
-                <p class="mt-1 text-ink">{{ __('Silakan unggah ulang bukti transfer yang benar. Kami juga mengirim penjelasan ini ke email Anda.') }}</p>
+                <p class="mt-1 text-ink">{{ __('Silakan unggah ulang bukti transfer yang benar.') }}</p>
                 @if($isPending)
                     <a href="{{ route('checkout.show', $booking->access_token) }}" class="btn btn-primary mt-4">{{ __('Unggah ulang bukti') }}</a>
                 @endif
@@ -73,7 +73,7 @@
         @if($proof?->status === \App\Enums\PaymentStatus::Pending)
             <section class="mt-8 rounded-2xl bg-cream-deep p-6" role="status">
                 <h2 class="font-bold text-forest-900">{{ __('Bukti diterima, menunggu konfirmasi admin') }}</h2>
-                <p class="mt-1 text-ink-soft">{{ __('Admin mencocokkan bukti dengan mutasi rekening. Tenda dipegang sampai :time WIB. Cek email Anda: konfirmasi pembayaran dikirim ke sana, dan email itulah yang ditunjukkan di lokasi.', ['time' => $booking->hold_expires_at->locale(app()->getLocale())->translatedFormat('j F Y, H:i')]) }}</p>
+                <p class="mt-1 text-ink-soft">{{ __('Admin mencocokkan bukti dengan mutasi rekening. Tenda dipegang sampai :time WIB. Status berubah menjadi Lunas di halaman ini setelah dicek. Tunjukkan kode booking saat tiba di lokasi.', ['time' => $booking->hold_expires_at->locale(app()->getLocale())->translatedFormat('j F Y, H:i')]) }}</p>
                 @if($holdActive)
                     <a href="{{ route('checkout.show', $booking->access_token) }}" class="btn btn-outline mt-4">{{ __('Kirim ulang bukti') }}</a>
                 @endif
@@ -89,6 +89,12 @@
                     <p class="mt-1 text-ink-soft">{{ __('Transfer dan kirim bukti sebelum :time WIB.', ['time' => $booking->hold_expires_at->locale(app()->getLocale())->translatedFormat('j F Y, H:i')]) }}</p>
                     <a href="{{ route('checkout.show', $booking->access_token) }}" class="btn btn-primary mt-4">{{ __('Lanjut ke pembayaran') }}</a>
                 @endif
+            </section>
+        @elseif($booking->acceptsLateProof())
+            <section class="mt-8 rounded-2xl bg-cream-deep p-6">
+                <h2 class="font-bold text-forest-900">{{ __('Sudah transfer tapi bukti belum terkirim?') }}</h2>
+                <p class="mt-1 text-ink-soft">{{ __('Waktu tahan tenda sudah habis, tetapi bukti transfer masih bisa diunggah sampai :time WIB. Admin akan mengecek apakah tenda masih tersedia.', ['time' => $booking->hold_expires_at->copy()->addHours((int) config('booking.late_proof_hours'))->locale(app()->getLocale())->translatedFormat('j F Y, H:i')]) }}</p>
+                <a href="{{ route('checkout.show', $booking->access_token) }}" class="btn btn-primary mt-4">{{ __('Unggah bukti transfer') }}</a>
             </section>
         @endif
 

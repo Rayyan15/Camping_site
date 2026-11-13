@@ -191,6 +191,16 @@
                 <p class="mt-3 text-ink-soft">{{ __('Tidak ada tenda :name yang tersedia di tanggal ini. Coba tipe lain atau ubah tanggal.', ['name' => $unitType->name]) }}</p>
                 <a href="{{ route('home') }}#cari" class="btn btn-primary mt-6">{{ __('Cari tanggal lain') }}</a>
             </div>
+            <div class="mx-auto mt-4 max-w-lg rounded-3xl bg-ember-soft p-6 text-ink">
+                <h2 class="font-bold">{{ __('Anda masih punya pesanan yang belum dibayar?') }}</h2>
+                <p class="mt-1">{{ __('Bila Anda sudah memesan tenda ini lalu halaman pembayaran tertutup, tenda mungkin sedang ditahan untuk pesanan Anda sendiri. Jangan pesan ulang. Lanjutkan pesanan lama dengan kode booking dan 4 digit terakhir nomor HP.') }}</p>
+                <div class="mt-4 flex flex-wrap gap-3">
+                    <a href="{{ route('booking.find') }}" class="btn btn-primary min-h-11">{{ __('Lanjutkan pesanan saya') }}</a>
+                    @if($whatsapp = config('site.whatsapp_number'))
+                        <a href="https://wa.me/{{ $whatsapp }}" target="_blank" rel="noopener" class="btn btn-outline min-h-11">{{ __('Lupa kode? Chat WhatsApp') }}</a>
+                    @endif
+                </div>
+            </div>
         @endif
     </div>
 @endsection

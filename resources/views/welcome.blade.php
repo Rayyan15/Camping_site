@@ -29,7 +29,7 @@
     $steps = [
         ['title' => __('Pilih tanggal'), 'text' => __('Isi check-in, check-out, dan jumlah tamu. Sistem menampilkan tipe tenda yang masih kosong beserta sisa unitnya.')],
         ['title' => __('Pilih tenda dan tambahan'), 'text' => __('Pilih unit, tambah tamu bila perlu, dan jadwalkan makanan atau kopi yang ingin disiapkan sebelum Anda datang.')],
-        ['title' => __('Transfer dan kirim bukti'), 'text' => __('Transfer ke rekening yang tampil di halaman pembayaran, lalu unggah bukti dalam :minutes menit. Konfirmasi admin dikirim lewat email.', ['minutes' => $holdMinutes])],
+        ['title' => __('Transfer dan kirim bukti'), 'text' => __('Transfer ke rekening yang tampil di halaman pembayaran, lalu unggah bukti dalam :minutes menit. Status Lunas tampil di halaman Cek status booking setelah admin mengecek.', ['minutes' => $holdMinutes])],
     ];
 
     $facilities = [
@@ -46,7 +46,8 @@
         ['q' => __('Berapa lama tenda ditahan sebelum saya bayar?'), 'a' => __('Tenda ditahan :minutes menit sejak checkout dibuat. Bila belum dibayar, tahanan dilepas otomatis dan tenda kembali tersedia.', ['minutes' => $holdMinutes])],
         ['q' => __('Tamu saya melebihi kapasitas tenda. Bagaimana?'), 'a' => ($extendableTypes->isEmpty() ? __('Pesan lebih dari satu unit. Kapasitas tiap tipe tertera di kartunya.') : __(':types bisa ditambah paling banyak :limit orang per tenda lewat extra bed saat memilih tenda. Untuk tipe lain, pesan unit tambahan.', ['types' => $extendableNames, 'limit' => $extraGuestLimit]))],
         ['q' => __('Bisakah memesan makanan sebelum datang?'), 'a' => __('Bisa. Pilih menu, tanggal, dan jam penyajian saat booking. Setelah menginap, pesan tambahan lewat QR di tenda.')],
-        ['q' => __('Metode pembayaran apa yang tersedia?'), 'a' => __('Transfer bank ke rekening yang tampil di halaman pembayaran, lalu unggah foto bukti transfer. Admin mencocokkan dengan mutasi dan mengirim konfirmasi lewat email.')],
+        ['q' => __('Metode pembayaran apa yang tersedia?'), 'a' => __('Transfer bank ke rekening yang tampil di halaman pembayaran, lalu unggah foto bukti transfer. Admin mencocokkan dengan mutasi, lalu status pesanan berubah menjadi Lunas di halaman Cek status booking. Tunjukkan kode booking saat tiba di lokasi.')],
+        ['q' => __('Halaman pembayaran tertutup atau ter-refresh sebelum bukti transfer terkirim. Harus pesan ulang?'), 'a' => __('Tidak perlu, dan jangan pesan ulang karena tenda masih ditahan atas pesanan Anda. Buka Cek status booking, isi kode booking dan 4 digit terakhir nomor HP Anda, lalu tekan Lanjut ke pembayaran dan unggah bukti di sana. Di perangkat yang sama, situs ini juga menampilkan pengingat untuk melanjutkan pesanan.').($whatsapp ? ' '.__('Lupa kode booking? Kirim foto bukti transfer, nama, dan tanggal menginap lewat WhatsApp, admin akan memprosesnya.') : '')],
         ['q' => __('Bagaimana cek status booking saya?'), 'a' => __('Buka halaman Cek status booking, lalu isi kode booking dan 4 digit terakhir nomor telepon atau email yang Anda pakai saat memesan.')],
     ];
 @endphp
