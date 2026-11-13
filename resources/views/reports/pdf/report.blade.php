@@ -41,7 +41,7 @@
         .lead { border-top: 5px solid {{ $forest }}; padding-top: 6px; margin-bottom: 22px; }
         .lead .figure { font-size: 42px; font-weight: bold; line-height: 1.05; color: {{ $forest }}; margin-top: 4px; }
 
-        .stats { width: 100%; border-collapse: collapse; border-top: 2px solid {{ $ink }}; margin-top: 4px; }
+        .stats { width: 100%; border-collapse: collapse; border-top: 2px solid {{ $ink }}; margin: 4px 0 14px; }
         .stats td { padding: 7px 0; border-bottom: 1px solid {{ $rule }}; font-size: 11px; }
         .stats td.value { text-align: right; font-family: 'DejaVu Sans Mono', monospace; font-weight: bold; font-size: 12px; white-space: nowrap; }
 
@@ -85,21 +85,21 @@
     @if ($lead)
         <div class="lead">
             <div class="label">{{ $lead['label'] }}</div>
-            <div class="figure">{{ $figure($lead['type'], $lead['value']) }}</div>
+            <div class="figure">{{ $lead['type']->display($lead['value']) }}</div>
         </div>
     @endif
 
-    @if ($stats !== [])
-        <div class="label">Ringkasan</div>
+    @foreach (collect($stats)->groupBy(fn ($line) => $line['group'] ?? 'Ringkasan') as $group => $lines)
+        <div class="label">{{ $group }}</div>
         <table class="stats">
-            @foreach ($stats as $line)
+            @foreach ($lines as $line)
                 <tr>
                     <td>{{ $line['label'] }}</td>
-                    <td class="value">{{ $figure($line['type'], $line['value']) }}</td>
+                    <td class="value">{{ $line['type']->display($line['value']) }}</td>
                 </tr>
             @endforeach
         </table>
-    @endif
+    @endforeach
 
     @if ($table->definition !== '')
         <div class="note">

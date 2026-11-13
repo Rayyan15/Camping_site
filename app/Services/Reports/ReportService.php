@@ -82,18 +82,18 @@ class ReportService
         $summary = [['label' => 'Jumlah booking', 'value' => (int) $perStatus->sum() - $expired, 'type' => Type::Count]];
         foreach (BookingStatus::cases() as $status) {
             if ($status !== BookingStatus::Expired && $perStatus->has($status->value)) {
-                $summary[] = ['label' => $status->getLabel(), 'value' => (int) $perStatus[$status->value], 'type' => Type::Count];
+                $summary[] = ['label' => $status->getLabel(), 'value' => (int) $perStatus[$status->value], 'type' => Type::Count, 'group' => 'Status'];
             }
         }
         // Totals cover sold stays only, so a cancelled or unpaid booking never inflates the tent figure.
         $soldRows = array_values(array_filter($rows, fn (array $row, int $index) => in_array($bookings[$index]->status, self::SOLD_STATUSES, true), ARRAY_FILTER_USE_BOTH));
-        foreach ([5 => 'Sewa tenda, booking terjual (Rp)', 6 => 'Tambahan, booking terjual (Rp)', 7 => 'Makanan, booking terjual (Rp)'] as $index => $label) {
-            $summary[] = ['label' => $label, 'value' => (int) array_sum(array_column($soldRows, $index)), 'type' => Type::Money];
+        foreach ([5 => 'Sewa tenda', 6 => 'Tambahan', 7 => 'Makanan'] as $index => $label) {
+            $summary[] = ['label' => $label, 'value' => (int) array_sum(array_column($soldRows, $index)), 'type' => Type::Money, 'group' => 'Nilai booking terjual'];
         }
-        $summary[] = ['label' => 'Total dibayar (Rp)', 'value' => (int) (clone $query)->where('status', '!=', BookingStatus::Expired->value)->sum('paid_amount'), 'type' => Type::Money];
-        $summary[] = ['label' => 'Belum dibayar tamu (Rp)', 'value' => (int) array_sum(array_column($soldRows, 10)), 'type' => Type::Money];
+        $summary[] = ['label' => 'Sudah dibayar', 'value' => (int) (clone $query)->where('status', '!=', BookingStatus::Expired->value)->sum('paid_amount'), 'type' => Type::Money, 'group' => 'Pembayaran tamu'];
+        $summary[] = ['label' => 'Belum dibayar', 'value' => (int) array_sum(array_column($soldRows, 10)), 'type' => Type::Money, 'group' => 'Pembayaran tamu'];
         if ($expired > 0) {
-            $summary[] = ['label' => 'Kedaluwarsa, tidak ditampilkan', 'value' => $expired, 'type' => Type::Count];
+            $summary[] = ['label' => 'Kedaluwarsa', 'value' => $expired, 'type' => Type::Count, 'group' => 'Tidak masuk tabel'];
         }
 
         return new ReportTable(
@@ -114,7 +114,8 @@ class ReportService
             ],
             $rows,
             $summary,
-            'Booking dengan tanggal check-in pada periode, ditambah booking yang refund-nya diajukan pada periode. Booking terjual: Lunas, Check-in, atau Check-out. Sisa adalah tagihan yang belum dibayar tamu, biasanya makanan yang ditagih ke booking. Booking kedaluwarsa (tidak dibayar sampai batas waktu) tidak dimuat dan hanya dihitung jumlahnya. Laporan ini memakai tanggal check-in; uang menurut tanggal bayar ada di laporan Pendapatan dan Metode pembayaran, jadi angkanya bisa berbeda. Nomor telepon dan email pelanggan tidak dimuat.'.$this->truncationNote($truncated),
+            'Berisi booking dengan tanggal check-in di periode ini, ditambah booking yang refund-nya diajukan di periode ini. Booking terjual adalah yang berstatus Lunas, Check-in, atau Check-out. Kolom Sisa adalah tagihan yang belum dibayar tamu, biasanya makanan yang ditagih ke booking. Booking kedaluwarsa (tidak dibayar sampai batas waktu) hanya dihitung jumlahnya, tidak masuk tabel. '
+            .'Laporan ini memakai tanggal check-in, sedangkan Pendapatan tenda dan F&B serta Pembayaran per metode memakai tanggal bayar, jadi angkanya bisa berbeda. Nomor telepon dan email tamu tidak ditampilkan.'.$this->truncationNote($truncated),
             $truncated,
         );
     }
@@ -156,12 +157,12 @@ class ReportService
             ],
             $rows,
             [
-                ['label' => 'Malam tersedia', 'value' => $totalAvailable, 'type' => Type::Count],
-                ['label' => 'Malam terisi', 'value' => $totalOccupied, 'type' => Type::Count],
-                ['label' => 'Okupansi (%)', 'value' => $this->percent($totalOccupied, $totalAvailable), 'type' => Type::Percent],
+                ['label' => 'Okupansi', 'value' => $this->percent($totalOccupied, $totalAvailable), 'type' => Type::Percent],
+                ['label' => 'Malam terisi', 'value' => $totalOccupied, 'type' => Type::Count, 'group' => 'Malam menginap'],
+                ['label' => 'Malam tersedia', 'value' => $totalAvailable, 'type' => Type::Count, 'group' => 'Malam menginap'],
             ],
-            'Okupansi = malam terisi dibagi malam tersedia. Malam terisi: malam menginap booking berstatus Lunas, Check-in, atau Check-out pada unit aktif. '
-            .'Malam tersedia: jumlah hari periode dikali unit aktif, dikurangi hari unit diblokir. Unit nonaktif tidak dihitung.',
+            'Okupansi adalah malam terisi dibagi malam tersedia. Malam terisi dihitung dari booking berstatus Lunas, Check-in, atau Check-out di unit aktif. '
+            .'Malam tersedia adalah jumlah hari di periode ini dikali jumlah unit aktif, dikurangi hari unit diblokir. Unit nonaktif tidak dihitung.',
         );
     }
 
@@ -217,15 +218,16 @@ class ReportService
                 (int) $item->sold, (int) $item->revenue,
             ])->all(),
             [
-                ['label' => 'Total terjual', 'value' => (int) $all->sum('sold'), 'type' => Type::Count],
-                ['label' => 'Ikut booking', 'value' => (int) $all->sum('via_booking'), 'type' => Type::Count],
-                ['label' => 'QR tenda', 'value' => (int) $all->sum('via_tent'), 'type' => Type::Count],
-                ['label' => 'QR kafe', 'value' => (int) $all->sum('via_cafe'), 'type' => Type::Count],
-                ['label' => 'Walk-in kasir', 'value' => (int) $all->sum('via_walkin'), 'type' => Type::Count],
-                ['label' => 'Total omzet (Rp)', 'value' => (int) $all->sum('revenue'), 'type' => Type::Money],
-                ['label' => 'Ditagih ke booking, belum dibayar tamu (Rp)', 'value' => $stillOwed, 'type' => Type::Money],
+                ['label' => 'Porsi terjual', 'value' => (int) $all->sum('sold'), 'type' => Type::Count],
+                ['label' => 'Ikut booking', 'value' => (int) $all->sum('via_booking'), 'type' => Type::Count, 'group' => 'Asal pesanan'],
+                ['label' => 'QR tenda', 'value' => (int) $all->sum('via_tent'), 'type' => Type::Count, 'group' => 'Asal pesanan'],
+                ['label' => 'QR kafe', 'value' => (int) $all->sum('via_cafe'), 'type' => Type::Count, 'group' => 'Asal pesanan'],
+                ['label' => 'Walk-in kasir', 'value' => (int) $all->sum('via_walkin'), 'type' => Type::Count, 'group' => 'Asal pesanan'],
+                ['label' => 'Omzet', 'value' => (int) $all->sum('revenue'), 'type' => Type::Money, 'group' => 'Uang'],
+                ['label' => 'Ditagih ke booking, belum dibayar', 'value' => $stillOwed, 'type' => Type::Money, 'group' => 'Uang'],
             ],
-            'Makanan yang ditagih ke booking lunas ikut dihitung terjual walau tamu belum membayarnya; nilainya tampil terpisah sebagai belum dibayar tamu. Item pada pesanan yang sudah dibayar, termasuk makanan yang ikut booking lunas, dipisah menurut asal pesanan: dipesan bersama booking, scan QR di tenda, scan QR di meja kafe, atau dicatat kasir, dengan tanggal pesanan pada periode. Diurutkan dari yang paling banyak terjual, '.self::TOP_MENU_LIMIT.' teratas.',
+            'Dihitung dari pesanan yang dibuat di periode ini dan sudah dibayar. Makanan yang ditagih ke booking ikut dihitung begitu booking-nya lunas, walau tamu belum membayar makanannya; nilainya tampil di Ditagih ke booking, belum dibayar. '
+            .'Asal pesanan: Ikut booking (dipesan bersama booking), QR tenda, QR kafe (scan di meja kafe), dan Walk-in kasir. Tabel menampilkan '.self::TOP_MENU_LIMIT.' menu terlaris; angka ringkasan menghitung semua menu.',
         );
     }
 
@@ -248,17 +250,16 @@ class ReportService
         ])->all();
 
         $perStatus = (clone $query)->toBase()->selectRaw('status, COUNT(*) as total, SUM(amount) as amount')->groupBy('status')->get()->keyBy('status');
-        $summary = [];
-        foreach (RefundStatus::cases() as $status) {
-            if ($perStatus->has($status->value)) {
-                $summary[] = ['label' => $status->getLabel(), 'value' => (int) $perStatus[$status->value]->total, 'type' => Type::Count];
-            }
-        }
-        $summary[] = [
-            'label' => 'Total dikembalikan (Rp)',
+        $summary = [[
+            'label' => 'Total dikembalikan',
             'value' => (int) ($perStatus[RefundStatus::Paid->value]->amount ?? 0),
             'type' => Type::Money,
-        ];
+        ]];
+        foreach (RefundStatus::cases() as $status) {
+            if ($perStatus->has($status->value)) {
+                $summary[] = ['label' => $status->getLabel(), 'value' => (int) $perStatus[$status->value]->total, 'type' => Type::Count, 'group' => 'Pengajuan per status'];
+            }
+        }
 
         return new ReportTable(
             ReportType::Refund,
@@ -273,7 +274,7 @@ class ReportService
             ],
             $rows,
             $summary,
-            'Refund dengan tanggal pengajuan pada periode. Total dikembalikan hanya menghitung refund berstatus Sudah Ditransfer.'.$this->truncationNote($truncated),
+            'Berisi refund yang diajukan di periode ini. Total dikembalikan hanya menghitung refund berstatus Sudah Ditransfer.'.$this->truncationNote($truncated),
             $truncated,
         );
     }
@@ -312,11 +313,11 @@ class ReportService
             ],
             $rows,
             [
-                ['label' => 'Total masuk (Rp)', 'value' => $in, 'type' => Type::Money],
-                ['label' => 'Total refund keluar (Rp)', 'value' => $out, 'type' => Type::Money],
-                ['label' => 'Neto (Rp)', 'value' => $in - $out, 'type' => Type::Money],
+                ['label' => 'Neto', 'value' => $in - $out, 'type' => Type::Money],
+                ['label' => 'Uang masuk', 'value' => $in, 'type' => Type::Money, 'group' => 'Arus uang'],
+                ['label' => 'Refund keluar', 'value' => $out, 'type' => Type::Money, 'group' => 'Arus uang'],
             ],
-            'Pembayaran berstatus berhasil dengan tanggal bayar pada periode. Uang masuk dan refund keluar dipisah per metode.',
+            'Berisi pembayaran berhasil dengan tanggal bayar di periode ini, dipisah per metode dan arah uang (masuk atau refund keluar).',
         );
     }
 
@@ -371,12 +372,12 @@ class ReportService
             ],
             $rows,
             [
-                ['label' => 'Sewa tenda, neto (Rp)', 'value' => $tentNet, 'type' => Type::Money],
-                ['label' => 'Tambahan (add-on), neto (Rp)', 'value' => $addonNet, 'type' => Type::Money],
-                ['label' => 'F&B, neto (Rp)', 'value' => $foodNet, 'type' => Type::Money],
-                ['label' => 'Total neto (Rp)', 'value' => $tentNet + $addonNet + $foodNet, 'type' => Type::Money],
+                ['label' => 'Total neto', 'value' => $tentNet + $addonNet + $foodNet, 'type' => Type::Money],
+                ['label' => 'Sewa tenda', 'value' => $tentNet, 'type' => Type::Money, 'group' => 'Neto per kategori'],
+                ['label' => 'Tambahan (add-on)', 'value' => $addonNet, 'type' => Type::Money, 'group' => 'Neto per kategori'],
+                ['label' => 'F&B', 'value' => $foodNet, 'type' => Type::Money, 'group' => 'Neto per kategori'],
             ],
-            'Pembayaran berhasil dengan tanggal bayar pada periode, sama dengan laporan pembayaran per metode. Pembayaran booking dihitung untuk sewa tenda dulu, lalu add-on, lalu makanan yang ditagih ke booking. Makanan yang belum dibayar tamu belum masuk ke sini; lihat kolom Sisa di laporan Booking.',
+            'Berisi pembayaran berhasil dengan tanggal bayar di periode ini, sama dengan Pembayaran per metode. Pembayaran booking dibagi ke sewa tenda dulu, lalu add-on, lalu makanan yang ditagih ke booking. Makanan yang belum dibayar tamu belum masuk ke sini; lihat kolom Sisa di laporan Booking.',
         );
     }
 
@@ -535,7 +536,7 @@ class ReportService
 
     private function truncationNote(bool $truncated): string
     {
-        return $truncated ? ' Hanya '.self::MAX_ROWS.' baris pertama ditampilkan; persempit periode untuk melihat sisanya.' : '';
+        return $truncated ? ' Hanya '.self::MAX_ROWS.' baris pertama yang ditampilkan; persempit periode untuk melihat sisanya.' : '';
     }
 
     /** @return array{label: string, type: Type} */

@@ -45,7 +45,7 @@ class DashboardStats extends Widget
             $sold = array_column(app(ReportService::class)->topMenu(ReportPeriod::thisMonth())->summary, 'value', 'label');
             $items[] = [
                 'icon' => 'heroicon-o-shopping-bag',
-                'value' => $sold['Total terjual'].' porsi',
+                'value' => $sold['Porsi terjual'].' porsi',
                 'label' => "Terjual bulan ini: booking {$sold['Ikut booking']}, QR tenda {$sold['QR tenda']}, QR kafe {$sold['QR kafe']}, walk-in {$sold['Walk-in kasir']}",
             ];
         }

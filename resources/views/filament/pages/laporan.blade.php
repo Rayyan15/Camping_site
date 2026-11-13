@@ -5,9 +5,8 @@
         Client asked for pill filters after the 17 Oct demo. Report type is the larger first row because it
         changes the whole table; the period row is smaller and shows the chosen range in words beside it.
         Colour pass after the user found the first version plain (2026-10-17, user direction overrides the
-        earlier one-accent rule for this page): the filter card sits on cream, summary tiles carry the
-        palette by meaning (forest for counts, ember for money, sand for percentages, the headline number
-        solid forest), and status cells use the same tones as the panel badges.
+        earlier one-accent rule for this page): the filter card sits on cream, the headline number is
+        solid forest, and status shares and cells use the same tones as the panel badges.
     --}}
     <style>
         .lap { display: grid; gap: 1.25rem; }
@@ -74,29 +73,35 @@
         .lap-loading { font-size: 0.8125rem; }
 
 
-        /* Summary band: the headline number big on the left, the rest as a list, and a composition bar when
-           the rest are statuses that add up to the headline (bookings, refunds). */
+        /* Summary band: the headline figure on the left; the other lines in named groups. A group of
+           counts that adds up to the headline (statuses, order sources) gets shares and a composition bar.
+           Units sit in front of the value in small type, so labels stay on one line. */
         .lap-band { display: grid; gap: 1.25rem; padding: 1.25rem; border-radius: 1rem; background: #fff; border: 1px solid var(--gray-200); }
         .dark .lap-band { background: var(--gray-900); border-color: var(--gray-800); }
-        @media (min-width: 768px) { .lap-band { grid-template-columns: minmax(12rem, 16rem) 1fr; align-items: center; padding: 1.5rem; } }
+        @media (min-width: 768px) { .lap-band { grid-template-columns: minmax(13rem, 17rem) 1fr; align-items: start; gap: 2rem; padding: 1.5rem; } }
         .lap-head { display: grid; gap: 0.25rem; padding: 1.25rem; border-radius: 0.875rem; background: var(--primary-700); color: #fff; }
         .dark .lap-head { background: var(--primary-600); }
         .lap-head-label { font-size: 0.8125rem; font-weight: 600; color: var(--primary-100); }
-        .lap-head-value { font-size: 2.5rem; font-weight: 700; line-height: 1.05; letter-spacing: -0.02em; overflow-wrap: anywhere; }
+        .lap-head-value { font-size: 2.5rem; font-weight: 700; line-height: 1.05; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
         .lap-head-value.is-long { font-size: 1.75rem; }
-        .lap-lines { display: grid; gap: 0.25rem 1.5rem; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); margin: 0; }
-        .lap-line { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 0 0.625rem; padding: 0.625rem 0; border-bottom: 1px solid var(--gray-100); }
+        .lap-groups { display: grid; gap: 1.25rem 2rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); align-items: start; }
+        .lap-group { display: grid; gap: 0.25rem; }
+        .lap-group-title { font-size: 0.75rem; font-weight: 600; color: var(--hh-ink-soft); }
+        .dark .lap-group-title { color: var(--gray-300); }
+        .lap-lines { display: grid; margin: 0; border-top: 2px solid var(--gray-950); }
+        .dark .lap-lines { border-color: var(--gray-300); }
+        .lap-line { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; padding: 0.5rem 0; border-bottom: 1px solid var(--gray-200); }
         .dark .lap-line { border-color: var(--gray-800); }
-        .lap-line dt { grid-column: 2; font-size: 0.8125rem; color: var(--hh-ink-soft); }
+        .lap-line dt { display: flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; color: var(--hh-ink-soft); }
         .dark .lap-line dt { color: var(--gray-300); }
-        .lap-line dd { grid-column: 2; margin: 0; font-size: 1.125rem; font-weight: 700; color: var(--gray-950); }
+        .lap-line dd { margin: 0; text-align: right; font-size: 1rem; font-weight: 700; color: var(--gray-950); font-variant-numeric: tabular-nums; white-space: nowrap; }
         .dark .lap-line dd { color: #fff; }
+        .lap-unit { margin-right: 0.125rem; font-size: 0.75rem; font-weight: 600; color: var(--hh-ink-soft); }
+        .dark .lap-unit { color: var(--gray-300); }
         .lap-line-share { margin-left: 0.375rem; font-size: 0.75rem; font-weight: 600; color: var(--hh-ink-soft); }
         .dark .lap-line-share { color: var(--gray-400); }
-        .lap-mark { grid-row: span 2; width: 0.75rem; height: 2.25rem; border-radius: 999px; }
-        .lap-mark-icon { grid-row: span 2; display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 0.625rem; }
-        .lap-mark-icon svg { width: 1.125rem; height: 1.125rem; }
-        .lap-bar { grid-column: 1 / -1; display: flex; height: 0.75rem; overflow: hidden; border-radius: 999px; background: var(--gray-100); }
+        .lap-dot { flex: none; width: 0.5rem; height: 0.5rem; border-radius: 999px; }
+        .lap-bar { display: flex; height: 0.5rem; margin-top: 0.25rem; overflow: hidden; border-radius: 999px; background: var(--gray-100); }
         .dark .lap-bar { background: var(--gray-800); }
         .lap-bar span { display: block; height: 100%; }
         .lap-bar span + span { border-left: 2px solid #fff; }
@@ -107,13 +112,6 @@
         .lap-fill-danger { background: var(--hh-ember); }
         .lap-fill-info { background: var(--primary-800); }
         .lap-fill-gray { background: var(--gray-500); }
-        .lap-icon-count { background: var(--primary-50); color: var(--primary-700); }
-        .lap-icon-money { background: var(--hh-ember-soft); color: var(--hh-ember-dark); }
-        .lap-icon-percent { background: var(--hh-cream); color: var(--hh-sand-dark); }
-        .dark .lap-icon-count, .dark .lap-icon-money, .dark .lap-icon-percent { background: var(--primary-800); }
-        .dark .lap-icon-count { color: var(--primary-200); }
-        .dark .lap-icon-money { color: var(--hh-ember-light); }
-        .dark .lap-icon-percent { color: var(--hh-sand); }
         .dark .lap-fill-success { background: var(--primary-400); }
         .dark .lap-fill-warning { background: var(--hh-sand); }
         .dark .lap-fill-danger { background: var(--hh-ember-light); }
@@ -145,18 +143,28 @@
         .dark .lap-type[aria-pressed="true"] { background: var(--primary-600); border-color: var(--primary-600); }
         .dark .lap-type[aria-pressed="true"] .lap-type-tile { background: var(--primary-700); }
 
-        /* Period: month shortcuts in one segmented track, the two dates always beside it */
-        .lap-periodbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.75rem 1rem; }
-        .lap-range-inputs { flex: 1 1 20rem; max-width: 28rem; }
-        .lap-seg { display: inline-flex; flex-wrap: wrap; gap: 0.25rem; padding: 0.25rem; border-radius: 999px; background: var(--hh-cream-deep); }
-        .dark .lap-seg { background: var(--primary-950); }
+        /* Period row: set apart from the report cards by a sand rule. Every control sits under its own label
+           on one baseline at 44px, and the active range is repeated in words on the right. */
+        .lap-periodbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.75rem 1rem; padding-top: 1rem; border-top: 1px solid var(--hh-sand); }
+        .dark .lap-periodbar { border-color: var(--primary-800); }
+        .lap-field { display: grid; gap: 0.375rem; }
+        .lap-field-label { font-size: 0.875rem; font-weight: 500; color: var(--gray-950); }
+        .dark .lap-field-label { color: #fff; }
+        .lap-range-inputs { flex: 1 1 20rem; max-width: 26rem; }
+        .lap-range-inputs .fi-input-wrp { min-height: 44px; display: flex; align-items: center; }
+        .lap-range-days { align-self: flex-end; display: flex; align-items: center; min-height: 44px; font-size: 0.875rem; font-weight: 600; color: var(--hh-ink-soft); font-variant-numeric: tabular-nums; }
+        .dark .lap-range-days { color: var(--gray-300); }
+        .lap-seg { display: inline-flex; border: 1px solid var(--hh-sand); border-radius: 0.625rem; overflow: hidden; background: #fff; }
+        .dark .lap-seg { border-color: var(--primary-800); background: var(--primary-950); }
         .lap-seg-btn {
-            min-height: 44px; padding: 0 1.125rem; border: 0; border-radius: 999px; cursor: pointer;
+            min-height: 42px; padding: 0 1rem; border: 0; cursor: pointer;
             background: transparent; font-size: 0.875rem; font-weight: 600; color: var(--primary-900);
             transition: background-color 150ms ease, color 150ms ease;
         }
-        .lap-seg-btn:hover { background: #fff; }
-        .lap-seg-btn:focus-visible { outline: 2px solid var(--primary-600); outline-offset: 2px; }
+        .lap-seg-btn + .lap-seg-btn { border-left: 1px solid var(--hh-sand); }
+        .dark .lap-seg-btn + .lap-seg-btn { border-color: var(--primary-800); }
+        .lap-seg-btn:hover { background: var(--hh-cream); }
+        .lap-seg-btn:focus-visible { outline: 2px solid var(--primary-600); outline-offset: -2px; }
         .lap-seg-btn[aria-pressed="true"] { background: var(--primary-700); color: #fff; }
         .dark .lap-seg-btn { color: var(--primary-100); }
         .dark .lap-seg-btn:hover { background: var(--primary-800); }
@@ -170,6 +178,7 @@
             .lap-periodbar { display: grid; }
             .lap-seg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .lap-seg-btn { padding: 0 0.5rem; }
+            .lap-range-days { min-height: 0; }
         }
 
         @media (prefers-reduced-motion: reduce) { .lap-pill, .lap-type, .lap-seg-btn { transition: none; } }
@@ -190,12 +199,18 @@
             </div>
 
             <div class="lap-periodbar">
-                <div class="lap-seg" role="group" aria-label="Periode cepat">
-                    @foreach ($presets as $value => $label)
-                        <button type="button" class="lap-seg-btn" wire:click="selectPreset('{{ $value }}')" aria-pressed="{{ $activePreset->value === $value ? 'true' : 'false' }}">{{ $label }}</button>
-                    @endforeach
+                <div class="lap-field">
+                    <span class="lap-field-label" id="lap-period-label">Periode</span>
+                    <div class="lap-seg" role="group" aria-labelledby="lap-period-label">
+                        @foreach ($presets as $value => $label)
+                            <button type="button" class="lap-seg-btn" wire:click="selectPreset('{{ $value }}')" aria-pressed="{{ $activePreset->value === $value ? 'true' : 'false' }}">{{ $label }}</button>
+                        @endforeach
+                    </div>
                 </div>
                 <div class="lap-range-inputs">{{ $this->form }}</div>
+                @if ($report)
+                    <p class="lap-range-days">{{ $report->period->days() }} hari</p>
+                @endif
             </div>
 
             <p wire:loading.delay class="hh-muted lap-loading" role="status">Memuat laporan...</p>
@@ -210,53 +225,61 @@
             @if ($report->summary !== [] && $report->rows !== [])
                 @php
                     $head = $report->summary[0];
-                    $rest = array_slice($report->summary, 1);
-                    $headValue = $head['type']->format($head['value']);
-                    // Status lines that share the headline's unit add up to it, so they get a composition bar.
-                    $isBreakdown = $head['type'] === \App\Enums\ReportValueType::Count && $head['value'] > 0 && $rest !== []
-                        && collect($rest)->every(fn ($line) => isset($statusTones[$line['label']]));
+                    $headValue = $head['type']->display($head['value']);
+                    $groups = collect(array_slice($report->summary, 1))->groupBy(fn ($line) => $line['group'] ?? '');
+                    $partTones = ['success', 'info', 'warning', 'gray', 'danger'];
                 @endphp
                 <section class="lap-band" aria-label="Ringkasan {{ $report->title() }}">
                     <div class="lap-head">
                         <p class="lap-head-label">{{ $head['label'] }}</p>
-                        <p @class(['lap-head-value', 'is-long' => mb_strlen($headValue) > 9])>{{ $headValue }}</p>
+                        <p @class(['lap-head-value', 'is-long' => mb_strlen($headValue) > 10])>{{ $headValue }}</p>
                     </div>
 
-                    @if ($rest !== [])
-                        <dl class="lap-lines">
-                            @foreach ($rest as $line)
+                    @if ($groups->isNotEmpty())
+                        <div class="lap-groups">
+                            @foreach ($groups as $group => $lines)
                                 @php
-                                    $statusTone = $statusTones[$line['label']] ?? null;
-                                    [$iconTone, $icon] = match ($line['type']) {
-                                        \App\Enums\ReportValueType::Money => ['money', 'heroicon-o-banknotes'],
-                                        \App\Enums\ReportValueType::Percent => ['percent', 'heroicon-o-chart-pie'],
-                                        default => ['count', 'heroicon-o-rectangle-stack'],
-                                    };
+                                    // A group of counts that adds up to the headline is its breakdown: show each share and a bar.
+                                    $isBreakdown = $head['type'] === \App\Enums\ReportValueType::Count && $head['value'] > 0
+                                        && $lines->every(fn ($line) => $line['type'] === \App\Enums\ReportValueType::Count)
+                                        && (int) $lines->sum('value') === (int) $head['value'];
+                                    $tone = fn (int $i, array $line) => $statusTones[$line['label']] ?? $partTones[$i % count($partTones)];
                                 @endphp
-                                <div class="lap-line">
-                                    @if ($statusTone)
-                                        <span class="lap-mark lap-fill-{{ $statusTone }}" aria-hidden="true"></span>
-                                    @else
-                                        <span class="lap-mark-icon lap-icon-{{ $iconTone }}" aria-hidden="true"><x-filament::icon :icon="$icon" /></span>
+                                <div class="lap-group">
+                                    @if ($group !== '')
+                                        <p class="lap-group-title">{{ $group }}</p>
                                     @endif
-                                    <dt>{{ $line['label'] }}</dt>
-                                    <dd>
-                                        {{ $line['type']->format($line['value']) }}
-                                        @if ($isBreakdown)
-                                            <span class="lap-line-share">{{ round($line['value'] / $head['value'] * 100) }}%</span>
-                                        @endif
-                                    </dd>
+                                    <dl class="lap-lines">
+                                        @foreach ($lines->values() as $i => $line)
+                                            <div class="lap-line">
+                                                <dt>
+                                                    @if ($isBreakdown)
+                                                        <span class="lap-dot lap-fill-{{ $tone($i, $line) }}" aria-hidden="true"></span>
+                                                    @endif
+                                                    {{ $line['label'] }}
+                                                </dt>
+                                                <dd>
+                                                    @if ($line['type'] === \App\Enums\ReportValueType::Money)
+                                                        <span class="lap-unit">Rp</span>
+                                                    @endif
+                                                    {{ $line['type']->format($line['value']) }}@if ($line['type'] === \App\Enums\ReportValueType::Percent)<span class="lap-unit">%</span>@endif
+                                                    @if ($isBreakdown)
+                                                        <span class="lap-line-share">{{ round($line['value'] / $head['value'] * 100) }}%</span>
+                                                    @endif
+                                                </dd>
+                                            </div>
+                                        @endforeach
+                                    </dl>
+                                    @if ($isBreakdown)
+                                        <div class="lap-bar" role="img" aria-label="Komposisi {{ mb_strtolower($group) }}: {{ $lines->map(fn ($line) => $line['label'].' '.$line['value'])->implode(', ') }}">
+                                            @foreach ($lines->values() as $i => $line)
+                                                @if ($line['value'] > 0)
+                                                    <span class="lap-fill-{{ $tone($i, $line) }}" style="width: {{ $line['value'] / $head['value'] * 100 }}%"></span>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    @endif
                                 </div>
-                            @endforeach
-                        </dl>
-                    @endif
-
-                    @if ($isBreakdown)
-                        <div class="lap-bar" role="img" aria-label="Komposisi status: {{ collect($rest)->map(fn ($line) => $line['label'].' '.$line['value'])->implode(', ') }}">
-                            @foreach ($rest as $line)
-                                @if ($line['value'] > 0)
-                                    <span class="lap-fill-{{ $statusTones[$line['label']] }}" style="width: {{ $line['value'] / $head['value'] * 100 }}%"></span>
-                                @endif
                             @endforeach
                         </div>
                     @endif

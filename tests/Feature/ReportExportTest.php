@@ -60,7 +60,7 @@ class ReportExportTest extends TestCase
 
         $this->assertSame(['Metode', 'Arah', 'Transaksi', 'Total (Rp)'], $sheets[0][0]);
         $this->assertSame(['Gateway', 'Masuk', 2, 985000], $sheets[0][1]);
-        $this->assertSame(['Neto (Rp)', 3040000], $sheets[1][3]);
+        $this->assertSame(['Neto (Rp)', 3040000], $sheets[1][1]);
     }
 
     public function test_every_report_downloads_as_pdf_with_the_expected_name(): void

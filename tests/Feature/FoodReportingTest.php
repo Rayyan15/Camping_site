@@ -100,9 +100,9 @@ class FoodReportingTest extends TestCase
 
         $this->assertSame([$booking->code, 'Tamu', '01/12/2026', '02/12/2026', 'Lunas', 30000, 0, 105000, 135000, 100000, 35000], $report->rows[0]);
         $summary = array_column($report->summary, 'value', 'label');
-        $this->assertSame(30000, $summary['Sewa tenda, booking terjual (Rp)']);
-        $this->assertSame(105000, $summary['Makanan, booking terjual (Rp)']);
-        $this->assertSame(35000, $summary['Belum dibayar tamu (Rp)'], 'Food billed to the stay and not paid yet is still owed.');
+        $this->assertSame(30000, $summary['Sewa tenda']);
+        $this->assertSame(105000, $summary['Makanan']);
+        $this->assertSame(35000, $summary['Belum dibayar'], 'Food billed to the stay and not paid yet is still owed.');
     }
 
     public function test_served_orders_nobody_paid_for_show_in_the_unpaid_tab(): void
@@ -214,7 +214,7 @@ class FoodReportingTest extends TestCase
         $this->travelTo(CarbonImmutable::parse('2026-12-01 09:00'));
         app(OrderService::class)->createOrder(Order::SOURCE_QR, [['menu_item_id' => $this->satay->id, 'qty' => 2]], $booking->id, $this->table->id, null, 'Tamu', null, true);
 
-        $owed = fn (ReportPeriod $period): int => array_column(app(ReportService::class)->topMenu($period)->summary, 'value', 'label')['Ditagih ke booking, belum dibayar tamu (Rp)'];
+        $owed = fn (ReportPeriod $period): int => array_column(app(ReportService::class)->topMenu($period)->summary, 'value', 'label')['Ditagih ke booking, belum dibayar'];
 
         $this->assertSame(35000, $owed(ReportPeriod::lastMonth()));
         $this->assertSame(70000, $owed(ReportPeriod::thisMonth()));
@@ -233,6 +233,6 @@ class FoodReportingTest extends TestCase
         $revenue = array_column($reports->revenueByCategory(ReportPeriod::thisMonth())->summary, 'value', 'label');
         $methods = array_column($reports->paymentsByMethod(ReportPeriod::thisMonth())->summary, 'value', 'label');
 
-        $this->assertSame($methods['Neto (Rp)'], $revenue['Total neto (Rp)']);
+        $this->assertSame($methods['Neto'], $revenue['Total neto']);
     }
 }
