@@ -146,10 +146,6 @@
 
         @includeIf('public.partials.booking-share', ['booking' => $booking])
 
-        <div class="mt-4">
-            @include('public.partials.admin-whatsapp', ['booking' => $booking])
-        </div>
-
         @if($refund)
             <section class="mt-8 rounded-2xl bg-cream-deep p-6">
                 <h2 class="font-bold text-forest-900">{{ __('Pembatalan:') }} {{ $refund->status->getLabel() }}</h2>

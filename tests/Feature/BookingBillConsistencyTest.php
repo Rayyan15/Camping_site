@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\BookingStatus;
 use App\Exceptions\BookingReviewException;
+use App\Filament\Resources\Bookings\Pages\EditBooking;
 use App\Jobs\ReleaseExpiredHolds;
 use App\Models\Booking;
 use App\Models\Customer;
@@ -19,6 +20,7 @@ use App\Services\Payment\PaymentService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 /** Food billed to a stay must count on every screen, and pre-orders follow their booking's life. */
@@ -120,5 +122,18 @@ class BookingBillConsistencyTest extends TestCase
         $grand = 'Rp '.number_format($booking->total + 40000, 0, ',', '.');
 
         $this->get(route('booking.status', $booking->access_token))->assertOk()->assertSee($grand);
+    }
+
+    public function test_booking_edit_page_lists_each_dish_with_its_price(): void
+    {
+        $this->actingAs($this->owner());
+        $booking = $this->booking();
+        $booking->update(['status' => BookingStatus::Paid, 'paid_amount' => $booking->total]);
+        $this->food($booking, Order::SOURCE_QR);
+        $this->food($booking, Order::SOURCE_QR, 'dibatalkan');
+
+        Livewire::test(EditBooking::class, ['record' => $booking->getKey()])
+            ->assertSee('2x Kopi (Rp 40.000)')
+            ->assertSeeHtml('Tidak ada');
     }
 }
