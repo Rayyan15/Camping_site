@@ -47,8 +47,8 @@ class ReportExportTest extends TestCase
     {
         $sheets = $this->workbook(ReportType::Booking);
 
-        $this->assertSame(['Kode', 'Pelanggan', 'Check-in', 'Check-out', 'Status', 'Sewa tenda (Rp)', 'Tambahan (Rp)', 'Makanan (Rp)', 'Total (Rp)', 'Dibayar (Rp)'], $sheets[0][0]);
-        $this->assertSame(['B-1', 'Andi Pratama', '01/10/2026', '04/10/2026', 'Lunas', 900000, 0, 0, 900000, 900000], $sheets[0][1]);
+        $this->assertSame(['Kode', 'Pelanggan', 'Check-in', 'Check-out', 'Status', 'Sewa tenda (Rp)', 'Tambahan (Rp)', 'Makanan (Rp)', 'Total (Rp)', 'Dibayar (Rp)', 'Sisa (Rp)'], $sheets[0][0]);
+        $this->assertSame(['B-1', 'Andi Pratama', '01/10/2026', '04/10/2026', 'Lunas', 900000, 0, 0, 900000, 900000, 0], $sheets[0][1]);
         $this->assertCount(6, $sheets[0]);
         $this->assertSame(['Ringkasan', '01/10/2026 sampai 31/10/2026'], $sheets[1][0]);
         $this->assertSame(['Jumlah booking', 5], $sheets[1][1]);

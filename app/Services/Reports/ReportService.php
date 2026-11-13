@@ -30,6 +30,9 @@ class ReportService
     /** Booking statuses whose nights count as sold. */
     private const SOLD_STATUSES = [BookingStatus::Paid, BookingStatus::CheckedIn, BookingStatus::CheckedOut];
 
+    /** Booking statuses that can still owe money: sold stays, plus paid stays held for review. */
+    private const OWING_STATUSES = [...self::SOLD_STATUSES, BookingStatus::NeedsReview];
+
     public function build(ReportType $type, ReportPeriod $period): ReportTable
     {
         return match ($type) {
@@ -54,14 +57,9 @@ class ReportService
         $truncated = $bookings->count() > self::MAX_ROWS;
 
         // The owner reads the tent apart from extras (ATV, firewood) and food ordered with the booking.
-        // booking.total holds the tent, add-ons and pre-orders; QR food billed to the stay is added on top.
         $billing = app(BookingBilling::class);
         $rows = $bookings->take(self::MAX_ROWS)->map(function (Booking $booking) use ($billing) {
-            $addons = (int) $booking->addons->sum('subtotal');
-            $preorders = (int) $booking->orders
-                ->filter(fn (Order $order): bool => $order->source === Order::SOURCE_PREORDER && $order->status !== OrderStatus::Dibatalkan->value)
-                ->sum(fn (Order $order): int => (int) $order->total + (int) $order->tax);
-            $grandTotal = $billing->grandTotal($booking);
+            ['tent' => $tent, 'addon' => $addon, 'food' => $food] = $this->billParts($booking);
 
             return [
                 $booking->code,
@@ -69,11 +67,13 @@ class ReportService
                 $booking->check_in->format('d/m/Y'),
                 $booking->check_out->format('d/m/Y'),
                 $booking->status->getLabel(),
-                $booking->total - $addons - $preorders,
-                $addons,
-                $preorders + $grandTotal - $booking->total,
-                $grandTotal,
+                $tent,
+                $addon,
+                $food,
+                $tent + $addon + $food,
                 $booking->paid_amount,
+                // Only a stay that is sold or held for review can owe money; an unpaid cancelled booking owes nothing.
+                in_array($booking->status, self::OWING_STATUSES, true) ? $billing->outstanding($booking) : 0,
             ];
         })->all();
 
@@ -87,10 +87,11 @@ class ReportService
         }
         // Totals cover sold stays only, so a cancelled or unpaid booking never inflates the tent figure.
         $soldRows = array_values(array_filter($rows, fn (array $row, int $index) => in_array($bookings[$index]->status, self::SOLD_STATUSES, true), ARRAY_FILTER_USE_BOTH));
-        foreach ([5 => 'Sewa tenda, lunas (Rp)', 6 => 'Tambahan, lunas (Rp)', 7 => 'Makanan, lunas (Rp)'] as $index => $label) {
+        foreach ([5 => 'Sewa tenda, booking terjual (Rp)', 6 => 'Tambahan, booking terjual (Rp)', 7 => 'Makanan, booking terjual (Rp)'] as $index => $label) {
             $summary[] = ['label' => $label, 'value' => (int) array_sum(array_column($soldRows, $index)), 'type' => Type::Money];
         }
         $summary[] = ['label' => 'Total dibayar (Rp)', 'value' => (int) (clone $query)->where('status', '!=', BookingStatus::Expired->value)->sum('paid_amount'), 'type' => Type::Money];
+        $summary[] = ['label' => 'Belum dibayar tamu (Rp)', 'value' => (int) array_sum(array_column($soldRows, 10)), 'type' => Type::Money];
         if ($expired > 0) {
             $summary[] = ['label' => 'Kedaluwarsa, tidak ditampilkan', 'value' => $expired, 'type' => Type::Count];
         }
@@ -109,10 +110,11 @@ class ReportService
                 $this->column('Makanan (Rp)', Type::Money),
                 $this->column('Total (Rp)', Type::Money),
                 $this->column('Dibayar (Rp)', Type::Money),
+                $this->column('Sisa (Rp)', Type::Money),
             ],
             $rows,
             $summary,
-            'Booking dengan tanggal check-in pada periode, ditambah booking yang refund-nya diajukan pada periode. Booking kedaluwarsa (tidak dibayar sampai batas waktu) tidak dimuat dan hanya dihitung jumlahnya. Nomor telepon dan email pelanggan tidak dimuat.'.$this->truncationNote($truncated),
+            'Booking dengan tanggal check-in pada periode, ditambah booking yang refund-nya diajukan pada periode. Booking terjual: Lunas, Check-in, atau Check-out. Sisa adalah tagihan yang belum dibayar tamu, biasanya makanan yang ditagih ke booking. Booking kedaluwarsa (tidak dibayar sampai batas waktu) tidak dimuat dan hanya dihitung jumlahnya. Laporan ini memakai tanggal check-in; uang menurut tanggal bayar ada di laporan Pendapatan dan Metode pembayaran, jadi angkanya bisa berbeda. Nomor telepon dan email pelanggan tidak dimuat.'.$this->truncationNote($truncated),
             $truncated,
         );
     }
@@ -192,6 +194,8 @@ class ReportService
             ->orderByDesc('sold')
             ->orderBy('menu_items.name')
             ->get();
+        $stillOwed = $this->unpaidBookingFood($period);
+
         // Totals count every dish sold; only the table is cut to the top rows.
         $all = $items;
         $items = $items->take(self::TOP_MENU_LIMIT);
@@ -219,8 +223,9 @@ class ReportService
                 ['label' => 'QR kafe', 'value' => (int) $all->sum('via_cafe'), 'type' => Type::Count],
                 ['label' => 'Walk-in kasir', 'value' => (int) $all->sum('via_walkin'), 'type' => Type::Count],
                 ['label' => 'Total omzet (Rp)', 'value' => (int) $all->sum('revenue'), 'type' => Type::Money],
+                ['label' => 'Ditagih ke booking, belum dibayar tamu (Rp)', 'value' => $stillOwed, 'type' => Type::Money],
             ],
-            'Item pada pesanan yang sudah dibayar, termasuk makanan yang ikut booking lunas, dipisah menurut asal pesanan: dipesan bersama booking, scan QR di tenda, scan QR di meja kafe, atau dicatat kasir, dengan tanggal pesanan pada periode. Diurutkan dari yang paling banyak terjual, '.self::TOP_MENU_LIMIT.' teratas.',
+            'Makanan yang ditagih ke booking lunas ikut dihitung terjual walau tamu belum membayarnya; nilainya tampil terpisah sebagai belum dibayar tamu. Item pada pesanan yang sudah dibayar, termasuk makanan yang ikut booking lunas, dipisah menurut asal pesanan: dipesan bersama booking, scan QR di tenda, scan QR di meja kafe, atau dicatat kasir, dengan tanggal pesanan pada periode. Diurutkan dari yang paling banyak terjual, '.self::TOP_MENU_LIMIT.' teratas.',
         );
     }
 
@@ -317,8 +322,8 @@ class ReportService
 
     /**
      * Same settled cash as the payment method report, split into tent rent, add-ons and food. A
-     * booking payment covers several things at once, so it is spread over that booking's tent,
-     * add-on and billed food lines in proportion to their amounts.
+     * booking payment covers several things at once, so it fills that booking's tent first, then
+     * add-ons, then food billed to the stay.
      */
     public function revenueByCategory(ReportPeriod $period): ReportTable
     {
@@ -371,16 +376,58 @@ class ReportService
                 ['label' => 'F&B, neto (Rp)', 'value' => $foodNet, 'type' => Type::Money],
                 ['label' => 'Total neto (Rp)', 'value' => $tentNet + $addonNet + $foodNet, 'type' => Type::Money],
             ],
-            'Pembayaran berhasil dengan tanggal bayar pada periode, sama dengan laporan pembayaran per metode. Pembayaran booking dibagi ke tenda, add-on, dan makanan sesuai porsi rincian booking.',
+            'Pembayaran berhasil dengan tanggal bayar pada periode, sama dengan laporan pembayaran per metode. Pembayaran booking dihitung untuk sewa tenda dulu, lalu add-on, lalu makanan yang ditagih ke booking. Makanan yang belum dibayar tamu belum masuk ke sini; lihat kolom Sisa di laporan Booking.',
         );
     }
 
-    /** Food billed to the booking, the same figure the revenue split and the booking report use. */
-    private function bookingFoodTotal(Booking $booking): int
+    /**
+     * Food counted as sold in the top menu report that the guest has not paid yet. Capped per booking
+     * by that booking's food ordered in the period, so a balance never counts in two periods and an
+     * unpaid non-food amount never shows up as food.
+     */
+    private function unpaidBookingFood(ReportPeriod $period): int
     {
-        return (int) $booking->orders
-            ->filter(fn (Order $order): bool => $order->bill_to_booking && $order->status !== OrderStatus::Dibatalkan->value)
+        $foodInPeriod = DB::table('order_items')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.bill_to_booking', true)
+            ->where('orders.status', '!=', OrderStatus::Dibatalkan->value)
+            ->whereNotNull('orders.booking_id')
+            ->where('orders.created_at', '>=', $period->from->toDateTimeString())
+            ->where('orders.created_at', '<', $period->untilExclusive()->toDateTimeString())
+            ->groupBy('orders.booking_id')
+            ->selectRaw('orders.booking_id, SUM(order_items.qty * order_items.price) as food')
+            ->pluck('food', 'booking_id');
+
+        $billing = app(BookingBilling::class);
+
+        return (int) Booking::query()
+            ->whereKey($foodInPeriod->keys())
+            ->whereIn('status', array_map(fn (BookingStatus $status) => $status->value, [...BookingStatus::occupying(), BookingStatus::CheckedOut]))
+            ->get()
+            ->sum(fn (Booking $booking): int => min($billing->outstanding($booking), (int) $foodInPeriod[$booking->id]));
+    }
+
+    /**
+     * The bill split the booking report and the revenue split share. booking.total keeps every
+     * pre-order priced at checkout, cancelled or not, so all of them count as food; otherwise a
+     * pre-order cancelled after the guest paid for it would show up as tent rent.
+     *
+     * @return array{tent: int, addon: int, food: int}
+     */
+    private function billParts(Booking $booking): array
+    {
+        $grandTotal = app(BookingBilling::class)->grandTotal($booking);
+        $addon = (int) $booking->addons->sum('subtotal');
+        $preorders = (int) $booking->orders
+            ->where('source', Order::SOURCE_PREORDER)
             ->sum(fn (Order $order): int => (int) $order->total + (int) $order->tax);
+        $food = $preorders + $grandTotal - $booking->total;
+
+        return [
+            'tent' => max(0, $grandTotal - $addon - $food),
+            'addon' => $addon,
+            'food' => $food,
+        ];
     }
 
     /** @return array<string, int> category => rupiah, summing exactly to the payment amount */
@@ -398,13 +445,8 @@ class ReportService
 
         // Money on a booking pays the tent first, then add-ons, then food billed to the stay, so
         // anything still owed shows up as unpaid food: the owner can match the gap to the bill.
-        $addon = (int) $payable->addons->sum('subtotal');
-        $food = $this->bookingFoodTotal($payable);
-        $parts = [
-            'tent' => max(0, app(BookingBilling::class)->grandTotal($payable) - $addon - $food),
-            'addon' => $addon,
-            'food_booking' => $food,
-        ];
+        $bill = $this->billParts($payable);
+        $parts = ['tent' => $bill['tent'], 'addon' => $bill['addon'], 'food_booking' => $bill['food']];
 
         $signed = fn (Payment $p): int => $p->direction === PaymentDirection::In ? (int) $p->amount : -(int) $p->amount;
         $before = (int) $payable->payments

@@ -98,10 +98,11 @@ class FoodReportingTest extends TestCase
 
         $report = app(ReportService::class)->bookings(ReportPeriod::thisMonth());
 
-        $this->assertSame([$booking->code, 'Tamu', '01/12/2026', '02/12/2026', 'Lunas', 30000, 0, 105000, 135000, 100000], $report->rows[0]);
+        $this->assertSame([$booking->code, 'Tamu', '01/12/2026', '02/12/2026', 'Lunas', 30000, 0, 105000, 135000, 100000, 35000], $report->rows[0]);
         $summary = array_column($report->summary, 'value', 'label');
-        $this->assertSame(30000, $summary['Sewa tenda, lunas (Rp)']);
-        $this->assertSame(105000, $summary['Makanan, lunas (Rp)']);
+        $this->assertSame(30000, $summary['Sewa tenda, booking terjual (Rp)']);
+        $this->assertSame(105000, $summary['Makanan, booking terjual (Rp)']);
+        $this->assertSame(35000, $summary['Belum dibayar tamu (Rp)'], 'Food billed to the stay and not paid yet is still owed.');
     }
 
     public function test_served_orders_nobody_paid_for_show_in_the_unpaid_tab(): void
@@ -190,5 +191,48 @@ class FoodReportingTest extends TestCase
 
         $this->assertSame(720000, $rows['Sewa tenda']);
         $this->assertSame(0, $rows['F&B ditagih ke booking'], 'Unpaid billed food is the whole gap, not a share of it.');
+    }
+
+    public function test_a_pre_order_cancelled_after_payment_stays_food_not_tent(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-12-01 09:00'));
+        $booking = $this->bookingWithFood(BookingStatus::Paid, 2);
+        $booking->update(['paid_amount' => 100000]);
+        $booking->orders()->update(['status' => OrderStatus::Dibatalkan->value]);
+
+        $report = app(ReportService::class)->bookings(ReportPeriod::thisMonth());
+
+        $this->assertSame([30000, 0, 70000, 100000, 100000, 0], array_slice($report->rows[0], 5));
+    }
+
+    public function test_top_menu_shows_unpaid_billed_food_once_capped_by_the_period(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-11-30 20:00'));
+        $booking = $this->bookingWithFood(BookingStatus::CheckedIn, 0);
+        $booking->update(['paid_amount' => 100000]);
+        app(OrderService::class)->createOrder(Order::SOURCE_QR, [['menu_item_id' => $this->satay->id, 'qty' => 1]], $booking->id, $this->table->id, null, 'Tamu', null, true);
+        $this->travelTo(CarbonImmutable::parse('2026-12-01 09:00'));
+        app(OrderService::class)->createOrder(Order::SOURCE_QR, [['menu_item_id' => $this->satay->id, 'qty' => 2]], $booking->id, $this->table->id, null, 'Tamu', null, true);
+
+        $owed = fn (ReportPeriod $period): int => array_column(app(ReportService::class)->topMenu($period)->summary, 'value', 'label')['Ditagih ke booking, belum dibayar tamu (Rp)'];
+
+        $this->assertSame(35000, $owed(ReportPeriod::lastMonth()));
+        $this->assertSame(70000, $owed(ReportPeriod::thisMonth()));
+    }
+
+    public function test_revenue_total_matches_the_payment_method_report(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-12-01 09:00'));
+        $cashier = $this->staff(User::ROLE_CASHIER)->id;
+        $booking = $this->bookingWithFood(BookingStatus::CheckedIn, 2);
+        app(PaymentService::class)->recordManual($booking, 60000, PaymentMethod::Cash->value, null, $cashier);
+        app(OrderService::class)->createOrder(Order::SOURCE_QR, [['menu_item_id' => $this->satay->id, 'qty' => 1]], $booking->id, $this->table->id, null, 'Tamu', null, true);
+        app(OrderService::class)->markPaidAtCashier($this->order(2, $this->table), PaymentMethod::Cash, $cashier);
+
+        $reports = app(ReportService::class);
+        $revenue = array_column($reports->revenueByCategory(ReportPeriod::thisMonth())->summary, 'value', 'label');
+        $methods = array_column($reports->paymentsByMethod(ReportPeriod::thisMonth())->summary, 'value', 'label');
+
+        $this->assertSame($methods['Neto (Rp)'], $revenue['Total neto (Rp)']);
     }
 }
