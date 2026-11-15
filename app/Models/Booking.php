@@ -4,7 +4,9 @@ namespace App\Models;
 
 use App\Enums\BookingStatus;
 use App\Enums\OrderStatus;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -147,10 +149,11 @@ class Booking extends Model
     }
 
     /** @return array<int, string> e.g. "Sab 2/11 08:00: 2x Kopi, 1x Nasi goreng" */
-    public function foodLabels(): array
+    public function foodLabels(?CarbonInterface $orderedBy = null): array
     {
         return $this->orders
             ->reject(fn (Order $order): bool => $order->statusEnum() === OrderStatus::Dibatalkan)
+            ->reject(fn (Order $order): bool => $orderedBy !== null && $order->created_at->gt($orderedBy))
             ->map(fn (Order $order): string => ($order->scheduled_at ? $order->scheduled_at->locale('id')->translatedFormat('D j/n H:i').': ' : '')
                 .$order->items->map(fn (OrderItem $item): string => $item->qty.'x '.$item->menuItem->name)->implode(', '))
             ->values()
@@ -179,5 +182,17 @@ class Booking extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    /**
+     * Orders that make up the bill, matching BookingBilling: pre-orders (priced into booking.total)
+     * and food billed to the stay that was not cancelled. Food paid at the cashier is left out.
+     *
+     * @return Collection<int, Order>
+     */
+    public function billedOrders(): Collection
+    {
+        return $this->orders->filter(fn (Order $order): bool => $order->source === Order::SOURCE_PREORDER
+            || ($order->bill_to_booking && $order->status !== OrderStatus::Dibatalkan->value));
     }
 }

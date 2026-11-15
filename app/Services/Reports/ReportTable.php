@@ -13,7 +13,7 @@ final readonly class ReportTable
     /**
      * @param  list<array{label: string, type: ReportValueType}>  $columns
      * @param  list<list<int|string|null>>  $rows
-     * @param  list<array{label: string, value: int|string, type: ReportValueType}>  $summary
+     * @param  list<array{label: string, value: int|string, type: ReportValueType, group?: string}>  $summary
      */
     public function __construct(
         public ReportType $type,

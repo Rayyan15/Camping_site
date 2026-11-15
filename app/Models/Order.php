@@ -15,6 +15,8 @@ use Illuminate\Support\Carbon;
 /**
  * @property ?Carbon $scheduled_at
  * @property ?QrPaymentChoice $payment_choice
+ * @property ?Carbon $auto_cancelled_at
+ * @property ?Carbon $served_at
  */
 class Order extends Model
 {
@@ -31,13 +33,14 @@ class Order extends Model
     protected $fillable = [
         'code', 'source', 'booking_id', 'customer_name', 'customer_phone', 'dining_spot_id',
         'scheduled_at', 'status', 'total', 'tax', 'payment_status', 'payment_choice',
-        'bill_to_booking', 'auto_cancelled_at',
+        'bill_to_booking', 'auto_cancelled_at', 'served_at',
     ];
 
     protected function casts(): array
     {
         return [
             'auto_cancelled_at' => 'datetime',
+            'served_at' => 'datetime',
             'scheduled_at' => 'datetime',
             'total' => 'integer',
             'tax' => 'integer',
@@ -130,11 +133,20 @@ class Order extends Model
      */
     public function scopeOwedAtCashier(Builder $query): void
     {
-        $query->where('bill_to_booking', false)
-            // Transfer orders are chased in the Cek transfer tab instead.
-            ->where(fn (Builder $cashier) => $cashier->whereNull('payment_choice')->orWhere('payment_choice', '!=', QrPaymentChoice::Transfer->value))
-            ->where('payment_status', '!=', self::PAYMENT_PAID)
-            ->where('status', '!=', OrderStatus::Dibatalkan->value);
+        $query->where('status', '!=', OrderStatus::Dibatalkan->value)
+            ->where(fn (Builder $owed) => $owed
+                ->where(fn (Builder $direct) => $direct
+                    ->where('bill_to_booking', false)
+                    // Transfer orders are chased in the Cek transfer tab instead.
+                    ->where(fn (Builder $cashier) => $cashier->whereNull('payment_choice')->orWhere('payment_choice', '!=', QrPaymentChoice::Transfer->value))
+                    ->where('payment_status', '!=', self::PAYMENT_PAID))
+                // Food billed to a stay is paid through the booking, so it is owed while that booking
+                // has not received its full bill (BookingBilling::grandTotal).
+                ->orWhere(fn (Builder $billed) => $billed
+                    ->where('bill_to_booking', true)
+                    ->whereIn('booking_id', fn ($owing) => $owing->select('bookings.id')->from('bookings')
+                        ->whereNotIn('bookings.status', [BookingStatus::Expired->value, BookingStatus::Cancelled->value, BookingStatus::Refunded->value])
+                        ->whereRaw('bookings.paid_amount < bookings.total + COALESCE((SELECT SUM(oi.price * oi.qty) FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE o.booking_id = bookings.id AND o.bill_to_booking = 1 AND o.source != ? AND o.status != ?), 0)', [self::SOURCE_PREORDER, OrderStatus::Dibatalkan->value]))));
     }
 
     public function statusEnum(): OrderStatus

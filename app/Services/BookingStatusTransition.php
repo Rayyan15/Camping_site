@@ -68,9 +68,15 @@ class BookingStatusTransition
                 throw InvalidBookingTransitionException::beforeCheckInDate($locked->check_in);
             }
 
-            // A staff reschedule may raise the price; the difference is settled before the guest moves in.
-            if ($target === BookingStatus::CheckedIn && $locked->paid_amount < $locked->total) {
-                throw InvalidBookingTransitionException::unpaidBalance($locked->total - $locked->paid_amount);
+            // Everything owed (reschedule difference, food billed to the stay) is settled before check-in
+            // and again before check-out, or nobody chases it later.
+            $owed = app(BookingBilling::class)->outstanding($locked);
+            if ($target === BookingStatus::CheckedIn && $owed > 0) {
+                throw InvalidBookingTransitionException::unpaidBalance($owed);
+            }
+
+            if ($target === BookingStatus::CheckedOut && $owed > 0) {
+                throw InvalidBookingTransitionException::unpaidBalance($owed, 'check-out. Termasuk makanan yang ditagih ke booking');
             }
 
             // Money already received must leave through a refund, never vanish with a plain cancel.

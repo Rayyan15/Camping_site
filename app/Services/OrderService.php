@@ -11,6 +11,7 @@ use App\Events\OrderPlaced;
 use App\Exceptions\InvalidOrderTransitionException;
 use App\Exceptions\MenuItemUnavailableException;
 use App\Exceptions\OrderBillingException;
+use App\Models\Booking;
 use App\Models\DiningSpot;
 use App\Models\Order;
 use App\Models\Payment;
@@ -104,6 +105,11 @@ class OrderService
         }
 
         return DB::transaction(function () use ($spot, $items, $customerName, $customerPhone, $billToBooking, $booking, $choice) {
+            $repeat = $this->recentIdenticalQrOrder($spot, $items, $customerName);
+            if ($repeat !== null) {
+                return $repeat;
+            }
+
             $order = $this->createOrder(
                 Order::SOURCE_QR,
                 $items,
@@ -124,6 +130,30 @@ class OrderService
 
             return $order;
         });
+    }
+
+    /**
+     * A double tap or a resend on a slow connection reaches us as a second identical request.
+     * Live data had two identical orders two seconds apart, both billed to the stay, so the same
+     * order from the same spot and guest within the window is answered with the first one.
+     *
+     * @param  array<int, array{menu_item_id: int, qty: int, notes?: string|null}>  $items
+     */
+    private function recentIdenticalQrOrder(DiningSpot $spot, array $items, string $customerName): ?Order
+    {
+        $signature = fn (iterable $lines): array => collect($lines)
+            ->map(fn ($line) => data_get($line, 'menu_item_id').'x'.data_get($line, 'qty'))
+            ->sort()->values()->all();
+        $wanted = $signature($items);
+
+        return Order::with('items')
+            ->where('source', Order::SOURCE_QR)
+            ->where('dining_spot_id', $spot->id)
+            ->where('customer_name', $customerName)
+            ->where('status', '!=', OrderStatus::Dibatalkan->value)
+            ->where('created_at', '>=', now()->subSeconds((int) config('booking.qr_duplicate_window_seconds')))
+            ->get()
+            ->first(fn (Order $order) => $signature($order->items) === $wanted);
     }
 
     /**
@@ -168,6 +198,30 @@ class OrderService
      *
      * @throws InvalidOrderTransitionException
      */
+    /**
+     * Pre-orders of a booking whose hold lapsed would sit in "Baru" forever. They are cancelled and
+     * flagged, so a revived booking gets them back while orders staff cancelled stay cancelled.
+     */
+    public function releasePreorders(Booking $booking): void
+    {
+        $booking->orders()
+            ->where('source', Order::SOURCE_PREORDER)
+            // Food already at the table was eaten: cancelling it would drop it from the bill and, on revival, cook it again.
+            ->whereNull('served_at')
+            ->where('status', '!=', OrderStatus::Dibatalkan->value)
+            ->get()
+            ->each(fn (Order $order) => $order->update(['status' => OrderStatus::Dibatalkan->value, 'auto_cancelled_at' => now()]));
+    }
+
+    public function restorePreorders(Booking $booking): void
+    {
+        $booking->orders()
+            ->where('source', Order::SOURCE_PREORDER)
+            ->whereNotNull('auto_cancelled_at')
+            ->get()
+            ->each(fn (Order $order) => $order->update(['status' => OrderStatus::Baru->value, 'auto_cancelled_at' => null]));
+    }
+
     public function updateStatus(Order $order, OrderStatus $newStatus): Order
     {
         return DB::transaction(function () use ($order, $newStatus) {
@@ -183,7 +237,16 @@ class OrderService
                 throw InvalidOrderTransitionException::paidCannotBeCancelled();
             }
 
-            $locked->update(['status' => $newStatus->value]);
+            // Closing an unpaid cashier order is how served food left without being paid (owner audit, Nov 2026).
+            if ($newStatus === OrderStatus::Selesai && ! $locked->isPaid() && ! $locked->bill_to_booking) {
+                throw InvalidOrderTransitionException::unpaidCannotBeClosed($locked->total);
+            }
+
+            $locked->update([
+                'status' => $newStatus->value,
+                // Stock keeps an older pre-order reserved until this moment, so it is set once and never moved.
+                'served_at' => $locked->served_at ?? (in_array($newStatus, [OrderStatus::Diantar, OrderStatus::Selesai], true) ? now() : null),
+            ]);
             $order->refresh();
 
             return $order;

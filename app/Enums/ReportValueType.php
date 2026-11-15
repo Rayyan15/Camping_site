@@ -18,6 +18,26 @@ enum ReportValueType: string
         };
     }
 
+    /** Summary figures carry their unit in the value, so their labels stay short. */
+    public function display(mixed $value): string
+    {
+        return match ($this) {
+            self::Money => 'Rp '.$this->format($value),
+            self::Percent => $this->format($value).'%',
+            default => $this->format($value),
+        };
+    }
+
+    /** Unit appended to a label where the value is a bare number (spreadsheet cells). */
+    public function unitSuffix(): string
+    {
+        return match ($this) {
+            self::Money => ' (Rp)',
+            self::Percent => ' (%)',
+            default => '',
+        };
+    }
+
     /** Spreadsheet number format, so exported cells stay real numbers the owner can sum. */
     public function excelFormat(): string
     {

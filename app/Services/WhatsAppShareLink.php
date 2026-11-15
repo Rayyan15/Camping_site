@@ -76,7 +76,7 @@ class WhatsAppShareLink
             'Booking '.config('site.name').' - '.$booking->code,
             'Tanggal: '.$booking->check_in->format('d/m/Y').' sampai '.$booking->check_out->format('d/m/Y'),
             $units !== '' ? 'Unit: '.$units : null,
-            'Total: Rp '.number_format($booking->total, 0, ',', '.'),
+            'Total: Rp '.number_format(app(BookingBilling::class)->grandTotal($booking), 0, ',', '.'),
             'Status booking: '.route('booking.status', $booking->access_token),
         ]));
     }

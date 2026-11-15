@@ -16,4 +16,9 @@ class InvalidOrderTransitionException extends RuntimeException
     {
         return new self('Pesanan yang sudah dibayar tidak bisa dibatalkan.');
     }
+
+    public static function unpaidCannotBeClosed(int $total): self
+    {
+        return new self('Tagih dulu Rp '.number_format($total, 0, ',', '.').' sebelum pesanan ditandai selesai.');
+    }
 }

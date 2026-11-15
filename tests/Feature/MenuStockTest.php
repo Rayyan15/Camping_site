@@ -24,8 +24,6 @@ use App\Services\BookingService;
 use App\Services\DiningSpotService;
 use App\Services\MenuStockService;
 use App\Services\OrderService;
-use App\Services\Reports\ReportPeriod;
-use App\Services\Reports\ReportService;
 use App\Services\SettingRepository;
 use Carbon\CarbonImmutable;
 use Database\Seeders\RoleSeeder;
@@ -58,9 +56,10 @@ class MenuStockTest extends TestCase
         $this->stock = app(MenuStockService::class);
     }
 
-    private function order(int $qty, QrPaymentChoice $choice = QrPaymentChoice::Cashier): Order
+    private function order(int $qty, QrPaymentChoice $choice = QrPaymentChoice::Cashier, string $guest = 'Sari'): Order
     {
-        return app(OrderService::class)->createQrOrder($this->table, [['menu_item_id' => $this->satay->id, 'qty' => $qty]], 'Sari', null, $choice);
+        // A distinct guest name keeps main's double-submit guard from folding two test orders into one.
+        return app(OrderService::class)->createQrOrder($this->table, [['menu_item_id' => $this->satay->id, 'qty' => $qty]], $guest, null, $choice);
     }
 
     private function staff(string $role): User
@@ -97,7 +96,7 @@ class MenuStockTest extends TestCase
         $this->assertSame(2, $this->stock->remainingFor($this->satay));
 
         try {
-            $this->order(3);
+            $this->order(3, guest: 'Budi');
             $this->fail('Ordering more than what is left must be refused.');
         } catch (MenuItemUnavailableException $e) {
             $this->assertStringContainsString('tinggal 2', $e->getMessage());
@@ -108,6 +107,29 @@ class MenuStockTest extends TestCase
 
         $this->stock->add($this->satay, 4);
         $this->assertSame(9, $this->stock->remainingFor($this->satay));
+    }
+
+    public function test_a_recount_keeps_unserved_pre_orders_reserved(): void
+    {
+        $this->bookingWithFood(BookingStatus::Paid, 2);
+        $this->travelTo(now()->addMinute());
+
+        // The owner says 5 can still be sold; the 2 pre-ordered portions not served yet stay set aside.
+        $this->stock->setRemaining($this->satay, 5);
+        $this->assertSame(5, $this->stock->remainingFor($this->satay));
+        $this->assertSame(2, $this->stock->reservedFor($this->satay));
+
+        // Saving the dialog unchanged must not take the pre-order off a second time.
+        $this->stock->setRemaining($this->satay, $this->stock->remainingFor($this->satay));
+        $this->stock->add($this->satay, 1);
+        $this->assertSame(6, $this->stock->remainingFor($this->satay));
+
+        try {
+            $this->order(7);
+            $this->fail('A recount must not let the reserved pre-order portions be sold again.');
+        } catch (MenuItemUnavailableException $e) {
+            $this->assertStringContainsString('tinggal 6', $e->getMessage());
+        }
     }
 
     public function test_food_of_an_expired_booking_returns_to_stock(): void
@@ -199,30 +221,15 @@ class MenuStockTest extends TestCase
         $this->assertSame(PaymentStatus::Pending, $order->payments()->firstOrFail()->status);
     }
 
-    public function test_booking_report_keeps_the_tent_apart_from_food_ordered_with_it(): void
-    {
-        $this->travelTo(CarbonImmutable::parse('2026-12-01 09:00'));
-        $booking = $this->bookingWithFood(BookingStatus::Paid, 2);
-        $booking->update(['paid_amount' => 100000]);
-        // QR food billed to the stay sits outside booking.total and must not shrink the tent figure.
-        app(OrderService::class)->createOrder(Order::SOURCE_QR, [['menu_item_id' => $this->satay->id, 'qty' => 1]], $booking->id, $this->table->id, null, 'Tamu', null, true);
-
-        $report = app(ReportService::class)->bookings(ReportPeriod::thisMonth());
-
-        $this->assertSame([$booking->code, 'Tamu', '01/12/2026', '02/12/2026', 'Lunas', 30000, 0, 105000, 135000, 100000], $report->rows[0]);
-        $summary = array_column($report->summary, 'value', 'label');
-        $this->assertSame(30000, $summary['Sewa tenda, lunas (Rp)']);
-        $this->assertSame(105000, $summary['Makanan, lunas (Rp)']);
-    }
-
     public function test_served_orders_nobody_paid_for_show_in_the_unpaid_tab(): void
     {
         Filament::setCurrentPanel(Filament::getDefaultPanel());
         $served = $this->order(1);
-        foreach ([OrderStatus::Diproses, OrderStatus::Siap, OrderStatus::Diantar, OrderStatus::Selesai] as $step) {
+        // Served but unpaid: main refuses Selesai until the cashier has the money, so it stops at Diantar.
+        foreach ([OrderStatus::Diproses, OrderStatus::Siap, OrderStatus::Diantar] as $step) {
             app(OrderService::class)->updateStatus($served, $step);
         }
-        $paid = $this->order(1);
+        $paid = $this->order(1, guest: 'Budi');
         app(OrderService::class)->markPaidAtCashier($paid, PaymentMethod::Cash, $this->staff(User::ROLE_CASHIER)->id);
 
         $this->actingAs($this->staff('owner'));
@@ -247,20 +254,5 @@ class MenuStockTest extends TestCase
         Livewire::test(ListMenuItems::class)
             ->callTableAction('add_stock', $this->satay, ['portions' => 7]);
         $this->assertSame(10, $this->stock->remainingFor($this->satay));
-    }
-
-    public function test_top_menu_splits_booking_food_from_qr_scans_in_tents_and_the_cafe(): void
-    {
-        $this->bookingWithFood(BookingStatus::Paid, 2);
-        $tent = app(DiningSpotService::class)->create('DOM-01', DiningSpot::TYPE_TENT);
-        foreach ([[$this->table, 3], [$tent, 1]] as [$spot, $qty]) {
-            $order = app(OrderService::class)->createQrOrder($spot, [['menu_item_id' => $this->satay->id, 'qty' => $qty]], 'Sari', null, QrPaymentChoice::Cashier);
-            app(OrderService::class)->markPaidAtCashier($order, PaymentMethod::Cash, $this->staff(User::ROLE_CASHIER)->id);
-        }
-        $this->bookingWithFood(BookingStatus::Expired, 5);
-
-        $report = app(ReportService::class)->topMenu(ReportPeriod::thisMonth());
-
-        $this->assertSame([['Sate Maranggi', 2, 1, 3, 0, 6, 210000, 'Tidak dibatasi']], $report->rows);
     }
 }

@@ -39,6 +39,8 @@
         .kq-qty { justify-self: start; padding: 0.0625rem 0.375rem; border-radius: 0.375rem; font-size: 0.8125rem; font-variant-numeric: tabular-nums; background: var(--primary-50); color: var(--primary-800); font-weight: 700; }
         .kq-note { display: block; font-size: 0.75rem; font-weight: 400; color: var(--gray-700); }
         .kq-meta { display: flex; flex-wrap: wrap; gap: 0.375rem; align-items: center; }
+        .kq-collect { margin: 0; padding: 0.5rem 0.625rem; border-radius: 0.5rem; background: var(--danger-50); border: 1px solid var(--danger-300); color: var(--danger-800); font-size: 0.8125rem; font-weight: 600; }
+        .dark .kq-collect { background: color-mix(in srgb, var(--danger-500) 16%, var(--gray-800)); border-color: var(--danger-700); color: var(--danger-200); }
         .kq-actions { display: grid; grid-template-columns: 3fr 2fr; gap: 0.5rem; align-items: stretch; }
         .kq-actions > :only-child { grid-column: 1 / -1; }
         .kq-primary { width: 100%; min-height: 2.75rem; }

@@ -6,6 +6,7 @@ use App\Enums\BookingStatus;
 use App\Enums\OrderStatus;
 use App\Exceptions\MenuItemUnavailableException;
 use App\Models\MenuItem;
+use App\Models\Order;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -67,10 +68,25 @@ class MenuStockService
         }
     }
 
-    /** Owner counted the shelf: this many portions are left now. Null stops counting. */
+    /**
+     * Owner says this many portions can still be sold now. Pre-orders not served yet stay counted after the
+     * recount, so the stored count adds them back to keep the sellable figure exactly what the owner typed.
+     * Null stops counting.
+     */
     public function setRemaining(MenuItem $item, ?int $portions): void
     {
-        $item->update(['stock' => $portions, 'stock_counted_at' => $portions === null ? null : now()]);
+        $stock = $portions === null ? null : $portions + $this->reservedFor($item);
+        $item->update(['stock' => $stock, 'stock_counted_at' => $portions === null ? null : now()]);
+    }
+
+    /** Portions held by pre-orders that are neither served nor cancelled. */
+    public function reservedFor(MenuItem $item): int
+    {
+        return (int) $this->liveOrderLines()
+            ->where('order_items.menu_item_id', $item->id)
+            ->where('orders.source', Order::SOURCE_PREORDER)
+            ->whereNull('orders.served_at')
+            ->sum('order_items.qty');
     }
 
     public function add(MenuItem $item, int $portions): void
@@ -82,25 +98,44 @@ class MenuStockService
         });
     }
 
-    /** @param  Collection<int, MenuItem>  $items */
+    /**
+     * @param  Collection<int, MenuItem>  $items
+     * @return Collection<int, \stdClass>
+     */
     private function usedSince(Collection $items): Collection
     {
         if ($items->isEmpty()) {
             return collect();
         }
 
-        return DB::table('order_items')
-            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+        return $this->liveOrderLines()
             ->join('menu_items', 'menu_items.id', '=', 'order_items.menu_item_id')
-            ->whereIn('order_items.menu_item_id', $items->modelKeys())
-            ->whereColumn('orders.created_at', '>=', 'menu_items.stock_counted_at')
-            ->where('orders.status', '!=', OrderStatus::Dibatalkan->value)
-            ->where(fn (Builder $query) => $query
-                ->whereNull('orders.booking_id')
-                ->orWhereNotIn('orders.booking_id', fn (Builder $dead) => $dead->select('id')->from('bookings')
-                    ->whereIn('status', array_map(fn (BookingStatus $status) => $status->value, [BookingStatus::Expired, BookingStatus::Cancelled, BookingStatus::Refunded]))))
+            ->whereIn('order_items.menu_item_id', $items->pluck('id')->all())
+            // A recount covers what is on the shelf, which still includes pre-orders not served at that moment, so
+            // those stay counted until served after the recount (setRemaining adds them back into the count).
+            ->where(fn (Builder $counted) => $counted
+                ->whereColumn('orders.created_at', '>=', 'menu_items.stock_counted_at')
+                ->orWhere(fn (Builder $unserved) => $unserved
+                    ->where('orders.source', Order::SOURCE_PREORDER)
+                    ->where(fn (Builder $open) => $open
+                        ->whereNull('orders.served_at')
+                        ->orWhereColumn('orders.served_at', '>=', 'menu_items.stock_counted_at'))))
             ->groupBy('order_items.menu_item_id')
             ->selectRaw('order_items.menu_item_id, SUM(order_items.qty) as used')
             ->get();
+    }
+
+    /** Order lines that still hold portions: not cancelled and not on a lapsed or cancelled booking. */
+    private function liveOrderLines(): Builder
+    {
+        return DB::table('order_items')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.status', '!=', OrderStatus::Dibatalkan->value)
+            // Served food was eaten, so a booking cancelled or refunded afterwards does not put it back on the shelf.
+            ->where(fn (Builder $query) => $query
+                ->whereNull('orders.booking_id')
+                ->orWhereNotNull('orders.served_at')
+                ->orWhereNotIn('orders.booking_id', fn (Builder $dead) => $dead->select('id')->from('bookings')
+                    ->whereIn('status', array_map(fn (BookingStatus $status) => $status->value, [BookingStatus::Expired, BookingStatus::Cancelled, BookingStatus::Refunded]))));
     }
 }

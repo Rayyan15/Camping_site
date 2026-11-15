@@ -58,7 +58,7 @@ class ReportServiceTest extends TestCase
 
         $table = $this->reports->build(ReportType::Booking, ReportPeriod::thisMonth());
 
-        $this->assertContains(['B-9', 'Siti Rahmawati', '20/11/2026', '22/11/2026', 'Dikembalikan', 500000, 0, 0, 500000, 500000], $table->rows);
+        $this->assertContains(['B-9', 'Siti Rahmawati', '20/11/2026', '22/11/2026', 'Dikembalikan', 500000, 0, 0, 500000, 500000, 0], $table->rows);
     }
 
     public function test_booking_report_counts_expired_holds_without_listing_them(): void
@@ -70,23 +70,23 @@ class ReportServiceTest extends TestCase
         $this->assertNotContains('B-X', array_column($table->rows, 0));
         $summary = array_column($table->summary, 'value', 'label');
         $this->assertSame(5, $summary['Jumlah booking']);
-        $this->assertSame(1, $summary['Kedaluwarsa, tidak ditampilkan']);
+        $this->assertSame(1, $summary['Kedaluwarsa']);
     }
 
     public function test_booking_report_lists_bookings_by_check_in_with_status_counts(): void
     {
         $table = $this->reports->build(ReportType::Booking, ReportPeriod::thisMonth());
 
-        $this->assertSame(['Kode', 'Pelanggan', 'Check-in', 'Check-out', 'Status', 'Sewa tenda (Rp)', 'Tambahan (Rp)', 'Makanan (Rp)', 'Total (Rp)', 'Dibayar (Rp)'], $table->headings());
+        $this->assertSame(['Kode', 'Pelanggan', 'Check-in', 'Check-out', 'Status', 'Sewa tenda (Rp)', 'Tambahan (Rp)', 'Makanan (Rp)', 'Total (Rp)', 'Dibayar (Rp)', 'Sisa (Rp)'], $table->headings());
         $this->assertSame([
-            ['B-1', 'Andi Pratama', '01/10/2026', '04/10/2026', 'Lunas', 900000, 0, 0, 900000, 900000],
-            ['B-6', 'Sari Utami', '05/10/2026', '07/10/2026', 'Lunas', 200000, 0, 0, 200000, 200000],
-            ['B-3', 'Andi Pratama', '10/10/2026', '12/10/2026', 'Menunggu Bayar', 300000, 0, 0, 300000, 0],
-            ['B-4', 'Sari Utami', '20/10/2026', '22/10/2026', 'Dibatalkan', 400000, 0, 0, 400000, 0],
-            ['B-2', 'Sari Utami', '28/10/2026', '03/11/2026', 'Check-out', 1800000, 0, 0, 1800000, 1800000],
+            ['B-1', 'Andi Pratama', '01/10/2026', '04/10/2026', 'Lunas', 900000, 0, 0, 900000, 900000, 0],
+            ['B-6', 'Sari Utami', '05/10/2026', '07/10/2026', 'Lunas', 200000, 0, 0, 200000, 200000, 0],
+            ['B-3', 'Andi Pratama', '10/10/2026', '12/10/2026', 'Menunggu Bayar', 300000, 0, 0, 300000, 0, 0],
+            ['B-4', 'Sari Utami', '20/10/2026', '22/10/2026', 'Dibatalkan', 400000, 0, 0, 400000, 0, 0],
+            ['B-2', 'Sari Utami', '28/10/2026', '03/11/2026', 'Check-out', 1800000, 0, 0, 1800000, 1800000, 0],
         ], $table->rows);
         $this->assertSame(
-            ['Jumlah booking' => 5, 'Menunggu Bayar' => 1, 'Lunas' => 2, 'Check-out' => 1, 'Dibatalkan' => 1, 'Sewa tenda, lunas (Rp)' => 2900000, 'Tambahan, lunas (Rp)' => 0, 'Makanan, lunas (Rp)' => 0, 'Total dibayar (Rp)' => 2900000],
+            ['Jumlah booking' => 5, 'Menunggu Bayar' => 1, 'Lunas' => 2, 'Check-out' => 1, 'Dibatalkan' => 1, 'Sewa tenda' => 2900000, 'Tambahan' => 0, 'Makanan' => 0, 'Sudah dibayar' => 2900000, 'Belum dibayar' => 0],
             array_column($table->summary, 'value', 'label'),
         );
         $this->assertStringNotContainsString('081200000001', json_encode($table->rows));
@@ -96,7 +96,7 @@ class ReportServiceTest extends TestCase
     {
         $table = $this->reports->build(ReportType::Booking, ReportPeriod::lastMonth());
 
-        $this->assertSame([['B-5', 'Andi Pratama', '29/09/2026', '02/10/2026', 'Check-in', 450000, 0, 0, 450000, 450000]], $table->rows);
+        $this->assertSame([['B-5', 'Andi Pratama', '29/09/2026', '02/10/2026', 'Check-in', 450000, 0, 0, 450000, 450000, 0]], $table->rows);
     }
 
     public function test_occupancy_counts_sold_nights_over_available_nights_per_type(): void
@@ -108,7 +108,7 @@ class ReportServiceTest extends TestCase
             ['Tenda', 1, 28, 1, 4],
         ], $table->rows);
         $this->assertSame(
-            ['Malam tersedia' => 90, 'Malam terisi' => 8, 'Okupansi (%)' => 9],
+            ['Okupansi' => 9, 'Malam terisi' => 8, 'Malam tersedia' => 90],
             array_column($table->summary, 'value', 'label'),
         );
         $this->assertStringContainsString('malam terisi dibagi malam tersedia', $table->definition);
@@ -119,11 +119,11 @@ class ReportServiceTest extends TestCase
         $table = $this->reports->build(ReportType::TopMenu, ReportPeriod::thisMonth());
 
         $this->assertSame([
-            ['Nasi Goreng', 0, 0, 0, 4, 4, 100000, 'Tidak dibatasi'],
-            ['Mie Rebus', 0, 0, 0, 3, 3, 60000, 'Tidak dibatasi'],
-            ['Kopi Hitam', 0, 0, 0, 2, 2, 30000, 'Tidak dibatasi'],
+            ['Nasi Goreng', 0, 0, 0, 4, 4, 100000],
+            ['Mie Rebus', 0, 0, 0, 3, 3, 60000],
+            ['Kopi Hitam', 0, 0, 0, 2, 2, 30000],
         ], $table->rows);
-        $this->assertSame(['Total terjual' => 9, 'Ikut booking' => 0, 'QR tenda' => 0, 'QR kafe' => 0, 'Walk-in kasir' => 9, 'Total omzet (Rp)' => 190000], array_column($table->summary, 'value', 'label'));
+        $this->assertSame(['Porsi terjual' => 9, 'Ikut booking' => 0, 'QR tenda' => 0, 'QR kafe' => 0, 'Walk-in kasir' => 9, 'Omzet' => 190000, 'Ditagih ke booking, belum dibayar' => 0], array_column($table->summary, 'value', 'label'));
     }
 
     public function test_refund_report_groups_by_status_and_totals_only_transferred_refunds(): void
@@ -136,7 +136,7 @@ class ReportServiceTest extends TestCase
             ['B-4', 'Sari Utami', '21/10/2026', 'Diajukan', 100000, '-'],
         ], $table->rows);
         $this->assertSame(
-            ['Diajukan' => 1, 'Ditolak' => 1, 'Sudah Ditransfer' => 1, 'Total dikembalikan (Rp)' => 50000],
+            ['Total dikembalikan' => 50000, 'Diajukan' => 1, 'Ditolak' => 1, 'Sudah Ditransfer' => 1],
             array_column($table->summary, 'value', 'label'),
         );
     }
@@ -152,7 +152,7 @@ class ReportServiceTest extends TestCase
             ['Transfer', 'Refund keluar', 1, 50000],
         ], $table->rows);
         $this->assertSame(
-            ['Total masuk (Rp)' => 3090000, 'Total refund keluar (Rp)' => 50000, 'Neto (Rp)' => 3040000],
+            ['Neto' => 3040000, 'Uang masuk' => 3090000, 'Refund keluar' => 50000],
             array_column($table->summary, 'value', 'label'),
         );
     }
@@ -163,8 +163,8 @@ class ReportServiceTest extends TestCase
         $revenue = array_column($this->reports->build(ReportType::Revenue, $period)->summary, 'value', 'label');
         $payments = array_column($this->reports->build(ReportType::PaymentMethod, $period)->summary, 'value', 'label');
 
-        $this->assertSame($payments['Neto (Rp)'], $revenue['Total neto (Rp)']);
-        $this->assertSame($revenue['Total neto (Rp)'], $revenue['Tenda dan add-on, neto (Rp)'] + $revenue['F&B, neto (Rp)']);
+        $this->assertSame($payments['Neto'], $revenue['Total neto']);
+        $this->assertSame($revenue['Total neto'], $revenue['Sewa tenda'] + $revenue['Tambahan (add-on)'] + $revenue['F&B']);
 
         $directFood = (int) Payment::query()->settled()
             ->paidBetween($period->from->toDateTimeString(), $period->untilExclusive()->toDateTimeString())
@@ -180,7 +180,7 @@ class ReportServiceTest extends TestCase
         $this->assertSame([], $this->reports->build(ReportType::Booking, $period)->rows);
         $this->assertSame([], $this->reports->build(ReportType::TopMenu, $period)->rows);
         $this->assertSame(0, $this->reports->build(ReportType::Occupancy, $period)->summary[1]['value']);
-        $this->assertSame(0, $this->reports->build(ReportType::PaymentMethod, $period)->summary[2]['value']);
+        $this->assertSame(0, $this->reports->build(ReportType::PaymentMethod, $period)->summary[0]['value']);
     }
 
     public function test_file_name_follows_the_convention(): void

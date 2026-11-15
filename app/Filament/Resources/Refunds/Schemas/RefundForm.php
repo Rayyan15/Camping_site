@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Refunds\Schemas;
 
 use App\Enums\BookingStatus;
 use App\Models\Booking;
+use App\Services\BookingBilling;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Components\Section;
@@ -27,7 +28,7 @@ class RefundForm
                                     $booking->code,
                                     $booking->customer->name,
                                     $booking->check_in->locale('id')->translatedFormat('j M Y'),
-                                    number_format($booking->total, 0, ',', '.'),
+                                    number_format(app(BookingBilling::class)->grandTotal($booking), 0, ',', '.'),
                                 )]))
                             ->searchable()
                             ->required(),

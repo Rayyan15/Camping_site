@@ -14,6 +14,7 @@ use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\FusedGroup;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
@@ -66,23 +67,44 @@ class Laporan extends Page implements HasSchemas
     {
         return $schema
             ->statePath('data')
-            ->columns(['default' => 1, 'sm' => 2])
             ->components([
-                DatePicker::make('from')
-                    ->label('Dari')
-                    ->native(false)
-                    ->format('Y-m-d')
-                    ->displayFormat('d/m/Y')
-                    ->live()
-                    ->afterStateUpdated(fn () => $this->data['preset'] = ReportPreset::Custom->value),
-                DatePicker::make('to')
-                    ->label('Sampai')
-                    ->native(false)
-                    ->format('Y-m-d')
-                    ->displayFormat('d/m/Y')
-                    ->live()
-                    ->afterStateUpdated(fn () => $this->data['preset'] = ReportPreset::Custom->value),
+                // One fused control reads as a single range, like a booking date field, instead of two loose boxes.
+                FusedGroup::make([
+                    $this->dateField('from', 'Dari'),
+                    $this->dateField('to', 'Sampai'),
+                ])
+                    ->label('Rentang tanggal')
+                    ->columns(2),
             ]);
+    }
+
+    private function dateField(string $name, string $label): DatePicker
+    {
+        return DatePicker::make($name)
+            ->label($label)
+            ->prefix($label)
+            ->native(false)
+            ->format('Y-m-d')
+            ->displayFormat('j M Y')
+            ->locale('id')
+            ->live()
+            ->afterStateUpdated(fn () => $this->markCustomUnlessPresetRange());
+    }
+
+    /**
+     * The picker writes the dates back after a shortcut fills them, so only a range that no longer matches
+     * the active shortcut turns the period custom.
+     */
+    private function markCustomUnlessPresetRange(): void
+    {
+        if ($this->preset() !== ReportPreset::Custom) {
+            $period = ReportPeriod::fromPreset($this->preset());
+            if (($this->data['from'] ?? null) === $period->from->toDateString() && ($this->data['to'] ?? null) === $period->to->toDateString()) {
+                return;
+            }
+        }
+
+        $this->data['preset'] = ReportPreset::Custom->value;
     }
 
     public function selectType(string $type): void

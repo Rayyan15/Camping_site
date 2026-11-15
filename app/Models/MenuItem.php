@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 class MenuItem extends Model
@@ -29,6 +30,18 @@ class MenuItem extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(MenuCategory::class, 'category_id');
+    }
+
+    /** @return HasMany<OrderItem, $this> */
+    public function orderItems(): HasMany
+    {
+        return $this->hasMany(OrderItem::class);
+    }
+
+    /** Order lines cascade with the item, so deleting a dish that was sold would erase it from bills and reports. */
+    public function canBeDeleted(): bool
+    {
+        return ! ($this->order_items_exists ?? $this->orderItems()->exists());
     }
 
     public function scopeAvailable(Builder $query): Builder

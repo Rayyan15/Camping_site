@@ -47,8 +47,8 @@ class ReportExportTest extends TestCase
     {
         $sheets = $this->workbook(ReportType::Booking);
 
-        $this->assertSame(['Kode', 'Pelanggan', 'Check-in', 'Check-out', 'Status', 'Sewa tenda (Rp)', 'Tambahan (Rp)', 'Makanan (Rp)', 'Total (Rp)', 'Dibayar (Rp)'], $sheets[0][0]);
-        $this->assertSame(['B-1', 'Andi Pratama', '01/10/2026', '04/10/2026', 'Lunas', 900000, 0, 0, 900000, 900000], $sheets[0][1]);
+        $this->assertSame(['Kode', 'Pelanggan', 'Check-in', 'Check-out', 'Status', 'Sewa tenda (Rp)', 'Tambahan (Rp)', 'Makanan (Rp)', 'Total (Rp)', 'Dibayar (Rp)', 'Sisa (Rp)'], $sheets[0][0]);
+        $this->assertSame(['B-1', 'Andi Pratama', '01/10/2026', '04/10/2026', 'Lunas', 900000, 0, 0, 900000, 900000, 0], $sheets[0][1]);
         $this->assertCount(6, $sheets[0]);
         $this->assertSame(['Ringkasan', '01/10/2026 sampai 31/10/2026'], $sheets[1][0]);
         $this->assertSame(['Jumlah booking', 5], $sheets[1][1]);
@@ -60,7 +60,7 @@ class ReportExportTest extends TestCase
 
         $this->assertSame(['Metode', 'Arah', 'Transaksi', 'Total (Rp)'], $sheets[0][0]);
         $this->assertSame(['Gateway', 'Masuk', 2, 985000], $sheets[0][1]);
-        $this->assertSame(['Neto (Rp)', 3040000], $sheets[1][3]);
+        $this->assertSame(['Neto (Rp)', 3040000], $sheets[1][1]);
     }
 
     public function test_every_report_downloads_as_pdf_with_the_expected_name(): void
@@ -87,7 +87,7 @@ class ReportExportTest extends TestCase
         ])->render();
 
         $this->assertStringContainsString('Laporan Menu terlaris', $html);
-        $this->assertStringContainsString('Periode<strong>01/10/2026 sampai 31/10/2026</strong>', $html);
+        $this->assertStringContainsString('Periode <strong>01/10/2026 sampai 31/10/2026</strong>', $html);
         $this->assertStringContainsString('Nasi Goreng', $html);
         $this->assertStringContainsString('100.000', $html);
         $this->assertStringContainsString('Dicetak 15/10/2026 10:00 WIB', $html);

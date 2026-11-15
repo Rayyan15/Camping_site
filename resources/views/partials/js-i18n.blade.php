@@ -19,6 +19,7 @@
     'Belum dibayar. Bayar ke kasir.',
     'Salin manual',
     'Mengirim bukti...',
+    'Mengirim pesanan...',
     'Bukti belum bisa dikirim. Coba lagi.',
     'File terlalu besar. Maksimal 10 MB.',
     'Halaman sudah terlalu lama dibuka. Muat ulang halaman, lalu kirim lagi.',

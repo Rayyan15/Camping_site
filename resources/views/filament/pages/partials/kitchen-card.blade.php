@@ -29,6 +29,7 @@
         $timeHint = $span($waiting).' lalu';
         $tone = $waiting >= $lateAfterMinutes ? 'late' : 'calm';
     }
+    $mustCollect = ! $order->isPaid() && ! $order->bill_to_booking;
     $isLate = $tone === 'late' && $status === OrderStatus::Baru;
 @endphp
 
@@ -71,9 +72,13 @@
         @endif
     </div>
 
+    @if($showActions && $mustCollect)
+        <p class="kq-collect" role="status">Belum dibayar. Tagih {{ $rupiah($order->total) }} dulu, baru bisa ditandai selesai.</p>
+    @endif
+
     @if($showActions && $canProcess)
         <div class="kq-actions">
-            <x-filament::button class="kq-primary" wire:click="advance({{ $order->id }}, '{{ OrderStatus::Selesai->value }}')" wire:loading.attr="disabled">
+            <x-filament::button class="kq-primary" :disabled="$mustCollect" wire:click="advance({{ $order->id }}, '{{ OrderStatus::Selesai->value }}')" wire:loading.attr="disabled">
                 Tandai selesai
             </x-filament::button>
             <div class="kq-secondary">

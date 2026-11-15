@@ -20,7 +20,7 @@ class ReportSummarySheet implements FromArray, ShouldAutoSize, WithColumnFormatt
 
     public function array(): array
     {
-        return array_map(fn (array $line) => [$line['label'], $line['value']], $this->table->summary);
+        return array_map(fn (array $line) => [$line['label'].$line['type']->unitSuffix(), $line['value']], $this->table->summary);
     }
 
     public function headings(): array

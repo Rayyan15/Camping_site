@@ -253,7 +253,7 @@ class StockOrderMatrixTest extends TestCase
         $summary = array_column(app(ReportService::class)->topMenu(ReportPeriod::thisMonth())->summary, 'value', 'label');
 
         $this->assertSame(2, $summary[self::CHANNEL[$entry]], "{$entry} landed in the wrong column");
-        $this->assertSame(2, $summary['Total terjual']);
+        $this->assertSame(2, $summary['Porsi terjual']);
     }
 
     #[DataProvider('entries')]
@@ -263,7 +263,8 @@ class StockOrderMatrixTest extends TestCase
         $order = $this->place($entry, 1);
         $this->actingAs($this->staff('owner'));
 
-        $owedAtCashier = in_array($entry, ['qr_tent', 'qr_cafe', 'walkin'], true);
+        // Food billed to a stay whose booking has not covered it is chased here too, so it never leaves unpaid unseen.
+        $owedAtCashier = in_array($entry, ['qr_tent', 'qr_tent_billed', 'qr_cafe', 'walkin'], true);
         $list = Livewire::test(ListOrders::class)->set('activeTab', 'unpaid');
         $owedAtCashier ? $list->assertCanSeeTableRecords([$order]) : $list->assertCanNotSeeTableRecords([$order]);
 

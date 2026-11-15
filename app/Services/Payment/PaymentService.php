@@ -21,6 +21,7 @@ use App\Models\BookingUnit;
 use App\Models\Payment;
 use App\Models\Unit;
 use App\Services\BookingBilling;
+use App\Services\OrderService;
 use App\Services\SettingRepository;
 use App\Services\UnitNightLedger;
 use Carbon\CarbonInterface;
@@ -39,6 +40,7 @@ class PaymentService
         private readonly PaymentGateway $gateway,
         private readonly UnitNightLedger $ledger,
         private readonly BookingBilling $billing,
+        private readonly OrderService $orders,
     ) {}
 
     /**
@@ -482,6 +484,8 @@ class PaymentService
         } catch (UnitUnavailableException) {
             return false;
         }
+
+        $this->orders->restorePreorders($booking);
 
         return true;
     }

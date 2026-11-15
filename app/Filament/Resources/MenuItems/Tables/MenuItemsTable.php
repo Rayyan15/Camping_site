@@ -20,6 +20,13 @@ class MenuItemsTable
 
     private const PREORDER_NOTE = 'Pesanan saat booking ikut memotong stok sejak dipesan, walau disajikan hari lain. Untuk paket BBQ yang dipesan jauh hari, kosongkan stoknya.';
 
+    private static function reservedNote(MenuItem $record): string
+    {
+        $reserved = app(MenuStockService::class)->reservedFor($record);
+
+        return $reserved > 0 ? "{$reserved} porsi sudah disisihkan untuk pesanan booking yang belum disajikan. " : '';
+    }
+
     public static function stockLabel(?int $left): string
     {
         return match (true) {
@@ -58,7 +65,7 @@ class MenuItemsTable
                     ->icon('heroicon-o-plus-circle')
                     ->visible(fn (): bool => (bool) auth()->user()?->can('manage_menu_stock'))
                     ->modalSubmitActionLabel('Tambah')
-                    ->modalDescription(fn (MenuItem $record): string => 'Sisa sekarang: '.self::stockLabel(app(MenuStockService::class)->remainingFor($record)).'. Isi jumlah porsi yang baru disiapkan. '.self::PREORDER_NOTE)
+                    ->modalDescription(fn (MenuItem $record): string => 'Sisa sekarang: '.self::stockLabel(app(MenuStockService::class)->remainingFor($record)).'. Isi jumlah porsi yang baru disiapkan. '.self::reservedNote($record).self::PREORDER_NOTE)
                     ->schema([
                         TextInput::make('portions')->label('Tambah berapa porsi')->integer()->minValue(1)->maxValue(self::MAX_PORTIONS)->required(),
                     ])
@@ -72,12 +79,12 @@ class MenuItemsTable
                     ->color('gray')
                     ->visible(fn (): bool => (bool) auth()->user()?->can('manage_menu_stock'))
                     ->modalSubmitActionLabel('Simpan stok')
-                    ->modalDescription('Angka berarti stok dihitung dan menu hilang dari pesanan saat 0. Kosong berarti tidak dibatasi. '.self::PREORDER_NOTE)
+                    ->modalDescription(fn (MenuItem $record): string => 'Angka berarti stok dihitung dan menu hilang dari pesanan saat 0. Kosong berarti tidak dibatasi. '.self::reservedNote($record).self::PREORDER_NOTE)
                     ->fillForm(fn (MenuItem $record): array => ['portions' => app(MenuStockService::class)->remainingFor($record)])
                     ->schema([
                         TextInput::make('portions')
-                            ->label('Sisa porsi sekarang')
-                            ->helperText('Hitung yang ada, lalu ketik angkanya. Kosongkan bila menu ini tidak memakai stok.')
+                            ->label('Sisa yang masih bisa dijual')
+                            ->helperText('Hitung porsi yang siap, kurangi yang sudah dipesan lewat booking, lalu ketik angkanya. Kosongkan bila menu ini tidak memakai stok.')
                             ->integer()->minValue(0)->maxValue(self::MAX_PORTIONS),
                     ])
                     ->action(function (MenuItem $record, array $data): void {
@@ -87,6 +94,9 @@ class MenuItemsTable
                 EditAction::make(),
             ])
             ->toolbarActions([DeleteBulkAction::make()])
+            // Sold dishes cannot be picked for delete; see MenuItem::canBeDeleted.
+            ->modifyQueryUsing(fn ($query) => $query->withExists('orderItems'))
+            ->checkIfRecordIsSelectableUsing(fn (MenuItem $record): bool => $record->canBeDeleted())
             // Urutan restarts at 1 in every category; the category chips on the list page keep that readable.
             ->defaultSort(fn ($query) => $query->orderBy('category_id')->orderBy('sort_order'))
             // Guests see items ordered by sort_order inside each category, so dragging here sets that order.

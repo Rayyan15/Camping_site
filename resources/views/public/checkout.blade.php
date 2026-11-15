@@ -10,13 +10,24 @@
     $checkOut = $booking->check_out->locale(app()->getLocale());
     $remaining = $holdActive ? max(0, (int) now()->diffInSeconds($booking->hold_expires_at, false)) : 0;
     $downPaid = $booking->paid_amount > 0;
+    $bill = app(\App\Services\BookingBilling::class)->breakdown($booking);
 @endphp
 
 @section('content')
     <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:py-14">
         <p class="eyebrow text-ember-dark">{{ __('Langkah 3 dari 3') }}</p>
         <h1 class="font-display mt-2 text-3xl font-semibold text-forest-900 sm:text-4xl">{{ __('Pembayaran') }}</h1>
-        <p class="mt-2 text-ink-soft">{{ __('Kode booking') }} <strong class="font-mono tracking-wider text-forest-900">{{ $booking->code }}</strong>. {{ __('Alamat halaman ini juga berlaku sebagai tautan status pesanan, jadi simpan atau bagikan hanya kepada orang yang Anda percaya.') }}</p>
+        <section class="mt-6 max-w-2xl rounded-3xl border-2 border-dashed border-forest-800/40 bg-[#fffdf8] p-5 sm:p-6" aria-labelledby="kode-title"
+                 @if($awaitingProof) data-resume-save data-resume-url="{{ route('checkout.show', $booking->access_token) }}" data-resume-code="{{ $booking->code }}" data-resume-until="{{ $booking->hold_expires_at->copy()->addHours((int) config('booking.late_proof_hours'))->getTimestampMs() }}" @else data-resume-clear="{{ $booking->code }}" @endif>
+            <h2 id="kode-title" class="text-sm font-semibold text-ink-soft">{{ __('Kode booking Anda') }}</h2>
+            <div class="mt-1 flex flex-wrap items-center gap-3">
+                <strong class="font-mono text-2xl font-bold tracking-wider text-forest-900 sm:text-3xl">{{ $booking->code }}</strong>
+                <button type="button" class="btn btn-outline min-h-11 px-4 text-sm" data-copy="{{ $booking->code }}">{{ __('Salin kode') }}</button>
+            </div>
+            <p class="mt-3 font-semibold text-forest-900">{{ __('Simpan kode ini, misalnya dengan screenshot.') }}</p>
+            <p class="mt-1 text-sm text-ink-soft">{{ __('Halaman tertutup sebelum bukti transfer terkirim? Buka Cek status booking, isi kode ini dan 4 digit terakhir nomor HP Anda, lalu unggah bukti dari sana.') }} <a href="{{ route('booking.find') }}" class="font-semibold text-forest-900 underline underline-offset-2">{{ __('Cek status booking') }}</a></p>
+            <p class="mt-1 text-sm text-ink-soft">{{ __('Alamat halaman ini juga berlaku sebagai tautan status pesanan, jadi simpan atau bagikan hanya kepada orang yang Anda percaya.') }}</p>
+        </section>
 
         @if(session('success'))
             <p class="mt-6 rounded-2xl bg-forest-100 px-5 py-4 font-semibold text-forest-900" role="status">{{ __(session('success')) }}</p>
@@ -68,7 +79,7 @@
                                 </tr>
                             @endforeach
 
-                            @foreach($booking->orders as $order)
+                            @foreach($booking->billedOrders() as $order)
                                 @foreach($order->items as $line)
                                     <tr>
                                         <td class="py-3 pr-4">
@@ -83,8 +94,8 @@
                             @endforeach
                         </tbody>
                         <tfoot class="border-t-2 border-forest-800">
-                            <tr><td class="pt-4 text-ink-soft">{{ __('Subtotal') }}</td><td class="pt-4 text-right">{{ $rupiah($booking->subtotal) }}</td></tr>
-                            <tr class="text-base"><td class="pt-2 font-bold text-forest-900">{{ __('Total') }}</td><td class="pt-2 text-right font-bold text-forest-900">{{ $rupiah($booking->total) }}</td></tr>
+                            <tr><td class="pt-4 text-ink-soft">{{ __('Subtotal') }}</td><td class="pt-4 text-right">{{ $rupiah($bill['subtotal']) }}</td></tr>
+                            <tr class="text-base"><td class="pt-2 font-bold text-forest-900">{{ __('Total') }}</td><td class="pt-2 text-right font-bold text-forest-900">{{ $rupiah($bill['total']) }}</td></tr>
                         </tfoot>
                     </table>
                 </section>
@@ -95,7 +106,7 @@
                         <p class="mt-2 text-sm text-forest-300">{{ __('Tenda pilihan Anda sudah dipesan tamu lain saat waktu bayar habis. Admin akan mencarikan tenda pengganti atau mengembalikan dana Anda.') }}</p>
                     @elseif($proof?->status === \App\Enums\PaymentStatus::Pending)
                         <p class="font-display text-2xl font-semibold" role="status">{{ __('Bukti diterima, menunggu konfirmasi admin') }}</p>
-                        <p class="mt-2 text-sm text-forest-300">{{ __('Tenda Anda dipegang sampai :time WIB. Kami mengirim email setelah pembayaran dikonfirmasi, jadi cek email Anda.', ['time' => $booking->hold_expires_at->locale(app()->getLocale())->translatedFormat('j F Y, H:i')]) }}</p>
+                        <p class="mt-2 text-sm text-forest-300">{{ __('Tenda Anda dipegang sampai :time WIB. Setelah pembayaran dikonfirmasi, status Lunas tampil di halaman Cek status booking.', ['time' => $booking->hold_expires_at->locale(app()->getLocale())->translatedFormat('j F Y, H:i')]) }}</p>
                     @elseif($lateProof)
                         <p class="font-display text-2xl font-semibold" role="status">{{ __('Waktu pembayaran habis') }}</p>
                         <p class="mt-2 text-sm text-forest-300">{{ __('Sudah terlanjur transfer? Unggah buktinya di bawah sebelum :time WIB. Bila tenda Anda masih kosong, pesanan langsung dipegang lagi.', ['time' => $lateProofUntil->locale(app()->getLocale())->translatedFormat('j F Y, H:i')]) }}</p>
@@ -159,8 +170,8 @@
                                                     <form action="{{ route('checkout.proof', $booking->access_token) }}" method="POST" enctype="multipart/form-data" class="mt-4" data-proof-form data-max-bytes="{{ \App\Http\Requests\Public\UploadTransferProofRequest::MAX_KILOBYTES * 1024 }}">
                                                         @csrf
                                                         <input type="hidden" name="method" value="{{ $method->value }}">
-                                                        <label for="{{ $fieldId }}" class="field-label">{{ $proof?->status === \App\Enums\PaymentStatus::Pending ? __('Kirim ulang bukti bayar') : __('Bukti bayar') }}</label>
-                                                        <input id="{{ $fieldId }}" name="proof" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf" required aria-describedby="{{ $fieldId }}-hint @error('proof') proof-error @enderror" class="field-input">
+                                                        <label for="{{ $fieldId }}" class="field-label">{{ $proof?->status === \App\Enums\PaymentStatus::Pending ? __('Kirim ulang bukti bayar') : __('Foto bukti transfer') }}</label>
+                                                        <input id="{{ $fieldId }}" name="proof" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf" required aria-describedby="{{ $fieldId }}-hint @error('proof') proof-error @enderror" class="proof-input">
                                                         <p id="{{ $fieldId }}-hint" class="mt-2 text-sm text-ink-soft">{{ __('JPG, PNG, WebP, atau PDF, maksimal 10 MB. Pastikan nominal dan tanggal terbaca.') }}</p>
                                                         @if(old('method', 'transfer') === $method->value)
                                                              @error('proof')

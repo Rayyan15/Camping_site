@@ -7,6 +7,7 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -50,6 +51,20 @@ class OrderForm
                             TextInput::make('payment_status')->label('Pembayaran')->disabled(),
                             Toggle::make('bill_to_booking')->label('Ditagihkan ke booking')->disabled(),
                         ]),
+                    ]),
+                Section::make('Isi pesanan')
+                    ->schema([
+                        TextEntry::make('items_summary')
+                            ->hiddenLabel()
+                            ->state(fn (?Order $record): array => $record?->items->map(
+                                fn ($item) => $item->qty.'x '.($item->menuItem?->name ?? 'Menu dihapus').', Rp '.number_format($item->qty * $item->price, 0, ',', '.').($item->notes ? ' (catatan: '.$item->notes.')' : '')
+                            )->all() ?? [])
+                            ->listWithLineBreaks()
+                            ->bulleted()
+                            ->placeholder('Tidak ada item.'),
+                        TextEntry::make('items_total')
+                            ->label('Jumlah item')
+                            ->state(fn (?Order $record): string => 'Rp '.number_format((int) $record?->items->sum(fn ($item) => $item->qty * $item->price), 0, ',', '.')),
                     ]),
             ]);
     }
