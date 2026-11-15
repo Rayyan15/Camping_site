@@ -24,6 +24,8 @@ use App\Services\BookingService;
 use App\Services\DiningSpotService;
 use App\Services\MenuStockService;
 use App\Services\OrderService;
+use App\Services\Reports\ReportPeriod;
+use App\Services\Reports\ReportService;
 use App\Services\SettingRepository;
 use Carbon\CarbonImmutable;
 use Database\Seeders\RoleSeeder;
@@ -130,6 +132,20 @@ class MenuStockTest extends TestCase
         } catch (MenuItemUnavailableException $e) {
             $this->assertStringContainsString('tinggal 6', $e->getMessage());
         }
+    }
+
+    public function test_the_top_menu_report_shows_the_stock_left_now(): void
+    {
+        $this->stock->setRemaining($this->satay, 2);
+        $order = $this->order(2);
+        app(OrderService::class)->markPaidAtCashier($order, PaymentMethod::Cash, $this->staff(User::ROLE_CASHIER)->id);
+
+        $report = app(ReportService::class)->topMenu(ReportPeriod::thisMonth());
+
+        $this->assertSame('Habis', $report->rows[0][7]);
+        $summary = array_column($report->summary, 'value', 'label');
+        $this->assertSame(1, $summary['Menu dengan stok dihitung']);
+        $this->assertSame(1, $summary['Menu habis']);
     }
 
     public function test_food_of_an_expired_booking_returns_to_stock(): void

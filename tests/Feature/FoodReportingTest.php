@@ -85,7 +85,7 @@ class FoodReportingTest extends TestCase
 
         $report = app(ReportService::class)->topMenu(ReportPeriod::thisMonth());
 
-        $this->assertSame([['Sate Maranggi', 2, 1, 3, 0, 6, 210000]], $report->rows);
+        $this->assertSame([['Sate Maranggi', 2, 1, 3, 0, 6, 210000, 'Tidak dibatasi']], $report->rows);
     }
 
     public function test_booking_report_keeps_the_tent_apart_from_food_ordered_with_it(): void

@@ -17,6 +17,7 @@ use App\Models\Payment;
 use App\Models\Refund;
 use App\Models\Unit;
 use App\Services\BookingBilling;
+use App\Services\MenuStockService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
@@ -196,6 +197,8 @@ class ReportService
             ->orderBy('menu_items.name')
             ->get();
         $stillOwed = $this->unpaidBookingFood($period);
+        // Stock is a live count, not a period figure, so the column reads "now" whatever range is picked.
+        $stock = app(MenuStockService::class)->remaining();
 
         // Totals count every dish sold; only the table is cut to the top rows.
         $all = $items;
@@ -212,10 +215,11 @@ class ReportService
                 $this->column('Walk-in kasir', Type::Count),
                 $this->column('Total terjual', Type::Count),
                 $this->column('Omzet (Rp)', Type::Money),
+                $this->column('Sisa stok sekarang', Type::Text),
             ],
             $items->map(fn ($item) => [
                 $item->name, (int) $item->via_booking, (int) $item->via_tent, (int) $item->via_cafe, (int) $item->via_walkin,
-                (int) $item->sold, (int) $item->revenue,
+                (int) $item->sold, (int) $item->revenue, $this->stockLabel($stock[$item->id] ?? null),
             ])->all(),
             [
                 ['label' => 'Porsi terjual', 'value' => (int) $all->sum('sold'), 'type' => Type::Count],
@@ -225,10 +229,22 @@ class ReportService
                 ['label' => 'Walk-in kasir', 'value' => (int) $all->sum('via_walkin'), 'type' => Type::Count, 'group' => 'Asal pesanan'],
                 ['label' => 'Omzet', 'value' => (int) $all->sum('revenue'), 'type' => Type::Money, 'group' => 'Uang'],
                 ['label' => 'Ditagih ke booking, belum dibayar', 'value' => $stillOwed, 'type' => Type::Money, 'group' => 'Uang'],
+                ['label' => 'Menu dengan stok dihitung', 'value' => count($stock), 'type' => Type::Count, 'group' => 'Stok sekarang'],
+                ['label' => 'Menu habis', 'value' => count(array_filter($stock, fn (int $left) => $left === 0)), 'type' => Type::Count, 'group' => 'Stok sekarang'],
             ],
             'Dihitung dari pesanan yang dibuat di periode ini dan sudah dibayar. Makanan yang ditagih ke booking ikut dihitung begitu booking-nya lunas, walau tamu belum membayar makanannya; nilainya tampil di Ditagih ke booking, belum dibayar. '
-            .'Asal pesanan: Ikut booking (dipesan bersama booking), QR tenda, QR kafe (scan di meja kafe), dan Walk-in kasir. Tabel menampilkan '.self::TOP_MENU_LIMIT.' menu terlaris; angka ringkasan menghitung semua menu.',
+            .'Asal pesanan: Ikut booking (dipesan bersama booking), QR tenda, QR kafe (scan di meja kafe), dan Walk-in kasir. Tabel menampilkan '.self::TOP_MENU_LIMIT.' menu terlaris; angka ringkasan menghitung semua menu. '
+            .'Sisa stok sekarang adalah porsi yang masih bisa dijual saat laporan dibuka, bukan angka periode; Tidak dibatasi berarti menu itu tidak dihitung stoknya.',
         );
+    }
+
+    private function stockLabel(?int $left): string
+    {
+        return match (true) {
+            $left === null => 'Tidak dibatasi',
+            $left === 0 => 'Habis',
+            default => $left.' porsi',
+        };
     }
 
     public function refunds(ReportPeriod $period): ReportTable
