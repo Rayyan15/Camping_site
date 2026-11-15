@@ -38,9 +38,10 @@ class ActivityLogsTable
                     ->label('Aksi')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => self::ACTION_LABELS[$state] ?? $state),
-                TextColumn::make('changes')
+                // A computed state: the raw changes cast is an [old, new] array, which Filament renders once per entry.
+                TextColumn::make('description')
                     ->label('Perubahan')
-                    ->formatStateUsing(fn (ActivityLog $record): string => ActivityChangeDescriber::describe($record))
+                    ->state(fn (ActivityLog $record): string => ActivityChangeDescriber::describe($record))
                     ->limit(300)
                     ->wrap(),
             ])
@@ -66,6 +67,7 @@ class ActivityLogsTable
             ->emptyStateHeading('Belum ada aktivitas tercatat')
             ->emptyStateDescription('Perubahan booking, pembayaran, refund, dan harga akan muncul di sini.')
             ->emptyStateIcon('heroicon-o-clipboard-document-list')
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['user', 'subject']))
             ->striped()
             ->defaultSort('created_at', 'desc');
     }

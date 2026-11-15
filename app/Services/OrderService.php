@@ -27,6 +27,7 @@ class OrderService
     public function __construct(
         private readonly PricingService $pricing,
         private readonly DiningSpotService $diningSpots,
+        private readonly MenuStockService $stock,
     ) {}
 
     /**
@@ -53,6 +54,8 @@ class OrderService
         $total = array_sum(array_column($lines, 'subtotal'));
 
         return DB::transaction(function () use ($source, $lines, $bookingId, $diningSpotId, $scheduledAt, $customerName, $customerPhone, $billToBooking, $total) {
+            $this->stock->assertEnough($lines);
+
             $order = Order::create([
                 'code' => $this->generateCode(),
                 'source' => $source,
@@ -203,7 +206,9 @@ class OrderService
     {
         $booking->orders()
             ->where('source', Order::SOURCE_PREORDER)
-            ->whereNotIn('status', [OrderStatus::Selesai->value, OrderStatus::Dibatalkan->value])
+            // Food already at the table was eaten: cancelling it would drop it from the bill and, on revival, cook it again.
+            ->whereNull('served_at')
+            ->where('status', '!=', OrderStatus::Dibatalkan->value)
             ->get()
             ->each(fn (Order $order) => $order->update(['status' => OrderStatus::Dibatalkan->value, 'auto_cancelled_at' => now()]));
     }
@@ -237,7 +242,11 @@ class OrderService
                 throw InvalidOrderTransitionException::unpaidCannotBeClosed($locked->total);
             }
 
-            $locked->update(['status' => $newStatus->value]);
+            $locked->update([
+                'status' => $newStatus->value,
+                // Stock keeps an older pre-order reserved until this moment, so it is set once and never moved.
+                'served_at' => $locked->served_at ?? (in_array($newStatus, [OrderStatus::Diantar, OrderStatus::Selesai], true) ? now() : null),
+            ]);
             $order->refresh();
 
             return $order;

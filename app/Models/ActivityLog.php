@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * @property array<string, mixed>|null $changes
@@ -26,6 +27,12 @@ class ActivityLog extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** @return MorphTo<Model, $this> */
+    public function subject(): MorphTo
+    {
+        return $this->morphTo();
     }
 
     /** Entries written by webhooks, jobs or the console have no user. */

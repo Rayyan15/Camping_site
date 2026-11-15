@@ -12,6 +12,14 @@ return [
     'hold_minute_options' => [30, 60, 120, 180],
 
     /*
+    | Unpaid QR transfer orders with no proof waiting are cancelled after this many minutes, so the
+    | portions they reserved go back to stock. 0 turns it off. The owner's pick in Pengaturan wins.
+    */
+    'qr_transfer_cancel_minutes' => 60,
+
+    'qr_transfer_cancel_minute_options' => [0, 30, 60, 120, 180],
+
+    /*
     | How long after a hold lapses the guest may still upload a transfer proof. Their tent comes
     | back if it is still free; otherwise the booking goes to staff review once the proof is confirmed.
     */

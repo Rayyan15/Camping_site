@@ -7,6 +7,7 @@ use App\Http\Requests\Public\LandingSearchRequest;
 use App\Models\MenuItem;
 use App\Models\UnitType;
 use App\Services\BookingService;
+use App\Services\MenuStockService;
 use App\Services\RefundPolicySummary;
 use App\Services\SettingRepository;
 use Illuminate\Contracts\View\View;
@@ -50,9 +51,13 @@ class LandingController extends Controller
      */
     private function menuByCategory(): Collection
     {
+        $stock = app(MenuStockService::class)->remaining();
+
         return MenuItem::available()
             ->with('category')
             ->get()
+            ->reject(fn (MenuItem $item) => ($stock[$item->id] ?? null) === 0)
+            ->each(fn (MenuItem $item) => $item->setAttribute('stock_left', $stock[$item->id] ?? null))
             ->sortBy([['category.sort_order', 'asc'], ['sort_order', 'asc']])
             ->groupBy(fn (MenuItem $item) => $item->category->name);
     }

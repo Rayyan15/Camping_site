@@ -8,6 +8,7 @@ use App\Http\Requests\Public\StoreQrOrderRequest;
 use App\Models\DiningSpot;
 use App\Models\MenuCategory;
 use App\Models\MenuItem;
+use App\Services\MenuStockService;
 use App\Services\OrderService;
 use BackedEnum;
 use Filament\Notifications\Notification;
@@ -134,7 +135,8 @@ class WalkInOrder extends Page
 
         return [
             'categories' => MenuCategory::whereIn('id', $menu->pluck('category_id'))->orderBy('sort_order')->get(),
-            'menu' => $this->filterMenu($menu),
+            // Sold-out dishes leave the picker but stay in menuById so a line already in the cart still renders.
+            'menu' => $this->filterMenu($menu->diff($menu->whereIn('id', array_keys(array_filter(app(MenuStockService::class)->remaining(), fn (int $left) => $left === 0))))),
             'menuById' => $menu->keyBy('id'),
             'diningSpots' => DiningSpot::orderBy('name')->pluck('name', 'id'),
             'paymentOptions' => $this->paymentOptions(),

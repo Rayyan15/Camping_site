@@ -75,12 +75,16 @@
                                             <p class="mt-0.5 text-sm leading-snug text-ink-soft">{{ $item->description }}</p>
                                         @endif
                                         <div class="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-                                            <p class="font-bold text-ember-dark">{{ $rupiah($item->price) }}</p>
+                                            <p class="font-bold text-ember-dark">{{ $rupiah($item->price) }}
+                                                @if($item->stock_left !== null)
+                                                    <span class="ml-2 text-sm font-semibold text-ink-soft">{{ __('Sisa :count', ['count' => $item->stock_left]) }}</span>
+                                                @endif
+                                            </p>
                                             <div class="inline-flex shrink-0 items-center rounded-full border border-sand-dark bg-[#fffdf8]">
                                                 <button type="button" data-step="-1" class="grid size-11 place-items-center rounded-full text-forest-800 transition hover:bg-forest-100 disabled:opacity-35" aria-label="{{ __('Kurangi :name', ['name' => $item->name]) }}">
                                                     <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" d="M5 12h14"/></svg>
                                                 </button>
-                                                <input type="number" name="items[{{ $item->id }}][qty]" value="{{ $qty }}" min="0" max="{{ \App\Http\Requests\Public\StoreQrOrderRequest::MAX_QTY }}" inputmode="numeric"
+                                                <input type="number" name="items[{{ $item->id }}][qty]" value="{{ $qty }}" min="0" max="{{ min(\App\Http\Requests\Public\StoreQrOrderRequest::MAX_QTY, $item->stock_left ?? PHP_INT_MAX) }}" inputmode="numeric"
                                                        aria-label="{{ __('Jumlah :name', ['name' => $item->name]) }}" data-qty
                                                        class="h-11 w-9 appearance-none border-0 bg-transparent p-0 text-center font-bold text-forest-900 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none">
                                                 <button type="button" data-step="1" class="grid size-11 place-items-center rounded-full text-forest-800 transition hover:bg-forest-100 disabled:opacity-35" aria-label="{{ __('Tambah :name', ['name' => $item->name]) }}">

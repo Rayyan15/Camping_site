@@ -22,6 +22,7 @@ enum SettingKey: string
     case QrPaymentTransferEnabled = 'qr_payment_transfer_enabled';
     case QrPaymentBookingEnabled = 'qr_payment_booking_enabled';
     case BookingHoldMinutes = 'booking_hold_minutes';
+    case QrTransferCancelMinutes = 'qr_transfer_cancel_minutes';
 
     public const DEFAULT_CHECK_IN_TIME = '14:00';
 
@@ -47,6 +48,7 @@ enum SettingKey: string
             self::QrPaymentTransferEnabled => 'Pesanan QR: transfer bank',
             self::QrPaymentBookingEnabled => 'Pesanan QR: tagihkan ke booking',
             self::BookingHoldMinutes => 'Batas waktu bayar booking (menit)',
+            self::QrTransferCancelMinutes => 'Batal otomatis pesanan QR transfer (menit)',
         };
     }
 }

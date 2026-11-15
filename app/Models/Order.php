@@ -15,6 +15,8 @@ use Illuminate\Support\Carbon;
 /**
  * @property ?Carbon $scheduled_at
  * @property ?QrPaymentChoice $payment_choice
+ * @property ?Carbon $auto_cancelled_at
+ * @property ?Carbon $served_at
  */
 class Order extends Model
 {
@@ -31,14 +33,15 @@ class Order extends Model
     protected $fillable = [
         'code', 'source', 'booking_id', 'customer_name', 'customer_phone', 'dining_spot_id',
         'scheduled_at', 'status', 'total', 'tax', 'payment_status', 'payment_choice',
-        'bill_to_booking', 'auto_cancelled_at',
+        'bill_to_booking', 'auto_cancelled_at', 'served_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'scheduled_at' => 'datetime',
             'auto_cancelled_at' => 'datetime',
+            'served_at' => 'datetime',
+            'scheduled_at' => 'datetime',
             'total' => 'integer',
             'tax' => 'integer',
             'bill_to_booking' => 'boolean',
@@ -149,6 +152,20 @@ class Order extends Model
     public function statusEnum(): OrderStatus
     {
         return OrderStatus::from($this->status);
+    }
+
+    /**
+     * Unpaid transfer orders take a proof, including ones the system cancelled for lack of payment in the last
+     * late_proof_hours: the guest may have paid just before the cut-off.
+     */
+    public function acceptsTransferProof(): bool
+    {
+        if ($this->payment_choice !== QrPaymentChoice::Transfer || $this->isPaid()) {
+            return false;
+        }
+
+        return $this->statusEnum() !== OrderStatus::Dibatalkan
+            || $this->auto_cancelled_at?->gt(now()->subHours((int) config('booking.late_proof_hours')));
     }
 
     public function isPaid(): bool

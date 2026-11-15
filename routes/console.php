@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\CancelUnpaidTransferOrders;
 use App\Jobs\ReleaseExpiredHolds;
 use App\Jobs\SyncFingerprintLogs;
 use Illuminate\Foundation\Inspiring;
@@ -11,6 +12,8 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::job(new ReleaseExpiredHolds)->everyMinute()->withoutOverlapping()->onOneServer();
+
+Schedule::job(new CancelUnpaidTransferOrders)->everyMinute()->withoutOverlapping()->onOneServer();
 
 // Always scheduled: the job logs a skip until ATTENDANCE_LOG_PATH is set, so the gap shows up in the logs.
 Schedule::job(new SyncFingerprintLogs)->dailyAt(config('attendance.sync_at'))->withoutOverlapping()->onOneServer()
