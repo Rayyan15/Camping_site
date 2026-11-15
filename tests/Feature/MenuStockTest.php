@@ -9,9 +9,11 @@ use App\Enums\PaymentStatus;
 use App\Enums\QrPaymentChoice;
 use App\Enums\SettingKey;
 use App\Exceptions\MenuItemUnavailableException;
+use App\Filament\Resources\ActivityLogs\ActivityChangeDescriber;
 use App\Filament\Resources\MenuItems\Pages\ListMenuItems;
 use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Jobs\CancelUnpaidTransferOrders;
+use App\Models\ActivityLog;
 use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\DiningSpot;
@@ -270,5 +272,10 @@ class MenuStockTest extends TestCase
         Livewire::test(ListMenuItems::class)
             ->callTableAction('add_stock', $this->satay, ['portions' => 7]);
         $this->assertSame(10, $this->stock->remainingFor($this->satay));
+
+        $log = ActivityLog::where('subject_type', 'menu_item')->latest('id')->firstOrFail();
+        $this->assertSame('owner', $log->actor_label);
+        $this->assertStringContainsString('Stok tercatat (termasuk pre-order belum disajikan) diubah dari 3 menjadi 10', ActivityChangeDescriber::describe($log));
+        $this->assertSame('Menu Sate Maranggi', ActivityChangeDescriber::subject($log->load('subject')));
     }
 }

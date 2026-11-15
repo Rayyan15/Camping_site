@@ -70,6 +70,11 @@ class ActivityChangeDescriber
         'is_available' => 'Tersedia',
         'name' => 'Nama',
         'price' => 'Harga',
+        // The stored count adds back pre-orders not served yet, so it can sit above what the owner typed.
+        'stock' => 'Stok tercatat (termasuk pre-order belum disajikan)',
+        'stock_counted_at' => 'Stok dihitung pada',
+        'served_at' => 'Diantar pada',
+        'auto_cancelled_at' => 'Dibatalkan otomatis pada',
     ];
 
     /** Foreign keys, tokens, file paths and bookkeeping columns mean nothing to a reader. */
@@ -84,7 +89,7 @@ class ActivityChangeDescriber
 
     private const DATES = ['check_in', 'check_out', 'date'];
 
-    private const DATETIMES = ['hold_expires_at', 'cancelled_at', 'paid_at', 'reviewed_at', 'scheduled_at', 'clock_in', 'clock_out'];
+    private const DATETIMES = ['hold_expires_at', 'cancelled_at', 'paid_at', 'reviewed_at', 'scheduled_at', 'clock_in', 'clock_out', 'stock_counted_at', 'served_at', 'auto_cancelled_at'];
 
     public static function subjectLabel(string $alias): string
     {
@@ -93,7 +98,11 @@ class ActivityChangeDescriber
 
     public static function subject(ActivityLog $record): string
     {
-        return self::subjectLabel($record->subject_type).' #'.$record->subject_id;
+        // A dish or booking is known by its name or code; the id stays for rows whose subject was deleted.
+        $subject = $record->relationLoaded('subject') ? $record->subject : null;
+        $name = $subject?->getAttribute('code') ?? $subject?->getAttribute('name');
+
+        return self::subjectLabel($record->subject_type).' '.($name ?? '#'.$record->subject_id);
     }
 
     public static function describe(ActivityLog $record): string
