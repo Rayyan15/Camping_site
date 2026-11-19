@@ -44,7 +44,14 @@ enum ReportType: string
     {
         return match ($this) {
             self::Booking => match ($label) {
-                'Jumlah booking' => 'Booking dengan tanggal check-in di periode ini, ditambah booking yang refund-nya diajukan di periode ini. Booking kedaluwarsa tidak dihitung.',
+                'Jumlah booking' => 'Booking dengan tanggal check-in di periode ini, ditambah booking yang refund-nya diajukan di periode ini. Booking kedaluwarsa tidak dihitung. Angka di bagian Status adalah pecahan dari jumlah ini: satu booking punya satu status, jadi jika dijumlah hasilnya sama.',
+                'Menunggu Bayar' => 'Tamu sudah memesan tapi belum membayar. Unit ditahan sampai batas waktu bayar; lewat dari itu booking jadi kedaluwarsa.',
+                'Lunas' => 'Sudah bayar penuh, tapi staf belum menekan tombol Check-in di sistem. Tamu yang sudah datang dan pulang tetap tercatat Lunas jika tombol Check-in dan Check-out tidak ditekan.',
+                'Check-in' => 'Staf sudah menekan tombol Check-in dan belum menekan Check-out. Jika tamu sudah pulang tapi masih di sini, tombol Check-out belum ditekan.',
+                'Check-out' => 'Staf sudah menekan tombol Check-out: tamu sudah pulang dan tagihannya selesai.',
+                'Perlu Ditinjau' => 'Batas waktu bayar sudah lewat, tapi sudah ada uang masuk atau bukti transfer yang belum diperiksa. Staf perlu memutuskan: lanjutkan booking atau batalkan dengan refund.',
+                'Dibatalkan' => 'Booking yang dibatalkan. Tidak masuk ke total nilai booking terjual.',
+                'Dikembalikan' => 'Booking yang dibatalkan dan uangnya sudah dikembalikan ke tamu.',
                 'Sewa tenda' => 'Harga tenda dari booking terjual (Lunas, Check-in, Check-out) yang check-in di periode ini. Dihitung dari tanggal menginap, bukan tanggal bayar.',
                 'Tambahan' => 'Add-on (extra bed, kayu bakar, aktivitas) dari booking terjual yang check-in di periode ini.',
                 'Makanan' => 'Makanan yang ditagihkan ke booking terjual yang check-in di periode ini, termasuk pre-order dan pesanan QR tenda.',
