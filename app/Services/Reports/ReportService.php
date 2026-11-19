@@ -452,7 +452,8 @@ class ReportService
     {
         $payable = $payment->payable;
 
-        if ($payable instanceof Order) {
+        // A payment can outlive its deleted order; it was still food, so judge by the recorded type.
+        if ($payable instanceof Order || $payment->payable_type === (new Order)->getMorphClass()) {
             return ['food_direct' => (int) $payment->amount];
         }
 

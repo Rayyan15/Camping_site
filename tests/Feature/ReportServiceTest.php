@@ -173,6 +173,19 @@ class ReportServiceTest extends TestCase
         $this->assertSame($directFood, $rows['F&B langsung (QR dan walk-in)'][1]);
     }
 
+    public function test_payment_of_a_deleted_order_stays_food_not_tent(): void
+    {
+        $period = ReportPeriod::thisMonth();
+        $before = collect($this->reports->build(ReportType::Revenue, $period)->rows)->keyBy(0);
+
+        $payment = Payment::query()->settled()->where('payable_type', 'order')->where('direction', 'in')->firstOrFail();
+        $payment->payable()->getQuery()->toBase()->delete();
+
+        $after = collect($this->reports->build(ReportType::Revenue, $period)->rows)->keyBy(0);
+        $this->assertSame($before['Sewa tenda'], $after['Sewa tenda']);
+        $this->assertSame($before['F&B langsung (QR dan walk-in)'], $after['F&B langsung (QR dan walk-in)']);
+    }
+
     public function test_empty_period_yields_empty_rows_and_zero_totals(): void
     {
         $period = ReportPeriod::custom('2027-01-01', '2027-01-31');
