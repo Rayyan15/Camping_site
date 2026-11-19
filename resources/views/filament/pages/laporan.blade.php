@@ -81,7 +81,7 @@
         @media (min-width: 768px) { .lap-band { grid-template-columns: minmax(13rem, 17rem) 1fr; align-items: start; gap: 2rem; padding: 1.5rem; } }
         .lap-head { display: grid; gap: 0.25rem; padding: 1.25rem; border-radius: 0.875rem; background: var(--primary-700); color: #fff; }
         .dark .lap-head { background: var(--primary-600); }
-        .lap-head-label { font-size: 0.8125rem; font-weight: 600; color: var(--primary-100); }
+        .lap-head-label { display: flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; font-weight: 600; color: var(--primary-100); }
         .lap-head-value { font-size: 2.5rem; font-weight: 700; line-height: 1.05; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
         .lap-head-value.is-long { font-size: 1.75rem; }
         .lap-groups { display: grid; gap: 1.25rem 2rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); align-items: start; }
@@ -181,6 +181,36 @@
             .lap-range-days { min-height: 0; }
         }
 
+        /* Source hint: a small "i" beside a summary label. Mouse users get it on hover; touch and keyboard
+           users tap or press it. The card is the only raised surface on the band, so it carries the shadow.
+           It spans its own row rather than hanging off the icon, so a right-hand column never pushes it off screen. */
+        .lap-hint { display: inline-flex; }
+        .lap-line, .lap-head { position: relative; }
+        .lap-hint-btn {
+            position: relative; display: inline-grid; place-items: center; width: 1.25rem; height: 1.25rem;
+            padding: 0; border: 0; border-radius: 999px; background: transparent; cursor: pointer;
+            color: var(--hh-ink-soft); transition: color 150ms ease;
+        }
+        .lap-hint-btn::before { content: ""; position: absolute; inset: -0.75rem; }
+        .lap-hint-btn svg { width: 1rem; height: 1rem; }
+        .lap-hint-btn:hover, .lap-hint-btn[aria-expanded="true"] { color: var(--primary-700); }
+        .lap-hint-btn:focus-visible { outline: 2px solid var(--primary-600); outline-offset: 2px; }
+        .dark .lap-hint-btn { color: var(--gray-400); }
+        .dark .lap-hint-btn:hover, .dark .lap-hint-btn[aria-expanded="true"] { color: var(--primary-300); }
+        .lap-head .lap-hint-btn { color: var(--primary-100); }
+        .lap-head .lap-hint-btn:hover, .lap-head .lap-hint-btn[aria-expanded="true"] { color: #fff; }
+        .lap-head .lap-hint-btn:focus-visible { outline-color: #fff; }
+        .lap-hint-card {
+            position: absolute; top: calc(100% + 0.25rem); left: 0; right: 0; z-index: 20;
+            padding: 0.75rem 0.875rem; border-radius: 0.75rem;
+            background: #fff; border: 1px solid var(--hh-sand); box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+            font-size: 0.8125rem; font-weight: 400; line-height: 1.5; letter-spacing: 0; color: var(--gray-950);
+            text-align: left; white-space: normal;
+        }
+        .dark .lap-hint-card { background: var(--gray-800); border-color: var(--gray-700); color: #fff; }
+
+        @media (prefers-reduced-motion: reduce) { .lap-hint-btn { transition: none; } }
+
         @media (prefers-reduced-motion: reduce) { .lap-pill, .lap-type, .lap-seg-btn { transition: none; } }
     </style>
 
@@ -231,7 +261,7 @@
                 @endphp
                 <section class="lap-band" aria-label="Ringkasan {{ $report->title() }}">
                     <div class="lap-head">
-                        <p class="lap-head-label">{{ $head['label'] }}</p>
+                        <p class="lap-head-label">{{ $head['label'] }} @include('filament.pages.partials.report-hint', ['hint' => $report->type->summaryHint($head['label']), 'label' => $head['label']])</p>
                         <p @class(['lap-head-value', 'is-long' => mb_strlen($headValue) > 10])>{{ $headValue }}</p>
                     </div>
 
@@ -257,6 +287,7 @@
                                                         <span class="lap-dot lap-fill-{{ $tone($i, $line) }}" aria-hidden="true"></span>
                                                     @endif
                                                     {{ $line['label'] }}
+                                                    @include('filament.pages.partials.report-hint', ['hint' => $report->type->summaryHint($line['label']), 'label' => $line['label']])
                                                 </dt>
                                                 <dd>
                                                     @if ($line['type'] === \App\Enums\ReportValueType::Money)
